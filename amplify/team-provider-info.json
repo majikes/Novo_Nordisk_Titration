@@ -1,0 +1,20 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-novonordisktitration-dev-134929-authRole",
+      "UnauthRoleArn": "arn:aws:iam::582050746740:role/amplify-novonordisktitration-dev-134929-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::582050746740:role/amplify-novonordisktitration-dev-134929-authRole",
+      "Region": "us-east-1",
+      "DeploymentBucketName": "amplify-novonordisktitration-dev-134929-deployment",
+      "UnauthRoleName": "amplify-novonordisktitration-dev-134929-unauthRole",
+      "StackName": "amplify-novonordisktitration-dev-134929",
+      "StackId": "arn:aws:cloudformation:us-east-1:582050746740:stack/amplify-novonordisktitration-dev-134929/75500570-c03d-11ed-a9cc-0a512eae3dfd",
+      "AmplifyAppId": "dhbdn6gjajcwe"
+    },
+    "categories": {
+      "auth": {
+        "novonordisktitrationd3e5e1db": {}
+      }
+    }
+  }
+}

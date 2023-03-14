@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.nav-link {
+    @apply mx-1 py-1 px-2 rounded-lg bg-white hover:bg-stone-400 hover:text-white
+}
+
+.nav-svg {
+    @apply w-5 mr-2 group-hover:stroke-white
+}
+
+.titrate-badge {
+    @apply rounded-full w-10 h-10 grid content-center place-items-center absolute bottom-1 right-1 font-bold bg-slate-300;
+}
+
+.control-row {
+    @apply flex justify-between my-1
+}
+
+.date-input {
+    @apply mt-1 w-full p-3 rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500
+}
+
+.select-input {
+    @apply w-full mt-1 p-3 rounded-md bg-gray-100 border-transparent focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500 disabled:text-gray-400
+}
+
+.adduser-text-input {
+    @apply w-full mt-1 p-3 rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500 validate-input
+}
+
+.adduser-select-input {
+    @apply w-full mt-1 p-3 rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500 validate-input
+}
+
+.validate-input {
+    @apply invalid:ring-rose-500 invalid:ring-2 invalid:ring-offset-1 valid:ring-emerald-500 valid:ring-2 valid:ring-offset-1
+}
+
+.adduser-form-cell {
+    @apply my-3 col-span-1 px-2 
+}
+
+.invalid-feedback {
+    @apply pt-2 invisible peer-invalid:visible text-sm text-red-700 font-light
+}
+
+.activity-select-input {
+    @apply w-full mt-1 py-1 px-2 rounded-md bg-transparent ring-1 ring-gray-400 border-gray-400 focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500
+}
+
+.titrate-select-input {
+    @apply text-center block w-6 h-6 appearance-none rounded bg-gray-100 focus:border-gray-500 focus:bg-white disabled:text-gray-400
+}
+
+.titrate-checkbox-input {
+    @apply w-full h-6 rounded bg-gray-200 border-transparent focus:border-transparent focus:bg-gray-200 text-gray-700 
+}
+
+.titratemodified {
+    @apply ring-rose-500 ring-2 ring-offset-1
+}
+
+.titrate-graph-labelcolor {
+    @apply w-6 h-6 mr-3 rounded-md
+}
+
+.userMgmtActive {
+    @apply text-green-600 font-semibold
+}
+
+.btn {
+    @apply mt-1 p-3 rounded-md bg-gray-100 border-transparent disabled:text-gray-400
+}
+
+.user-mgmt-cell {
+    @apply w-48
+}
+/* .disabled {
+    @apply text-gray-400
+} */
+
