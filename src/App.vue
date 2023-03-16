@@ -1,13 +1,10 @@
-<!-- <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
-</template> -->
 
 <template>
   <div id="content-wrapper" class="text-gray-700">
     <div v-if="auth.authStatus === 'authenticated'" id="auth-site">
-      {{ "User: "+auth.user.username+", AuthGroup: "+ authGroup }}
-      <div v-if="authGroup === 'Physician'">
+      {{ "User: "+auth.user.username+", AuthGroup: "+ authGroupState }}
+
+      <div v-if="authGroupState === 'Admin'">
         <div id="nav">
           <nav class="flex flex-row justify-center my-4">
             <router-link class="nav-link group" :to="{ name: 'StudyOverview' }">
@@ -18,7 +15,38 @@
                     d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
                     stroke-linecap="round" stroke-linejoin="round"></path>
                 </svg>
-                <span class="line-through">Home</span>
+                <span>Home</span>
+              </div>
+            </router-link>
+
+            <router-link class="nav-link group" :to="{ name: 'UserSettings' }">
+              <div class=" flex">
+                <svg class="nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
+                  viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"
+                    stroke-linecap="round" stroke-linejoin="round"></path>
+                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                Settings
+              </div>
+            </router-link>
+          </nav>
+        </div>        
+      </div>
+
+      <div v-else-if="authGroupState === 'Physician'">
+        <div id="nav">
+          <nav class="flex flex-row justify-center my-4">
+            <router-link class="nav-link group" :to="{ name: 'StudyOverview' }">
+              <div class="flex">
+                <svg class="w-5 nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
+                  viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
+                    stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                <span>Home</span>
               </div>
             </router-link>
 
@@ -111,7 +139,7 @@
         </div>
       </div>
 
-      <div v-else-if="authGroup === 'CRC'">
+      <div v-else-if="authGroupState === 'CRC'">
         <div id="nav">
           <nav class="flex flex-row justify-center my-4">
             <router-link class="nav-link group" :to="{ name: 'StudyOverview' }">
@@ -122,7 +150,7 @@
                     d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
                     stroke-linecap="round" stroke-linejoin="round"></path>
                 </svg>
-                <span class="line-through">Home</span>
+                <span>Home</span>
               </div>
             </router-link>
 
@@ -215,6 +243,63 @@
         </div>        
       </div>
 
+      <div v-else-if="authGroupState === 'Participant'">
+        <div id="nav">
+          <nav class="flex flex-row justify-center my-4">
+            
+            <router-link class="nav-link group" :to="{ name: 'DataEntry' }">
+              <div class=" flex">
+                <svg class="w-5 nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
+                  viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
+                    stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                Participant Home
+              </div>
+            </router-link>
+
+            <router-link class="nav-link group" :to="{ name: 'SmbgTitrationRules' }">
+              <div class=" flex">
+                <svg class="nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
+                  viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M9 13.5l3 3m0 0l3-3m-3 3v-6m1.06-4.19l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"
+                    stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                SMBG Titration rules
+              </div>
+            </router-link>
+
+            <!-- <router-link class="nav-link group" :to="{ name: 'AppSupport' }">
+              <div class=" flex">
+                <svg class="nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
+                  viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"
+                    stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                Support
+              </div>
+            </router-link> -->
+          
+            <router-link class="nav-link group" :to="{ name: 'UserSettings' }">
+              <div class=" flex">
+                <svg class="nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
+                  viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path
+                    d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"
+                    stroke-linecap="round" stroke-linejoin="round"></path>
+                  <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                Settings
+              </div>
+            </router-link>
+
+          </nav>
+        </div>        
+      </div>
+
       <!-- <div class="max-w-4xl control-row">
         DEV SETTINGS
       </div> -->
@@ -222,26 +307,21 @@
         <router-view class="main-container" />
       </div>
     </div>
-    <Authenticator :hide-sign-up="true"></Authenticator>
+    <authenticator :hide-sign-up="true"></authenticator>
   </div>
 </template>
 
-<script lang="ts">
-//import { Options, Vue } from 'vue-class-component';
-//import HelloWorld from './components/HelloWorld.vue';
 
-import { defineComponent, onMounted, ref } from 'vue'
+<script lang="ts">
+import { computed, defineComponent, onBeforeMount, onMounted, ref, reactive } from 'vue'
 import { useSubjectListStore } from '@/stores/SubjectListStore'
 import { api, subject_convert } from '@/functions/GlobalFunctions'
 import { useApiURL } from '@/globalConfigPlugin'
 import Subject from '@/types/Subject'
-
 import { Authenticator, useAuthenticator } from '@aws-amplify/ui-vue';
 import '@aws-amplify/ui-vue/styles.css';
-
-import { Amplify } from 'aws-amplify'
+import { Auth, Amplify } from 'aws-amplify'
 import awsconfig from '@/aws-exports.js'
-
 Amplify.configure(awsconfig)
 
 // export default class App extends Vue {}
@@ -254,23 +334,43 @@ export default defineComponent({
     const subjectListStore = useSubjectListStore()
     const auth = useAuthenticator()
     const apiRootURL = useApiURL()
-    let groups = ref([] as string[])
-    let authGroup = "CRC"
-      // if(typeof(auth.user.signInUserSession.idToken.payload["cognito:groups"])!=='undefined') {
-      //   groups.value = auth.user.signInUserSession.idToken.payload["cognito:groups"]
-      //   authGroup = groups.value.toString()
-      // }
+
+    //const authGroupState = reactive({ authGroup: ''})
+    ///const user =  Auth.currentAuthenticatedUser();
+    const authGroupState = computed(()=> {
+      console.log(auth);
+      let authGroup = ''
+      if(auth.user!=='' && typeof(auth.user.signInUserSession.idToken.payload["cognito:groups"])!=='undefined') {
+        authGroup = auth.user.signInUserSession.idToken.payload["cognito:groups"].toString()
+      }
+      console.log("computed group: "+authGroup);
+      return authGroup
+    })
+
+    // onBeforeMount(
+    //   async()=>{
+    //   authGroupState.authGroup = user.signInUserSession.accessToken.payload["cognito:groups"].toString();
+    //   console.log("Current authenticated user: "+authGroupState.authGroup);
+    // })
+
+
+    //let groups = ref([] as string[])
+    //let authGroup = ''
+    // if(typeof(auth.user.signInUserSession.idToken.payload["cognito:groups"])!=='undefined') {
+    //   groups.value = auth.user.signInUserSession.idToken.payload["cognito:groups"]
+    //   authGroup = groups.value.toString()
+    // }
       // else if(typeof(auth.user["accessToken"])!=='undefined'){
       //   authGroup= auth.user.accessToken.payload['cognito:groups'].toString()
       // }
       // else if(typeof(typeof(auth["idToken"]!=='undefined'))){
       //   authGroup = auth.idToken.payload['cognito:groups'].toString()
       // }
-    console.log("auth: "+JSON.stringify(auth, null, 2));    
-    console.log("auth.user: "+JSON.stringify(auth.user, null, 2));
-    console.log("auth.user.username: "+JSON.stringify(auth.user.username, null, 2));
+    //console.log("auth: "+JSON.stringify(auth, null, 2));    
+    //console.log("auth.user: "+JSON.stringify(auth.user, null, 2));
+    //console.log("auth.user.username: "+JSON.stringify(auth.user.username, null, 2));
     //console.log("auth.user.signInUserSession.idToken.payload: "+JSON.stringify(auth.user.signInUserSession.idToken.payload, null, 2));
-    console.log("authGroup: "+authGroup);
+    //console.log("authGroup: "+authGroupState.authGroup);
 
     const error = ref(null)
     const loading = ref(true)
@@ -300,17 +400,10 @@ export default defineComponent({
     //       console.log(error.value)
     //     })
     // })
-    // console.log("auth: "+auth.authStatus+", authGroup: "+authGroup);
-    return { auth, authGroup }
+    console.log("From App.vue page, auth: "+auth+", authGroup: "+authGroupState.value);
+    return { auth, authGroupState }
   }
 });
-
-// Authenticator.currentAuthenticatedUser()
-// .then((data:any) => console.log(data.signInUserSession.accessToken.payload['cognito:groups']));
-
-// //const { attributes } = user;
-// console.log("user atts: "+ user);
-
 </script>
 
 

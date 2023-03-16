@@ -3,20 +3,12 @@ import StudyOverview from '../views/StudyOverview.vue'
 import AGP from '../views/AGP.vue'
 import TitrationView from '../views/TitrationView2.vue'
 import ProfileView from '../views/ProfileView.vue'
+import DataEntry from '../views/DataEntry.vue'
+import SmbgTitrationRules from '../views/SmbgTitrationRules.vue'
 import ParticipantManagement from '../views/ParticipantManagement.vue'
 import AddParticipant from '../views/AddParticipant.vue'
 import DataDownload from '../views/DataDownload.vue'
 import UserSettings from '../views/UserSettings.vue'
-
-
-enum Role {
-    participant = 0,
-    crc = 1,
-    physician = 2
-}
-
-let current_role = Role.physician
-current_role = Role.crc
 
 
 const routes : Array<RouteRecordRaw> = [
@@ -45,6 +37,16 @@ const routes : Array<RouteRecordRaw> = [
         name: 'ProfileView',
         component: ProfileView
     },
+    {
+        path: '/data-entry',
+        name: 'DataEntry',
+        component: DataEntry
+    },
+    {
+        path: '/smbg-titration-rules',
+        name: 'SmbgTitrationRules',
+        component: SmbgTitrationRules
+    },    
     {
         path: '/user-management',
         name: 'ParticipantManagement',

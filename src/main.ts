@@ -6,7 +6,6 @@ import { plugin } from './globalConfigPlugin'
 import './assets/tailwind.css'
 
 const pinia = createPinia()
-
 const app = createApp(App)
 
 app.use(router)

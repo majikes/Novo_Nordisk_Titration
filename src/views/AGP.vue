@@ -18,7 +18,7 @@
       <div class="grid content-end">
         <button class="form-input btn" id="graph-button" :disabled="buttonDisabled" @click="graphData">Graph</button>
       </div>
-      <SubjectDropdown v-model="selected" @change="changeSelected" />
+      <SubjectDropdown v-model="selected"/>
     </div>
     <div class="control-row content-end py-3">
       <div id="titrate-link">
@@ -48,16 +48,6 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-12 py-1">
-      <div class="col-span-10">
-        <div class="py-2" id="iob-caption"><span class="font-semibold">Insulin on Board</span></div>
-        <div id="iob-container">
-          <QuantileChart v-if="loaded" :graphableData="graphableInsulin" :loaded="loaded" dataType="insulin" />
-        </div>
-      </div>
-
-    </div>
-
   </div>
 </template>
   
@@ -72,7 +62,7 @@ import SubjectDropdown from '@/components/SubjectDropdown.vue'
 import { useSubjectIdStore } from '@/stores/SubjectIdStore'
 import { api, dateConvertToISO } from '@/functions/GlobalFunctions'
 import TiRChart from '@/components/TiRChart.vue'
-import { useApiURL } from '@/globalConfigPlugin'
+import { useApiURL, useApiURLNovo } from '@/globalConfigPlugin'
 import { first } from 'lodash'
 
 export default defineComponent({
@@ -80,6 +70,7 @@ export default defineComponent({
   components: { QuantileChart, SubjectDropdown, TiRChart },
   setup() {
     const apiRootURL = useApiURL()
+    const apiRootURLNovo = useApiURLNovo()
     // initialize selected ref() used for dropdown v-model to url value
     // and treat undefined param as '' to properly select empty option
     const route = useRoute()
@@ -177,7 +168,7 @@ export default defineComponent({
         //   }).finally(() => {
         //     subjectDetailsLoading.value = false
         //   })
-        const defaultStartDate = '8/12/2021'
+        const defaultStartDate = '01/01/2021'
         const startDates = {
           '81101': '07/27/2021',
           '81102': '08/12/2021',
@@ -210,7 +201,7 @@ export default defineComponent({
           '81130': '10/21/2021',
           '81131': '10/22/2021'
         }
-        const endDate = '12/30/2021'
+        const endDate = '12/31/2023'
         console.log('HARDCODED DATERANGE GET')
         const startDate = '08/12/2021'
         if (selected.value in startDates) {
@@ -219,7 +210,8 @@ export default defineComponent({
           firstLog.value = dateConvertToISO(storedStart)
           let endTmp = new Date(storedStart)
           endTmp.setMonth(endTmp.getMonth() + 2)
-          lastLog.value = endTmp.toISOString().split('T')[0]
+          ///lastLog.value = endTmp.toISOString().split('T')[0]
+          lastLog.value = dateConvertToISO(endDate)
         } else { 
           firstLog.value = dateConvertToISO(startDate)
           lastLog.value = dateConvertToISO(endDate)
@@ -269,7 +261,8 @@ export default defineComponent({
         loaded.value = false
         subjectGraphLoading.value = true
         // TODO pass dates as arguments
-        const req_url = `${apiRootURL}/getsubjects?subject_id=${selected.value}&day1=${startTS.valueOf()}&day2=${endTS.valueOf()}`
+        ///const req_url = `${apiRootURL}/getsubjects?subject_id=${selected.value}&day1=${startTS.valueOf()}&day2=${endTS.valueOf()}`
+        const req_url = `${apiRootURLNovo}/agp?subject_id=${selected.value}&day1=${startTS.valueOf()}&day2=${endTS.valueOf()}`
         console.log(`request to ${req_url}`)
         api.get<SubjectGraphable>(req_url).then(
           (subjectGraphable: SubjectGraphable) => {

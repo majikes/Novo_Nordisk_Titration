@@ -5,101 +5,72 @@
         <h1 class="text-2xl font-bold">Subject Titration</h1>
       </div>
     
-      <div class="control-row">
-      <SubjectDropdown v-model="selected" />
+      <div class="grid place-content-center">
+        <SubjectDropdown v-model="selected" @change="changeSelected"/>
       </div>
 
-      <div>
-        <div class="my-2" id="quantile-caption">
-          <span class="font-semibold">Glucose comparison</span>
-        </div>
-        <div class="grid grid-cols-5">
-          <div class="col-span-1 flex justify-start">
-            <button class="group flex" :disabled="nominalDisabled" @click="toggleNominal">
-              <div class="titrate-graph-labelcolor bg-neutral-400 group-disabled:bg-neutral-200"></div>
-              <div class="group-disabled:text-gray-300"
-                :class="{'line-through': nominalStrikethrough}">
-                Nominal
-                <!-- , {{nominalOff}}, {{nominalStrikethrough}} -->
-              </div>
-            </button>
-          </div>
-          <div class="col-span-1 flex justify-start">
-            <button class="group flex" :disabled="optimalDisabled" @click="toggleOptimal">
-              <div class="titrate-graph-labelcolor bg-sky-400 group-disabled:bg-sky-200"></div>
-              <div class="group-disabled:text-gray-300"
-                :class="{'line-through': optimalStrikethrough}">
-                Optimal
-                <!-- , {{optimalOff}}, {{optimalStrikethrough}} -->
-              </div>
-            </button>
-          </div>
-          <div class="col-span-1 flex justify-start">
-            <button class="group flex" :disabled="modifiedDisabled" @click="toggleModified">
-              <div class="titrate-graph-labelcolor bg-rose-400 group-disabled:bg-rose-200"></div>
-              <div class="group-disabled:text-gray-300"
-                :class="{'line-through': modifiedStrikethrough}">
-                Modified
-                <!-- , {{modifiedOff}}, {{modifiedStrikethrough}} -->
-              </div>
-            </button>
-          </div>
-        </div>
-      </div>
-
+      <!-- Quantile graph and TIR -->
       <div class="grid grid-cols-12 py-1">
-      <div class="col-span-10">
-        <!-- glucose row -->
-        <div class="py-2" id="quantile-caption"><span class="font-semibold">Glucose</span></div>
-        <div id="quantile-container">
-          <QuantileChart v-if="loaded" :graphableData="graphData" :loaded="loaded" dataType="glucose" />
-        </div>
-      </div>
-
-      <div class="grid">
-        <div class="pl-3 py-2" id="tir1-caption"><span class="font-semibold">Plotted period</span></div>
-        <TiRChart class="h-80 w-10 justify-self-center" v-if="loaded" :loaded="loaded" />
-      </div>
-      </div>
-  
-      <div class="relative" id="quantile-container">
-        <!-- loading hover -->
-        <div v-if="subjectGraphLoading"
-          class="z-10 w-64 h-20 rounded-lg drop-shadow-lg absolute grid content-center place-items-center top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white">
-          <div class="p-4 bg-white animate-pulse">
-            <div class="font-semibold">Loading...</div>
-            <!-- <div>(current wait time ~10 seconds)</div> -->
+        <div class="col-span-10">
+          <!-- glucose row -->
+          <div class="py-2" id="quantile-caption"><span class="font-semibold">Glucose</span></div>
+          <div id="quantile-container">
+            <!-- loading hover -->
+            <div v-if="subjectGraphLoading"
+              class="z-10 w-64 h-20 rounded-lg drop-shadow-lg absolute grid content-center place-items-center top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white">
+              <div class="p-4 bg-white animate-pulse">
+                <div class="font-semibold">Loading...</div>
+                <!-- <div>(current wait time ~10 seconds)</div> -->
+              </div>
+            </div>
+            <QuantileChart v-if="loaded" :graphableData="graphableGlucose" :loaded="loaded" dataType="glucose" />
           </div>
         </div>
-        <QuantileChart v-if="loaded" :graphableData="graphData" :loaded="loaded" dataType="glucose" />
+
+        <div class="grid">
+          <div class="pl-3 py-2" id="tir1-caption"><span class="font-semibold">1 week before</span></div>
+          <TiRChart class="h-80 w-10 justify-self-center" v-if="loaded" :tirData="tir1Graphable" :loaded="loaded" />
+        </div>
       </div>
 
-      <div class="grid grid-cols-2">
-      <div class="flex justify-end place-content-end my-1">
-        <div>
-          <!-- TODO THIS SHOULD CHANGE TO FUNCTION THAT GENERATES PROFILE
-            THEN PASSES PROPS TO PROFILE ROUTE -->
-          <!-- <router-link class="btn" :to="{ name: 'ProfileView' }">Generate Profile</router-link> -->
-          <button :disabled="buttonDisabled" class="btn w-48" id="genprofile-button" @click="generateProfile">History</button>
-        </div>
-      </div>
-      </div>
 
-      <div class="grid grid-cols-2">
-      <div class="control-row" id="titrate-control-buttons">
-        <div id="graph-button-div">
-          <!-- {{visualizeButtonDisabled}} {{isOriginal}} -->
-          <button class="btn w-48" id="graph-button" :disabled="visualizeButtonDisabled" @click="graphChanges">
-            Modify
-          </button>
+      <!-- Old and New basal doses, Modify and Confirm buttons -->
+      <div class="grid place-content-center pl-3 py-20">
+        <div class="grid grid-cols-3 place-content-center">
+          <div class="col-span-1 flex justify-start">
+            <p>Old Basal insulin dose:</p>  
+          </div>
+          <div class="col-span-1 flex justify-start">
+            {{ "10U" }}
+          </div>
         </div>
-        <div>
-          <button class="btn w-48" id="reset-button" @click="resetButton">
-            Confirm and send
-          </button>
+
+        <div class="grid grid-cols-3 place-content-center">
+            <div class="col-span-1 flex justify-start">
+              <p>New Basal insulin dose: </p>  
+            </div>
+            <div class="col-span-1 flex justify-start">
+              <input type="text" id="small-input" class="block w-12 p-2 text-gray-900 border border-gray-300 
+              rounded-lg bg-gray-50 sm:text-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 
+              dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+              value="20">
+            </div>
+            <div class="col-span-1 flex justify-start">
+              <div id="basal-history">
+                <button class="btn w-48" id="view-basal-history-button" @click="navigateToBasalDoseHistory">View History</button>
+              </div>
+            </div>  
+        </div>
+
+        <div class="grid grid-cols-3 place-content-center">
+          <div class="col-span-1 flex justify-start pl-3">
+            <button class="btn w-48" @click="modifyNewBasalInsulinDose">MODIFY</button>
+          </div>
+          <div class="col-span-2 flex justify-start pl-3">
+            <button class="btn w-48" @click="confirmAndSendDoseToParticipants">CONFIRM AND SEND TO PARTICIPANT</button>
+          </div>
         </div>
       </div>
-    </div>
 
       
     </div>
@@ -116,406 +87,271 @@
   import SubjectGraphable from '@/types/SubjectGraphable'
   import QuantileGraphable from '@/types/QuantileGraphable'
   import TitrateGraphable from '@/types/TitrateGraphable'
-  import { api } from '@/functions/GlobalFunctions'
-  import { useApiURL } from '@/globalConfigPlugin'
+  import { api, dateConvertToISO } from '@/functions/GlobalFunctions'
+  import TiRChart from '@/components/TiRChart.vue'
+  import { useApiURL, useApiURLNovo } from '@/globalConfigPlugin'
   import { isEmpty, cloneDeep, split } from 'lodash'
   import VueDatePicker from '@vuepic/vue-datepicker'
   import '@vuepic/vue-datepicker/dist/main.css'
   // import { max } from 'lodash'
   
   export default defineComponent({
-    name: 'TitrationView',
-    components: { SubjectDropdown, QuantileChart },
-    props: {},
-    setup() {
-      const apiRootURL = useApiURL()
-      const selected = ref('')
-      const subjectIdStore = useSubjectIdStore()
-      const titrateStore = useTitrateVariableStore()
-      const route = useRoute()
-      const router = useRouter()
-      const tmpRootURL = 'https://qnsx3trrkj.execute-api.us-east-1.amazonaws.com/test'
-      // console.log('hello titration view')
-      selected.value = route.params.subjectId === undefined ? '' : route.params.subjectId as string
-  
-      const subjectGraphLoading = ref(false)
-      const buttonDisabled = computed(() => {
-        return selected.value === '' || subjectGraphLoading.value
-      })
-  
-      const date = ref()
-  
-      const titrateLevels = ['5', '4', '3', '2', '1']
-      const titrateLevelDesc = {
-        '1': '🡳',
-        '2': '🡶',
-        '3': '',
-        '4': '🡵',
-        '5': '🡱',
+  name: 'TitrateView',
+  components: { QuantileChart, SubjectDropdown, TiRChart },
+  setup() {
+    const apiRootURL = useApiURL()
+    const apiRootURLNovo = useApiURLNovo()
+    // initialize selected ref() used for dropdown v-model to url value
+    // and treat undefined param as '' to properly select empty option
+    const route = useRoute()
+    const router = useRouter()
+    const selected = ref('')
+    selected.value = route.params.subjectId === undefined ? '' : route.params.subjectId as string
+
+    // 'loading' and other flags that we'll need
+    // primarily used to enable and disable fields for input
+    const subjectListLoading = ref(true)
+    const subjectDetailsLoading = ref(false)
+    const subjectGraphLoading = ref(false)
+    // this one is a computed value
+    // true if subjid is empty OR if subjectDetails are loading
+    const subjectDateDisabled = computed(() => {
+      return (subjectDetailsLoading.value || selected.value === '')
+    })
+
+    // v-model of date inputs
+    let startDate = ref('')
+    let endDate = ref('')
+    // then computed value that disables button
+    // if either date input is empty ('')
+    const buttonDisabled = computed(() => {
+      return (startDate.value === '' || endDate.value === '')
+    })
+
+    const subjectIdStore = useSubjectIdStore()
+    // the actual graphable data we'll be updating
+    // TODO find out how we strictly type this without populating data
+    // i think it might just be ref({} as SubjectGraphable), idk
+    const graphableGlucose = ref({} as QuantileGraphable)
+    const tir1Graphable = ref([] as number[])
+    ///const tir2Graphable = ref([] as number[])
+    // loaded flag for QuantileChart etc, should be false when subj changes
+    const loaded = ref(false)
+
+    //////////////////////////
+    // functions
+    //////////////////////////
+
+    // subjectList load
+    // const subjectList = ref<string[]>([])
+    // const error = ref(null)
+    // onMounted(async () => {
+    //   await api.get<string[]>('http://localhost:3000/subjectListLimited').then(
+    //     (apiSubjectList:string[]) => {
+    //       subjectList.value = apiSubjectList
+    //     }).catch(err => {
+    //       error.value = err.message
+    //       console.log(error.value)
+    //     }).finally(() => {
+    //       subjectListLoading.value = false
+    //     })
+    // })
+
+    // route change callback on select change
+    // const router = useRouter()
+    function changeSelected(event: Event) {
+      // TODO idk if we even need this guard anymore thanks to v-model
+      if (event.target instanceof HTMLSelectElement) {
+        console.log(`dropdown: ${selected.value}`)
+        console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
+        // router.push({ name: 'AGP', params: { subjectId: selected.value } })
+        // loaded.value = false
+        getDateRangeLimits()
       }
-      const titrateGridColumns = 24
-      const titrateGrid = ref({
-        night: Array(titrateGridColumns).fill(false),
-        // exercise: [false, false, false, false, false, true, true, true, true, false, false, false],
-        basal: Array(titrateGridColumns).fill('3'),
-        bolus: Array(titrateGridColumns).fill('3'),
-      })
-      const nightArray = ref(Array(titrateGridColumns).fill(false))
-  
-      const isOriginal = computed(() => {
-        return (
-          JSON.stringify(titrateGrid.value.night) === JSON.stringify(nightArray.value) &&
-          JSON.stringify(titrateGrid.value.basal) === JSON.stringify(Array(titrateGridColumns).fill('3')) &&
-          JSON.stringify(titrateGrid.value.bolus) === JSON.stringify(Array(titrateGridColumns).fill('3')))
-      })
-  
-      const visualizeButtonDisabled = computed(() => {
-        return buttonDisabled.value || isOriginal.value
-      })
-  
-      function resetControl() {
-        // subjectGraphLoading.value = true
-        titrateGrid.value.night = cloneDeep(nightArray.value)
-        titrateGrid.value.basal = Array(titrateGridColumns).fill('3')
-        titrateGrid.value.bolus = Array(titrateGridColumns).fill('3')
-        // graphAll('optimal')
+    }
+
+    // get / update optimal data to graph
+    // function checkAndGraph() {
+    //   if (selected.value === '') {
+    //     // buttondisabled is true automatically because selected === ''
+    //   }
+    //   else {
+    //     loaded.value = false
+    //     subjectGraphLoading.value = true
+    //     // TODO pass dates as arguments
+    //     // api.get<any>(`${apiRootURL}/titrate?subject_id=${selected.value}`).then(
+    //     ///const req_url = `${apiRootURL}/titrate?subject_id=${selected.value}`
+    //     const req_url = `${apiRootURLNovo}/agp?subject_id=${selected.value}&day1=${startTS.valueOf()}&day2=${endTS.valueOf()}`
+    //     console.log(`request to ${req_url}`)
+    //     api.get<SubjectGraphable>(req_url).then(
+    //       (subjectGraphable: SubjectGraphable) => {
+    //         console.log('success!')
+    //         console.log(subjectGraphable)
+    //         graphableGlucose.value.id = selected.value
+    //         const glucTraces = [
+    //           { label: '05th Percentile', trace: subjectGraphable.glucose05th },
+    //           { label: '25th Percentile', trace: subjectGraphable.glucose25th },
+    //           { label: 'Median', trace: subjectGraphable.glucose50th },
+    //           { label: '75th Percentile', trace: subjectGraphable.glucose75th },
+    //           { label: '95th Percentile', trace: subjectGraphable.glucose95th },
+    //         ]
+    //         graphableGlucose.value.traceGroups = [
+    //           {
+    //             type: 'glucose',
+    //             traces: glucTraces,
+    //           },
+    //         ]
+    //         tir1Graphable.value = subjectGraphable.tControlMean
+    //         loaded.value = true
+    //       }).catch(err => {
+    //         graphError.value = err.message
+    //         console.log(graphError.value)
+    //       }).finally(() => {
+    //         subjectGraphLoading.value = false
+    //       })
+    //   }
+    // }
+
+    // TODO on changeSelected and on pageload IF selected != '', get subject details
+    // while loading, disable date inputs, subject dropdown, 'graph' button
+    // incoming dates from API are MM/DD/YYYY, min and max HTML attrs are YYYY-MM-DD
+    const firstLog = ref('')
+    const lastLog = ref('')
+    const sdError = ref(null)
+    function getDateRangeLimits() {
+      console.log(`getDateRangeLimits subjid: ${selected.value}`)
+      if (selected.value !== '') {
+        // reset firstLog and lastLog
+        firstLog.value = ''
+        lastLog.value = ''
+        subjectDetailsLoading.value = true
+        // await api.get
+        // api call for deets, for now only firstLog and lastLog
+        // const req_url = `${apiRootURL}/getsubjects?subject_id=${selected.value}`
+        // console.log(`request to ${req_url}`)
+        // api.get<SubjectDetails>(req_url).then(
+        //   (subjectDetails: SubjectDetails) => {
+        //     firstLog.value = dateConvertToISO(subjectDetails.firstLog)
+        //     lastLog.value = dateConvertToISO(subjectDetails.lastLog)
+        //     console.log(`subject available dates: ${firstLog.value} - ${lastLog.value}`)
+        //     console.log(subjectDetails)
+        //   }).catch(err => {
+        //     sdError.value = err.message
+        //     console.log(sdError.value)
+        //   }).finally(() => {
+        //     subjectDetailsLoading.value = false
+        //   })
+
+        startDate.value = '01/25/2023'
+        endDate.value = '02/06/2023'
+
+        firstLog.value = dateConvertToISO(startDate.value)
+        lastLog.value = dateConvertToISO(endDate.value)
+        
+        console.log(`dates: ${firstLog.value} - ${lastLog.value}`)
+        subjectDetailsLoading.value = false
       }
-      // const titrateGridColumns = computed(() => {
-      //   return Math.max(titrateGrid.value.night.length,
-      //     titrateGrid.value.exercise.length,
-      //     titrateGrid.value.basal.length,
-      //     titrateGrid.value.bolus.length)
-      // })
-  
-      // https://qnsx3trrkj.execute-api.us-east-1.amazonaws.com/test/generateprofile
-      // https://qnsx3trrkj.execute-api.us-east-1.amazonaws.com/test/titrate
-  
-      // first time
-      // if selected not ''
-      // get titrate info
-  
-      // const graphableData = ref({} as QuantileGraphable)
-      // loaded flag for QuantileChart etc, should be false when subj changes
-      const loaded = ref(false)
-      const nominalColor = 'rgba(163,163,163,0.5)'
-      const optimalColor = 'rgba(56, 189, 248, 0.5)'
-      const modifiedColor = 'rgba(251, 113, 133, 0.5)'
-  
-      const colorMap = {
-        // 'teal-400': 'rgba(45, 212, 191, 0.5)',
-        // 'cyan-400': 'rgba(34, 211, 238, 0.5)',
-        // 'sky-400': 'rgba(56, 189, 248, 0.5)',
-        'indigo-400': 'rgba(129, 140, 248, 0.5)',
-        'violet-400': 'rgba(167, 139, 250, 0.5)',
-        'purple-400': 'rgba(192, 132, 252, 0.5)',
-        'fuchsia-400': 'rgba(232, 121, 249, 0.5)',
-        'pink-400': 'rgba(244, 114, 182, 0.5)',
-        'rose-400': 'rgba(251, 113, 133, 0.5)'
-      }
-  
-      const emptyNominalTraceGroup = {
-        type: 'glucose',
-        traces: [] as any,
-        colors: { inner: nominalColor }
-      }
-      const emptyOptimalTraceGroup = {
-        type: 'glucose',
-        traces: [] as any,
-        colors: { inner: optimalColor }
-      }
-      const emptyModifiedTraceGroup = {
-        type: 'glucose',
-        traces: [] as any,
-        colors: { inner: modifiedColor }
-      }
-  
-      const nominalTraceGroup = ref(cloneDeep(emptyNominalTraceGroup))
-      const optimalTraceGroup = ref(cloneDeep(emptyOptimalTraceGroup))
-      const modifiedTraceGroup = ref(cloneDeep(emptyModifiedTraceGroup))
-  
-      // these control visibility of different traces
-      // selecting a new subject resets these all to false
-      // RESET button should also reset them all to false
-      // VISUALIZE button should set optimal to true and modified to false
-      const nominalOff = ref(false)
-      const optimalOff = ref(false)
-      const modifiedOff = ref(false)
-  
-      // these are booleans that track if we even have nominal/optimal/modified
-      // traces stored
-      const nominalDisabled = computed(() => {
-        return isEmpty(nominalTraceGroup.value.traces)
-      })
-      const optimalDisabled = computed(() => {
-        return isEmpty(optimalTraceGroup.value.traces)
-      })
-      const modifiedDisabled = computed(() => {
-        return isEmpty(modifiedTraceGroup.value.traces)
-      })
-  
-      // and these are booleans to control whether we display
-      // a strikethrough. 
-      // a disabled button should NEVER have a strikethrough
-      // an enabled button only has a strikethrough if the corresponding
-      // Off variable is true
-      const nominalStrikethrough = computed(() => {
-        return (!nominalDisabled.value && nominalOff.value)
-      })
-      const optimalStrikethrough = computed(() => {
-        return (!optimalDisabled.value && optimalOff.value)
-      })
-      const modifiedStrikethrough = computed(() => {
-        return (!modifiedDisabled.value && modifiedOff.value)
-      })
-  
-      // finally the toggle methods to toggle visibility of traces on and off
-      function toggleNominal() { nominalOff.value = !nominalOff.value }
-      function toggleOptimal() { optimalOff.value = !optimalOff.value }
-      function toggleModified() { modifiedOff.value = !modifiedOff.value }
-  
-      const graphData = computed(() => {
-        console.log('graphData update...')
-        const retGraphable = {} as QuantileGraphable
-        let tmpTraceGroups = [] as any
-        // tmpTraceGroups.push(emptyTraceGroup)
-        if (!modifiedOff.value && !modifiedDisabled.value) {
-          tmpTraceGroups.push(cloneDeep(modifiedTraceGroup.value))
-        }
-        if (!optimalOff.value && !optimalDisabled.value) {
-          tmpTraceGroups.push(cloneDeep(optimalTraceGroup.value))
-        }
-        if (!nominalOff.value && !nominalDisabled.value) {
-          tmpTraceGroups.push(cloneDeep(nominalTraceGroup.value))
-        }
-        console.log('generated graphData:',retGraphable)
-        retGraphable.traceGroups = tmpTraceGroups
-        return retGraphable
-      })
-  
-      function resetTraces() {
-        nominalTraceGroup.value = cloneDeep(emptyNominalTraceGroup)
-        optimalTraceGroup.value = cloneDeep(emptyOptimalTraceGroup)
-        modifiedTraceGroup.value = cloneDeep(emptyModifiedTraceGroup)
-      }
-  
-      function resetNightControl() {
-        nightArray.value = Array(titrateGridColumns).fill(false)
-      }
-  
-      function resetButton() {
-        resetControl()
-        nominalOff.value = false
-        optimalOff.value = false
-        modifiedOff.value = false
-        modifiedTraceGroup.value = cloneDeep(emptyModifiedTraceGroup)
-        // graphAll('optimal')
-      }
-  
-      // graphableData.value.traceGroups = []
-  
-      // function graphAll(traceToShow: "nominal" | "optimal" | "modified") {
-      //   // TODO PULL FAKE NOMINAL TRACE GROUP
-      //   // let traceGroups = [nominalTraceGroup]
-      //   let traceGroups = []
-      //   // console.log(nominalTraceGroup )
-      //   console.log(`graphAll ${traceToShow}`)
-      //   traceGroups.push(nominalTraceGroup)
-  
-      //   if (traceToShow === "optimal") { traceGroups.push(optimalTraceGroup) }
-      //   else if (traceToShow === "modified") { traceGroups.push(modifiedTraceGroup) }
-  
-      //   console.log('graphAll tracegroups:', traceGroups)
-      //   graphableData.value.traceGroups = cloneDeep(traceGroups)
-      //   console.log('graphAll graphableData ref variable:', graphableData.value.traceGroups)
-      //   subjectGraphLoading.value = false
-      // }
-  
-      // get / update optimal data to graph
-      const graphError = ref(null)
-      function checkAndGraph() {
-        if (selected.value === '') {
-          resetNightControl()
-          // buttondisabled is true automatically because selected === ''
-        }
-        else {
-          loaded.value = false
-          subjectGraphLoading.value = true
-          // TODO pass dates as arguments
-          // api.get<any>(`${apiRootURL}/titrate?subject_id=${selected.value}`).then(
-          const req_url = `${apiRootURL}/titrate?subject_id=${selected.value}`
-          console.log(`request to ${req_url}`)
-          api.get<any>(req_url).then(
-            (response: any) => {
-              console.log('optimal success!')
-              console.log(response)
-              // graphableData.value = response.body.quant_data
-              // TODO SHIM BECAUSE THIS ENDPOINT IS RETURNING STRING
-              // const responseData = JSON.parse(response.body) as TitrateGraphable
-              const responseData = response as TitrateGraphable
-              // const parsedResponse = {} as QuantileGraphable
-              // graphableData.value.id = selected.value
-              // console.log(responseData)
-              // quantile chart accepts QuantileGraphable
-              if (typeof (responseData.night) !== 'undefined') {
-                responseData.night.forEach((element: any, idx: number) => {
-                  titrateGrid.value.night[idx] = element === 1
-                  nightArray.value[idx] = element === 1
-                })
-              }
-              if (typeof (responseData.quantNominal) !== 'undefined') {
-                const nominalTraces = [
-                  { label: '25th Percentile', trace: responseData.quantNominal['glucose25th'] },
-                  { label: 'Median', trace: responseData.quantNominal['glucose50th'] },
-                  { label: '75th Percentile', trace: responseData.quantNominal['glucose75th'] },
-                ]
-                nominalTraceGroup.value = {
-                  type: 'glucose',
-                  traces: nominalTraces,
-                  colors: { inner: nominalColor }
-                }
-              }
-              const optimalTraces = [
-                { label: '25th Percentile', trace: responseData.quantOptimal['glucose25th'] },
-                { label: 'Median', trace: responseData.quantOptimal['glucose50th'] },
-                { label: '75th Percentile', trace: responseData.quantOptimal['glucose75th'] },
-              ]
-              optimalTraceGroup.value = {
-                type: 'glucose',
-                traces: optimalTraces,
-                colors: { inner: optimalColor }
-              }
-              // graphAll('optimal')
-              loaded.value = true
-            }).catch(err => {
-              graphError.value = err.message
-              console.log(graphError.value)
-            }).finally(() => {
-              subjectGraphLoading.value = false
-            })
-        }
-      }
-      // first run on setup/load
-      checkAndGraph()
-  
-      // then get nominal graph data
-      // TESTING FOR NOW
-      // ALSO TESTING LEAVING OUT THE LOADING FLAGS IN SECOND ASYNC CALL
-      // IDK, SEEMS INTERESTING
-      // const day1 = '1629417600'
-      // const day2 = '1629590399'
-      // const day1 = '1627344000'
-      // const day2 = '1627862400'
-      // function checkNominalGraph() {
-      //   if (selected.value !== '') {
-      //     loaded.value = false
-      //     const req_url = `${apiRootURL}/getsubjects?subject_id=${selected.value}&day1=${day1}&day2=${day2}`
-      //     console.log(`request to ${req_url}`)
-      //     api.get<any>(req_url).then(
-      //       (response: any) => {
-      //         console.log('nominal success!')
-      //         console.log(response)
-      //         const responseData = response as SubjectGraphable
-  
-      //         const nominalTraces = [
-      //           { label: '25th Percentile', trace: responseData['glucose25th'] },
-      //           { label: 'Median', trace: responseData['glucose50th'] },
-      //           { label: '75th Percentile', trace: responseData['glucose75th'] },
-      //         ]
-      //         console.log('intermediate nominal traces:', nominalTraces)
-      //         nominalTraceGroup = {
-      //           type: 'glucose',
-      //           traces: nominalTraces,
-      //           colors: { inner: nominalColor }
-      //         }
-      //         graphAll('nominal')
-      //         loaded.value = true
-      //       }).catch(err => {
-      //         graphError.value = err.message
-      //         console.log(graphError.value)
-      //       }).finally(() => {
-      //         // subjectGraphLoading.value = false
-      //       }).then(() => {
-      //         // CHAIN THESE TOGETHER, FIRST GET NOMINAL, THEN OPTIMAL
-      //         checkAndGraph()
-      //       })
-      //   }
-      // }
-  
-      // then first run on setup
-      // checkNominalGraph()
-  
-      // ...then watch and update both on subject change
-      watch(selected, () => {
-        // checkAndGraph()
-        resetTraces()
-        resetControl()
-        nominalOff.value = false
-        optimalOff.value = false
-        modifiedOff.value = false
-        checkAndGraph()
-      })
-  
-      function graphChanges() {
+    }
+    // initial invoke on page load to get available date ranges
+    getDateRangeLimits()
+
+
+    // helper function to just validate date range input
+    // TODOS:
+    // - make sure range is in correct order
+    // - implement validation from adduser??
+    // - implement daterangepicker
+    // const validDates = computed(() => {
+    //   if (firstLog.value === '' || lastLog.value === '' || startDate.value === '' || endDate.value === '') {
+    //     return false
+    //g.value)
+    //     const startDateDate = new Date(startDate.value)
+    //     const endDateDate = new Date(endDate.value)
+    //     if (endDateDate > lastLogDate || startDateDate < firstLogDate || startDateDate > endDateDate) {
+    //       return false
+    //     } else {
+    //       return true
+    //     }
+    //   }
+    // })
+    const validDates = ref(true)
+
+    // first run on setup/load
+    ///graphData()
+    // ...then watch and update both on subject change
+    watch(selected, () => {
+      console.log(`dropdown: ${selected.value}`)
+      console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
+      // router.push({ name: 'AGP', params: { subjectId: selected.value } })
+      // loaded.value = false
+      getDateRangeLimits()      
+      graphData()
+    })
+    // get / update data to graph
+    const graphError = ref(null)
+    function graphData() {
+
+      if (!validDates.value) {
+        console.log(`${startDate.value} - ${endDate.value}: invalid range`)
+      } else {
+        console.log(`${startDate.value} - ${endDate.value}: VALID`)
+        const startTS = Math.floor((new Date(startDate.value).valueOf()) / 1000)
+        const endTS = Math.floor((new Date(endDate.value).valueOf()) / 1000)
+        // console.log('graphing...')
+        // console.log(startTS,endTS)
+        loaded.value = false
         subjectGraphLoading.value = true
-        console.log('POST request to /titrate')
-        // translate titrateGrid to API values
-        const tNight = Array.from(titrateGrid.value.night, x => + x)
-        const tBasal = titrateGrid.value.basal.map(Number)
-        const tBolus = titrateGrid.value.bolus.map(Number)
-        // console.log(tNight, tBasal, tBolus)
-        const req_url = `${apiRootURL}/titrate?subject_id=${selected.value}`
+        // TODO pass dates as arguments
+        const req_url = `${apiRootURLNovo}/agp?subject_id=${selected.value}&day1=${startTS.valueOf()}&day2=${endTS.valueOf()}`
         console.log(`request to ${req_url}`)
-        api.post<any, any>(req_url, JSON.stringify({
-          // subject_id: selected,
-          titrate_control: {
-            night: tNight,
-            basal: tBasal,
-            bolus: tBolus
-          }
-        })).then((response: any) => {
-          console.log(response)
-          const responseData = response as TitrateGraphable
-          // TODO THESE SHOULD PROBABLY BE NAMED QUANT MODIFIED OR SOMETHING
-          const modifiedTraces = [
-            { label: '25th Percentile', trace: responseData.quantOptimal['glucose25th'] },
-            { label: 'Median', trace: responseData.quantOptimal['glucose50th'] },
-            { label: '75th Percentile', trace: responseData.quantOptimal['glucose75th'] },
-          ]
-          modifiedTraceGroup.value = {
-            type: 'glucose',
-            traces: modifiedTraces,
-            colors: { inner: 'rgba(251, 113, 133, 0.5)' }
-          }
-          // change visibility correctly
-          optimalOff.value = true
-          modifiedOff.value = false
-          // console.log(graphableData.value)
-  
-          // graphAll('modified')
-        }).catch(err => {
-          console.log(err.message)
-        }).finally(() => {
-          subjectGraphLoading.value = false
-        })
-        // api.get<any>(`${tmpRootURL}/titrateondemand?subject_id=${selected.value}`).then((response: any) => {
-        //   console.log(response)
-        // }).catch(err => {
-        //   console.log(err.message)
-        // })
+        api.get<SubjectGraphable>(req_url).then(
+          (subjectGraphable: SubjectGraphable) => {
+            console.log('success!')
+            console.log(subjectGraphable)
+            graphableGlucose.value.id = selected.value
+            const glucTraces = [
+              { label: '05th Percentile', trace: subjectGraphable.glucose05th },
+              { label: '25th Percentile', trace: subjectGraphable.glucose25th },
+              { label: 'Median', trace: subjectGraphable.glucose50th },
+              { label: '75th Percentile', trace: subjectGraphable.glucose75th },
+              { label: '95th Percentile', trace: subjectGraphable.glucose95th },
+            ]
+            graphableGlucose.value.traceGroups = [
+              {
+                type: 'glucose',
+                traces: glucTraces,
+              },
+            ]
+            tir1Graphable.value = subjectGraphable.tControlMean
+            ///tir2Graphable.value = subjectGraphable.tControlMean
+            loaded.value = true
+          }).catch(err => {
+            graphError.value = err.message
+            console.log(graphError.value)
+          }).finally(() => {
+            subjectGraphLoading.value = false
+          })
       }
-  
-      function generateProfile() {
-        // TODO REPLACE WITH ACTUAL COMPUTATION
-        console.log('HARDCODED PROFILE GEN')
-        router.push({ name: 'ProfileView', params: { subjectId: selected.value } })
-      }
-  
-      return {
-        selected, isOriginal, nightArray, titrateLevels, titrateLevelDesc, titrateGrid, titrateGridColumns, visualizeButtonDisabled,
-        date, loaded, graphData, buttonDisabled, generateProfile, checkAndGraph, resetButton, graphChanges, subjectGraphLoading,
-        nominalDisabled, optimalDisabled, modifiedDisabled, nominalStrikethrough, optimalStrikethrough, modifiedStrikethrough,
-        nominalOff, optimalOff, modifiedOff, toggleNominal, toggleOptimal, toggleModified
-      }
-    },
-  })
+    }
+
+    function navigateToBasalDoseHistory(){
+      router.push({ name: 'ProfileView', params: { subjectId: selected.value } })
+    }
+
+    function modifyNewBasalInsulinDose(){
+      console.log("Make new Basal dose editable/modifyable");
+    }
+
+    function confirmAndSendDoseToParticipants(){
+      console.log("Confirm and send Dose to the participants");
+    }
+
+    return {
+      selected, changeSelected,
+      subjectDateDisabled, subjectDetailsLoading, subjectListLoading, subjectGraphLoading,
+      graphData, graphableGlucose, loaded, startDate, endDate, firstLog, lastLog, buttonDisabled,
+      route, sdError, tir1Graphable, navigateToBasalDoseHistory, modifyNewBasalInsulinDose, confirmAndSendDoseToParticipants
+    }
+  }
+})
   </script>  
