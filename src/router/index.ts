@@ -6,7 +6,9 @@ import ProfileView from '../views/ProfileView.vue'
 import DataEntry from '../views/DataEntry.vue'
 import SmbgTitrationRules from '../views/SmbgTitrationRules.vue'
 import ParticipantManagement from '../views/ParticipantManagement.vue'
+import PhysicianManagement from '../views/PhysicianManagement.vue'
 import AddParticipant from '../views/AddParticipant.vue'
+import AddPhysician from '../views/AddPhysician.vue'
 import DataDownload from '../views/DataDownload.vue'
 import UserSettings from '../views/UserSettings.vue'
 
@@ -53,9 +55,19 @@ const routes : Array<RouteRecordRaw> = [
         component: ParticipantManagement
     },
     {
+        path: '/physician-management',
+        name: 'PhysicianManagement',
+        component: PhysicianManagement
+    },
+    {
         path: '/add-user',
         name: 'AddParticipant',
         component: AddParticipant
+    },
+    {
+        path: '/add-physician',
+        name: 'AddPhysician',
+        component: AddPhysician
     },
     {
         path: '/download',

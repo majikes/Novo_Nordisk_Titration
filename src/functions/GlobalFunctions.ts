@@ -1,4 +1,5 @@
 import Subject from '@/types/Subject'
+import UserListItem from '@/types/UserListItem'
 import SubjectFromAPI from '@/types/SubjectFromAPI'
 import SubjectGraphable from '@/types/SubjectGraphable'
 import QuantileGraphable from '@/types/QuantileGraphable'
@@ -76,6 +77,15 @@ export function subject_convert(s: SubjectFromAPI): Subject {
         nWeeksP: s.nWeeksP[0],
         tControl: s.tControl,
         lastLog: s.lastLog
+    }
+    return ret_s
+}
+
+export function user_convert(s: SubjectFromAPI): UserListItem {
+    const ret_s: UserListItem = {
+        id: s.id[0],
+        username: s.username[0],
+        status: s.status[0]
     }
     return ret_s
 }

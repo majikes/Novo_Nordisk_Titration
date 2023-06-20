@@ -5,8 +5,11 @@
       <h1 class="text-2xl font-bold">User Management</h1>
     </div>
     <div class="my-8" id="add-user">
+      <SubjectDropdown/>
+      <UserDropdown userType="Physician" />
       <router-link class="btn" :to="{ name: 'AddParticipant' }">Add new user</router-link>
     </div>
+
     <div class="flex justify-between my-4 px-4 py-2 rounded-lg bg-gray-200">
       <div class="user-mgmt-cell" id="id-header">
         <strong>ID</strong>
@@ -55,10 +58,12 @@ import { api, subject_convert } from '@/functions/GlobalFunctions'
 // import { active } from 'd3-transition'
 import { useApiURL } from '@/globalConfigPlugin'
 import { lowerCase } from 'lodash'
+import SubjectDropdown from '@/components/SubjectDropdown.vue'
+import UserDropdown from '@/components/UserDropdown.vue'
 
 export default defineComponent({
   name: 'ParticipantManagement',
-  components: {},
+  components: { SubjectDropdown, UserDropdown },
   setup() {
     const apiRootURL = useApiURL()
 
