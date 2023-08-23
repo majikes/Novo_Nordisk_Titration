@@ -14,8 +14,16 @@
     @apply rounded-full w-10 h-10 grid content-center place-items-center absolute bottom-1 right-1 font-bold bg-slate-300;
 }
 
+.titrate-svg-container {
+    @apply w-full pointer-events-none
+}
+
 .control-row {
     @apply flex justify-between my-1
+}
+
+.force-center-content {
+    @apply grid content-center place-items-center
 }
 
 .date-input {
@@ -34,20 +42,52 @@
     @apply w-full mt-1 p-3 rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500 validate-input
 }
 
+.adduser-tir-input {
+    @apply w-full mt-1 p-1 rounded-md bg-gray-50 border-transparent focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500 silent-validate-input
+}
+
+.adduser-modal {
+    @apply z-10 w-10/12 rounded-lg drop-shadow-lg absolute grid content-center place-items-center top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+}
+
+.adduser-table-simple-row {
+    @apply grid grid-cols-4 rounded-md px-4 py-1 even:bg-gray-100
+}
+
 .validate-input {
     @apply invalid:ring-rose-500 invalid:ring-2 invalid:ring-offset-1 valid:ring-emerald-500 valid:ring-2 valid:ring-offset-1
 }
 
+.silent-validate-input {
+    @apply invalid:ring-rose-500 invalid:ring-2 invalid:ring-offset-1
+}
+
+.custom-text-input {
+    @apply w-full mt-1 p-3 rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500
+}
+
+.custom-invalid {
+    @apply ring-rose-500 ring-2 ring-offset-1
+}
+
+.custom-valid {
+    @apply ring-emerald-500 ring-2 ring-offset-1
+}
+
 .adduser-form-cell {
-    @apply my-3 col-span-1 px-2 
+    @apply my-2 col-span-1 px-2 
 }
 
 .invalid-feedback {
     @apply pt-2 invisible peer-invalid:visible text-sm text-red-700 font-light
 }
 
+.custom-invalid-feedback {
+    @apply pt-2 text-sm text-red-700 font-light
+}
+
 .activity-select-input {
-    @apply w-full mt-1 py-1 px-2 rounded-md bg-transparent ring-1 ring-gray-400 border-gray-400 focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500
+    @apply w-full mt-1 py-1 px-2 rounded-md bg-transparent ring-1 ring-gray-400 disabled:text-gray-400 border-gray-400 focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500
 }
 
 .titrate-select-input {
@@ -58,6 +98,42 @@
     @apply w-full h-6 rounded bg-gray-200 border-transparent focus:border-transparent focus:bg-gray-200 text-gray-700 
 }
 
+.titrate-control-row {
+    @apply grid grid-cols-24 col-start-2 col-span-11
+}
+
+.titrate-control-cell {
+    @apply rounded-sm opacity-90 grid content-center place-items-center bg-gray-100 h-6 aspect-square
+}
+
+.titrate-control-cell-envelope {
+    @apply col-span-1 p-0.5 grid content-center place-items-center
+}
+
+.titrate-control-unselect {
+    @apply bg-transparent
+}
+
+.titrate-control-drag-select {
+    @apply bg-blue-500
+}
+
+.titrate-control-drag-select-min {
+    @apply rounded-l-md
+}
+
+.titrate-control-drag-select-max {
+    @apply rounded-r-md
+}
+
+.titrate-control-sleep-dropdown {
+    @apply w-full mt-1 p-1 rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500
+}
+
+.titrate-control-modal {
+    @apply z-10 w-10/12 rounded-lg drop-shadow-lg absolute grid content-center place-items-center top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+}
+
 .titratemodified {
     @apply ring-rose-500 ring-2 ring-offset-1
 }
@@ -66,8 +142,52 @@
     @apply w-6 h-6 mr-3 rounded-md
 }
 
+.titration-view {
+    @apply max-w-4xl overflow-x-hidden
+}
+
+.profile-input {
+    @apply w-full mt-1 p-1 rounded-md bg-transparent border-transparent focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500
+}
+
+.profile-sleep-input {
+    @apply w-full p-1 rounded-md bg-transparent border-transparent focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500
+}
+
+.profile-add-input {
+    @apply w-full mt-1 p-1 rounded-md bg-transparent border-gray-500 focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500
+}
+
+.profile-modal {
+    @apply z-10 w-10/12 rounded-lg drop-shadow-lg absolute grid content-center place-items-center top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+}
+
+.profile-table-simple-row {
+    @apply grid grid-cols-4 rounded-md px-4 py-1 even:bg-gray-100
+}
+
+.profile-confirm-btn {
+    @apply mt-1 p-3 rounded-md border-transparent disabled:text-gray-400
+}
+
+.profile-x-pad {
+    @apply px-4
+}
+
+.profile-x-pad-compact {
+    @apply px-1
+}
+
+.profile-x-pad-compact-add {
+    @apply px-3
+}
+
 .userMgmtActive {
     @apply text-green-600 font-semibold
+}
+
+.user-mgmt-btn {
+    @apply mt-1 p-3 rounded-md border-transparent disabled:text-gray-400
 }
 
 .btn {
@@ -76,6 +196,26 @@
 
 .user-mgmt-cell {
     @apply w-48
+}
+
+.tir-graph-cell {
+    @apply rounded-md
+}
+
+.tir-graph-small-cell {
+    @apply rounded-md
+}
+
+.debug-div {
+    @apply hover:bg-gray-300 w-6 h-6 aspect-square rounded grid content-center place-items-center
+}
+
+.debug-div-on {
+    @apply bg-rose-400
+}
+
+.debug-svg {
+    @apply w-5 group-hover:stroke-white
 }
 /* .disabled {
     @apply text-gray-400

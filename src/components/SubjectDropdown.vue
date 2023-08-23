@@ -1,8 +1,8 @@
 <template>
-  <div class="grid content-end w-64" id="subject-dropdown-div">
+  <div class="grid content-start w-64" id="subject-dropdown-div">
     <label for="subject-select">Subject</label>
-    <select class="form-select select-input border-transparent border-r-8" name="subject" id="subject-select" :disabled="subjectListLoading"
-      :value="modelValue" @change="changeValue">
+    <select class="form-select select-input border-transparent border-r-8" name="subject" id="subject-select"
+      ref="subjectselect" :disabled="subjectListLoading" :value="modelValue" @change="changeValue">
       <option disabled value="" selected>{{ subjectListLoading ? 'Loading...' : '-- Please choose a subject --' }}
       </option>
       <option v-for="subject in subjectsorted" :key="subject" :value="subject">
@@ -19,10 +19,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { useSubjectIdStore } from '@/stores/SubjectIdStore'
 import { api } from '@/functions/GlobalFunctions'
 import { useApiURL } from '@/globalConfigPlugin'
+import { useAuthenticator } from '@aws-amplify/ui-vue'
 import SubjectDetails from '@/types/SubjectDetails'
+import { lowerCase } from 'lodash'
+import { useErrorStore } from '@/stores/ErrorStore'
 
 export default defineComponent({
-  name: 'TiRChart',
+  name: 'SubjectDropdown',
   components: {},
   props: {
     modelValue: {
@@ -42,6 +45,29 @@ export default defineComponent({
   setup(props, { emit }) {
     // global root API URL, heck yeah
     const rootApiURL = useApiURL()
+    const errors = useErrorStore()
+    const componentName = 'SubjectDropdown'
+
+    const auth = useAuthenticator()
+    const groupComputed = computed(() => {
+      let group = [] as string[]
+      if (typeof (auth.user) !== 'undefined' &&
+        typeof (auth.user.signInUserSession) !== 'undefined' &&
+        typeof (auth.user.signInUserSession.idToken.payload["cognito:groups"]) !== 'undefined') {
+        group = auth.user.signInUserSession.idToken.payload["cognito:groups"].map(lowerCase)
+      }
+      console.log(`group: ${group}`)
+      return group
+    })
+    const tokenComputed = computed(() => {
+      // 'Authorization': cognitoUser.signInUserSession.idToken.jwtToken
+      let token = ''
+      if (typeof (auth.user.signInUserSession) !== 'undefined' && typeof (auth.user.signInUserSession.idToken.jwtToken) !== 'undefined') {
+        token = auth.user.signInUserSession.idToken.jwtToken
+      }
+      console.log(`token: ${token}`)
+      return token
+    })
 
     // loading flags for content
     const subjectListLoading = ref(true)
@@ -70,21 +96,57 @@ export default defineComponent({
 
     const error = ref(null)
     onMounted(async () => {
-      const req_url = `${rootApiURL}/getsubjects?subject_id=all`
+      ///getassignedusers?username=pcolmegna for non-participant dropdowns and management screens
+      //for dropdowns and Usermanagement screens, you can call /getsubjects by passing the 'username'
+
+      let endpoint = 'getsubjects'
+      // if (groupComputed.value.includes('admin')) {
+      //   endpoint = 'getassignedusers'
+      // }
+      const req_url = `${rootApiURL}/${endpoint}?username=${auth.user.username}`
       console.log(`request to ${req_url}`)
-      await api.get<string[]>(req_url).then(
-        (apiSubjectList: string[]) => {
+      await api.getAuth<any[]>(req_url, tokenComputed.value).then(
+        (apiSubjectList: any[]) => {
           console.log(apiSubjectList)
-          subjectList.value = apiSubjectList
+          subjectList.value = apiSubjectList.map(function (value, index) {
+            return value.id
+          })
+          // const gluc = rawDataRows.map(function (value, index) {
+          //   const egv = value[7]
+          //   if (egv.toLowerCase() === 'low') { return 40 }
+          //   else if (egv.toLowerCase() === 'high') { return 400 }
+          //   else { return Number(value[7]) }
+          // })
         }).catch(err => {
           error.value = err.message
           console.log(error.value)
+          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
         }).finally(() => {
           subjectListLoading.value = false
         })
     })
 
-    // watch for changes from route
+    // apparently this is how you pull out specific DOM elements
+    const subjectselect = ref<HTMLInputElement | null>(null)
+    // THIS ALL HAS TO HAPPEN AFTER ONMOUNTED?
+    onMounted(() => {
+      // console.log('mounted', subjectselect.value)
+      // watch for changes from route
+      watch(() => route.params.subjectId,
+        (newSubjParam) => {
+          console.log(`newroute is ${newSubjParam}`)
+          const newSubjId = newSubjParam === undefined ? '' : newSubjParam as string
+          console.log(subjectselect.value)
+          if (subjectselect.value !== null) {
+            // subjectselect.value.
+            subjectselect.value.value = newSubjId
+            emit('update:modelValue', newSubjId)
+            // console.log('hi')
+          }
+        })
+    })
+
+
     // watch(() => route.params.subjectId,
     // async newSubjId => { 
     //   selected.value = route.params.subjectId === undefined ? '' : route.params.subjectId as string
@@ -101,7 +163,7 @@ export default defineComponent({
     //   }
     // }
 
-    return { changeValue, route, subjectList, subjectsorted, subjectListLoading }
+    return { changeValue, route, subjectList, subjectselect, subjectsorted, subjectListLoading }
   }
 })
 </script>

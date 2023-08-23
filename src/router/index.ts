@@ -1,7 +1,7 @@
 import { createWebHistory, createRouter, RouteRecordRaw } from "vue-router"
 import StudyOverview from '../views/StudyOverview.vue'
 import AGP from '../views/AGP.vue'
-import TitrationView from '../views/TitrationView2.vue'
+import TitrateView from '../views/TitrateView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import DataEntry from '../views/DataEntry.vue'
 import SmbgTitrationRules from '../views/SmbgTitrationRules.vue'
@@ -26,8 +26,8 @@ const routes : Array<RouteRecordRaw> = [
     },
     {
         path: '/titration/:subjectId?',
-        name: 'TitrationView2',
-        component: TitrationView
+        name: 'TitrateView',
+        component: TitrateView
     },
     // {
     //     path: '/profile-history/:subjectId?',
@@ -91,6 +91,15 @@ const router = createRouter({
     history: createWebHistory(process.env.BASE_URL),
     routes,
     linkActiveClass: 'drop-shadow-md'
+})
+
+router.beforeEach((to, from, next) => {
+    let title = `NN Titration | ${to.name as string}`
+    if (to.params.subjectId) {
+        title += ` - ${to.params.subjectId}`
+    }
+    document.title = title
+    next()
 })
 
 export default router

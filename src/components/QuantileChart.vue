@@ -123,6 +123,7 @@ export default defineComponent({
 
     const options = computed(() => {
       let tmpOptions = {} as any
+      const safeMax = props.graphableData.traceGroups.length > 0 ? findMax(props.graphableData.traceGroups[0].traces) : 300
 
       if (props.dataType === 'glucose') {
         tmpOptions = {
@@ -152,7 +153,7 @@ export default defineComponent({
             },
             y: {
               beginAtZero: true,
-              max: 400,
+              max: Math.max(300, Math.ceil(safeMax)),
               grid: {
                 display: true,
                 ///drawBorder: false,  
@@ -216,6 +217,8 @@ export default defineComponent({
 
       // get rid of a lot of options if we're graphing insulin
       if (props.dataType === 'insulin') {
+        const safeMax = props.graphableData.traceGroups.length > 0 ? findMax(props.graphableData.traceGroups[0].traces) : 10
+
         tmpOptions = {
           animation: false,
           responsive: true,
@@ -245,7 +248,7 @@ export default defineComponent({
               // type: 'linear', 
               beginAtZero: true,
               // HACKY BECAUSE THIS GRAPH IS BEING A PIECE OF SHIT
-              max: Math.ceil(findMax(props.graphableData.traceGroups[0].traces)),
+              max: Math.ceil(safeMax),
               grace: '10%',
               grid: {
                 display: true,

@@ -3,6 +3,8 @@ import UserListItem from '@/types/UserListItem'
 import SubjectFromAPI from '@/types/SubjectFromAPI'
 import SubjectGraphable from '@/types/SubjectGraphable'
 import QuantileGraphable from '@/types/QuantileGraphable'
+import TiRType from '@/types/TiRType'
+import { flattenDeep } from 'lodash'
 
 // https://www.newline.co/@bespoyasov/how-to-use-fetch-with-typescript--a81ac257
 // Make the `request` function generic
@@ -44,12 +46,31 @@ export async function request<TResponse>(
 // usage:
 // const user = await api.get<User>('/api/users/42');
 export const api = {
-    get: <TResponse>(url: string) => 
+    get: <TResponse>(url: string) =>
         request<TResponse>(url),
-    
+
+    getAuth: <TResponse>(url: string, token: string) =>
+        request<TResponse>(url, {
+            headers: new Headers({
+                'Content-Type': 'application/json',
+                // 'Accept': 'application/json',
+                // 'Access-Control-Allow-Headers': 'Content-Type',
+                'Authorization': token,
+            })
+        }),
+
     // Using `extends` to set a type constraint:
-    post: <TBody extends BodyInit, TResponse>(url: string, body: TBody) => 
+    post: <TBody extends BodyInit, TResponse>(url: string, body: TBody) =>
         request<TResponse>(url, { method: 'POST', body: body }),
+
+    postAuth: <TBody extends BodyInit, TResponse>(url: string, token: string, body: TBody) =>
+        request<TResponse>(url, {
+            method: 'POST', body: body,
+            headers: new Headers({
+                'Content-Type': 'application/json',
+                'Authorization': token,
+            })
+        }),
 }
 
 // helper function to convert dumb return value describing
@@ -100,4 +121,56 @@ export function dateConvertToISO(input: string): string {
         return input;
     }
     return input.replace(pattern, '$3-$1-$2');
+}
+
+// just match year, month, day for titration2week control
+export function dateMatch(d1: Date, d2: Date) {
+    // console.log(`comparing ${d1} and ${d2}`)
+
+    // console.log(d1.getDate, d2.getDate)
+    // console.log(d1.getDate === d2.getDate)
+    // console.log(d1.getMonth, d2.getMonth)
+    // console.log(d1.getMonth === d2.getMonth)
+    // console.log(d1.getFullYear, d2.getFullYear)
+    // console.log(d1.getFullYear === d2.getFullYear)
+    const retBool = d1.getDate() === d2.getDate() &&
+        d1.getMonth() === d2.getMonth() &&
+        d1.getFullYear() === d2.getFullYear()
+
+    // if (retBool) {console.log(`${d1} and ${d2} match!`)}
+    return retBool
+}
+// basically ".includes" but using dateMatch for equality check
+export function dateInDateArr(d1: Date, dA: Date[]) {
+    let retBool = false
+    for (const d2 of dA) {
+        retBool ||= dateMatch(d1, d2)
+    }
+    return retBool
+}
+
+// TiR that flattens 2d array and ignores nulls
+export function calcTiR(glucArr: (number | null)[] | (number | null)[][]) {
+    const fullVals = flattenDeep(glucArr).filter(function (value, index) { return typeof (value) === 'number' })
+    const total = fullVals.length
+
+    const vlow = fullVals.filter(function (value, index) { return (value as number) < 54 })
+    const low = fullVals.filter(function (value, index) { return (value as number) >= 54 && (value as number) < 70 })
+    const target = fullVals.filter(function (value, index) { return (value as number) >= 70 && (value as number) <= 180 })
+    const high = fullVals.filter(function (value, index) { return (value as number) > 180 && (value as number) <= 250 })
+    const vhigh = fullVals.filter(function (value, index) { return (value as number) > 250 })
+
+    const vlowP = Math.round(vlow.length / total * 100 * 100) / 100
+    const lowP = Math.round(low.length / total * 100 * 100) / 100
+    const targetP = Math.round(target.length / total * 100 * 100) / 100
+    const highP = Math.round(high.length / total * 100 * 100) / 100
+    const vhighP = Math.round(vhigh.length / total * 100 * 100) / 100
+
+    return {
+        lt54: vlowP,
+        bt5470: lowP,
+        bt70180: targetP,
+        bt180250: highP,
+        gt250: vhighP
+    } as TiRType
 }

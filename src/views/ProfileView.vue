@@ -5,7 +5,7 @@
       History of Basal Dose
       Subject ID: {{ route.params.subjectId }}
     </div>
-    <ProfileTable :profile="testProf" id="profile-table" />
+    <ProfileTableSimple :profile="testProf" id="profile-table" />
     <div class="flex justify-end my-1">
       <button disabled class="btn">
         Confirm Recommendation
@@ -16,12 +16,12 @@
   
 <script lang="ts">
 import { defineComponent } from 'vue'
-import ProfileTable from '@/components/ProfileTable.vue'
+import ProfileTableSimple from '@/components/ProfileTableSimple.vue'
 import { useRoute } from 'vue-router'
 
 export default defineComponent({
   name: 'ProfileView',
-  components: { ProfileTable },
+  components: { ProfileTableSimple },
   setup() {
     const route = useRoute()
 
