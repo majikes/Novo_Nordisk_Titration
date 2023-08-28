@@ -1,6 +1,6 @@
 
 <template>
-  <div class="participant-management">
+  <div class="user-management">
     <div class="control-row-header" id="header">
       <h1 class="text-2xl font-bold">User Management</h1>
     </div>
@@ -14,9 +14,9 @@
       <div class="user-mgmt-cell" id="id-header">
         <strong>ID</strong>
       </div>
-      <!-- <div v-if="groupComputed.includes('admin')" class="user-mgmt-cell" id="role-header">
+      <div v-if="adminMode" class="user-mgmt-cell" id="role-header">
         <strong>Role</strong>
-      </div> -->
+      </div>
       <div class="user-mgmt-cell flex justify-center" id="status-header">
         <strong>Status</strong>
       </div>
@@ -31,6 +31,7 @@
       <!-- <div>{{ subjectActiveStore }}</div> -->
     </div>
     <!-- <div>{{ subjectActiveStore }}</div> -->
+    <!-- {{route}} -->
     <div v-if="loading">Loading...</div>
     <UserManagementList v-else :userlistitems="subjectsorted" />
     <!-- v-for div, full span, containing 3 sub divs
@@ -40,7 +41,8 @@
 </template>
   
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from 'vue'
+import { computed, defineComponent, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { api, subject_convert } from '@/functions/GlobalFunctions'
 import { useApiURL } from '@/globalConfigPlugin'
 import { lowerCase } from 'lodash'
@@ -56,6 +58,7 @@ export default defineComponent({
     const apiRootURL = useApiURL()
     const auth = useAuthenticator()
     const errors = useErrorStore()
+    const route = useRoute()
     const componentName = 'UserManagement'
     const debugModeStore = useDebugModeStore()
     // let groups = ref([] as string[])
@@ -82,11 +85,15 @@ export default defineComponent({
       return token
     })
 
+    const adminMode = computed(() => {
+      return route.path === '/physician-management' && (groupComputed.value.includes('admin') || groupComputed.value.includes('superadmin'))
+    })
+
     // const subjectActiveStore = ref({} as any)
     // const subjectLoadingStore = ref({} as any)
     const subjects = ref<any[]>([])
     const subjectsorted = computed(() => {
-      const sortkey = groupComputed.value.includes('admin') ? 'fullname' : 'id'
+      const sortkey = adminMode.value ? 'fullname' : 'id'
       return [...subjects.value].sort((a, b) => {
         if (typeof (a[sortkey]) !== 'undefined' && typeof (b[sortkey]) !== 'undefined') {
           if (a[sortkey] > b[sortkey]) { return 1 }
@@ -98,15 +105,17 @@ export default defineComponent({
 
     const error = ref(null)
     const loading = ref(true)
-    onMounted(async () => {
+    function loadList() {
       console.log('loading subject list')
+      subjects.value = []
+      
       let endpoint = 'getparticipantidssupervisedbytheuser'
       // TODO RE-ADD WITH ADMIN NOVO ENDPOINT
-      // if (groupComputed.value.includes('admin')) {
-      //   endpoint = 'getassignedusers'
-      // }
+      if (adminMode.value) {
+        endpoint = 'getassignedusers'
+      }
       const list_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}`
-      await api.getAuth<any[]>(list_url, tokenComputed.value).then(
+      api.getAuth<any[]>(list_url, tokenComputed.value).then(
         (subjectlist: any[]) => {
           // clear the mapping
           // TODO ADAPT MAPPING
@@ -116,7 +125,6 @@ export default defineComponent({
           // subjectLoadingStore.value = {}
           // const true_subjectlist: Subject[] = subjectlist.map(subject_convert)
           // console.log(true_subjectlist)
-          subjects.value = []
           //
           if (endpoint === 'getassignedusers') {
             for (const user of subjectlist) {
@@ -159,11 +167,17 @@ export default defineComponent({
         }).finally(() => {
           loading.value = false
         })
+    }
+    loadList()
+
+    watch(adminMode, () => {
+      console.log('admin mode:', adminMode.value)
+      loadList()
     })
 
     return {
-      error, groupComputed, loading, subjects, subjectsorted,
-      debugModeStore
+      adminMode, error, groupComputed, loading, subjects, subjectsorted,
+      debugModeStore, route
     }
   }
 })

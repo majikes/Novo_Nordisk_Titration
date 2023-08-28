@@ -1,6 +1,6 @@
 <template>
   <div class="group control-row rounded-lg w-full mx-4 pt-1 pb-2 px-4 even:bg-gray-100">
-    <div v-if="groupComputed.includes('admin')" class="user-mgmt-cell grid content-center">
+    <div v-if="adminMode" class="user-mgmt-cell grid content-center">
       {{ userlistitem.fullname }}
     </div>
     <div v-else class="user-mgmt-cell grid content-center">
@@ -8,7 +8,7 @@
         {{ userlistitem.id }}
       </router-link>
     </div>
-    <div v-if="groupComputed.includes('admin')" class="user-mgmt-cell grid content-center">
+    <div v-if="adminMode" class="user-mgmt-cell grid content-center">
       {{ userlistitem.role }}
     </div>
     <div class="flex">
@@ -33,6 +33,7 @@
 <script lang="ts">
 
 import { computed, defineComponent, PropType, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { useApiURL } from '@/globalConfigPlugin'
 import { api } from '@/functions/GlobalFunctions'
 import { useAuthenticator } from '@aws-amplify/ui-vue'
@@ -53,6 +54,7 @@ export default defineComponent({
     const apiRootURL = useApiURL()
     const auth = useAuthenticator()
     const errors = useErrorStore()
+    const route = useRoute()
     const componentName = 'UserManagementListItem'
     const debugModeStore = useDebugModeStore()
     // let groups = ref([] as string[])
@@ -78,6 +80,9 @@ export default defineComponent({
       console.log(`token: ${token}`)
       return token
     })
+    const adminMode = computed(() => {
+      return route.path === '/physician-management' && (groupComputed.value.includes('admin') || groupComputed.value.includes('superadmin'))
+    })
 
     const options = ref([
       { text: 'active', value: 1 },
@@ -93,7 +98,7 @@ export default defineComponent({
     })
     const isActive = computed(() => { return active.value === 1 })
     // const computedActive = computed(() => { return lowerCase(status.value) === 'active' })
-    
+
     const loading = ref(false)
     const updateMsg = ref(null)
     function updateActiveStatus() {
@@ -109,7 +114,7 @@ export default defineComponent({
       let toggleChange = false
       let updateEndpoint = 'updatesubjectstatus'
       let idparam = 'subject_id'
-      if (groupComputed.value.includes('admin') || groupComputed.value.includes('superadmin')) {
+      if (adminMode.value) {
         updateEndpoint = 'updateuserstatus'
         idparam = 'user_id'
       }
@@ -151,8 +156,9 @@ export default defineComponent({
         })
     }
 
-    return { active, isActive, loading, updateActiveStatus, debugModeStore, 
-      groupComputed, options, statusString
+    return {
+      active, isActive, loading, updateActiveStatus, debugModeStore,
+      groupComputed, options, statusString, adminMode
     }
   }
 })
