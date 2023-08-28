@@ -1,6 +1,6 @@
 <template>
   <div class="study-overview">
-    <div class="control-row">
+    <div class="control-row-header">
       <h1 class="text-2xl font-bold">Study Overview</h1>
     </div>
     <div v-if="error" class="text-l font-semibold grid content-center place-items-center h-48">
@@ -58,7 +58,7 @@ export default defineComponent({
         //   'adherenceCircle': { 'p_cgm': 97.37, 'nBolus_d': 15.57, 'tCL': 91.85, 'score': 0.91 }, 
         //   'timeInRange': { 'lt54': 0.0, 'bt5470': 0.0, 'bt70180': 71.9, 'bt180250': 25.6, 'gt250': 2.5 } 
         // },]
-      const req_url = `${apiRootURL}/generatedataforstudyoverview?username=${auth.user.username}`
+      const req_url = `${apiRootURL}/getdataforstudyoverview?username=${auth.user.username}`
       await api.getAuth<SubjectCardFromAPIType[]>(req_url, tokenComputed.value).then(
         (subjectCards: SubjectCardFromAPIType[]) => {
           // const true_subjectlist: Subject[] = subjectlist.map(subject_convert)

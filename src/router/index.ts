@@ -5,8 +5,9 @@ import TitrateView from '../views/TitrateView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import DataEntry from '../views/DataEntry.vue'
 import SmbgTitrationRules from '../views/SmbgTitrationRules.vue'
-import ParticipantManagement from '../views/ParticipantManagement.vue'
-import PhysicianManagement from '../views/PhysicianManagement.vue'
+// import ParticipantManagement from '../views/ParticipantManagement.vue'
+// import PhysicianManagement from '../views/PhysicianManagement.vue'
+import UserManagement from '../views/UserManagement.vue'
 import AddParticipant from '../views/AddParticipant.vue'
 import AddPhysician from '../views/AddPhysician.vue'
 import DataDownload from '../views/DataDownload.vue'
@@ -50,14 +51,14 @@ const routes : Array<RouteRecordRaw> = [
         component: SmbgTitrationRules
     },    
     {
-        path: '/user-management',
+        path: '/participant-management',
         name: 'ParticipantManagement',
-        component: ParticipantManagement
+        component: UserManagement
     },
     {
         path: '/physician-management',
         name: 'PhysicianManagement',
-        component: PhysicianManagement
+        component: UserManagement
     },
     {
         path: '/add-user',

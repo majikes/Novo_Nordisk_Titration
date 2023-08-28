@@ -1,7 +1,7 @@
 
 <template>
   <div class="agp">
-    <div class="control-row" id="header">
+    <div class="control-row-header" id="header">
       <h1 class="text-2xl font-bold">AGP</h1>
     </div>
     <div class="control-row content-end">

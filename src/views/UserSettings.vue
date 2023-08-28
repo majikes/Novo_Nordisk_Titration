@@ -1,7 +1,7 @@
 
 <template>
   <div class="user-settings">
-    <div class="flex justify-start my-3">
+    <div class="control-row-header">
       <h1 class="text-2xl font-bold">User Settings</h1>
     </div>
     <div class="flex justify-start my-3">

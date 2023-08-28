@@ -18,6 +18,10 @@
     @apply w-full pointer-events-none
 }
 
+.control-row-header {
+    @apply flex justify-between my-1 w-[900px]
+}
+
 .control-row {
     @apply flex justify-between my-1
 }

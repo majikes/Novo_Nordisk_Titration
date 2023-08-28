@@ -1,6 +1,6 @@
 <template>
     <div class="add-participant">
-        <div class="control-row" id="header">
+        <div class="control-row-header" id="header">
             <h1 class="text-2xl font-bold">Add Physician</h1>
         </div>
         <form class="needs-validation" id="new-user-form" @submit="addNewPhysician">

@@ -1,7 +1,7 @@
 
 <template>
   <div class="titration-view">
-    <div class="control-row" id="header">
+    <div class="control-row-header" id="header">
       <h1 class="text-2xl font-bold">Subject Titration</h1>
     </div>
 

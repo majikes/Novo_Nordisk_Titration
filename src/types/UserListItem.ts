@@ -1,7 +1,10 @@
 interface UserListItem {
-    id: number,
-    username: string,
-    status: string
+    fname?: string,
+    fullname?: string,
+    id: string,
+    lname?: string,
+    role?: string,
+    active: number,
 }
 
 export default UserListItem

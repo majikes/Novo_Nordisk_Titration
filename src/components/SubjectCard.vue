@@ -2,7 +2,7 @@
   <div class="w-64 flex flex-wrap justify-between flex-row p-5 rounded-xl drop-shadow-lg"
     :class="{ 'bg-white': !isActive, 'bg-emerald-100': isActive }">
     <div class="mb-2 basis-full" id="header">
-      {{ card.username }}
+      <div>{{ card.username }}</div>
     </div>
     <!-- TiR bar and tooltip -->
     <div class="w-8 mb-3 rounded-sm relative" :class="{ 'ring-2 ring-gray-300': tirInvalid }">

@@ -99,7 +99,8 @@ export default defineComponent({
       ///getassignedusers?username=pcolmegna for non-participant dropdowns and management screens
       //for dropdowns and Usermanagement screens, you can call /getsubjects by passing the 'username'
 
-      let endpoint = 'getsubjects'
+      // let endpoint = 'getsubjects'
+      let endpoint = 'getparticipantidssupervisedbytheuser'
       // if (groupComputed.value.includes('admin')) {
       //   endpoint = 'getassignedusers'
       // }

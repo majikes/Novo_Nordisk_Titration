@@ -1,6 +1,6 @@
 <template>
     <div class="physician-management">
-        <div class="control-row" id="header">
+        <div class="control-row-header" id="header">
             <h1 class="text-2xl font-bold">Physician Management</h1>
         </div>
         <div class="my-8" id="add-user">
@@ -30,7 +30,7 @@
 import { computed, defineComponent, ref, onMounted } from 'vue';
 import UserManagementList from '@/components/UserManagementList.vue';
 import UserListItem from '@/types/UserListItem';
-import { api, user_convert } from '@/functions/GlobalFunctions'
+import { api } from '@/functions/GlobalFunctions'
 // import { active } from 'd3-transition'
 import { useApiURL } from '@/globalConfigPlugin'
 import { lowerCase } from 'lodash';

@@ -1,6 +1,7 @@
 <template>
-  <div class="circle-data-quality-chart">
-    <Doughnut v-if="loaded" :data="data" :options="options" />
+  <div class="circle-data-quality-chart rounded-full"
+    :class="{'ring-2 ring-gray-300':dataQualityBreakdown.score===0}">
+    <Doughnut class="pointer-events-none" v-if="loaded" :data="data" :options="options" />
   </div>
 </template>
 <script lang="ts">
@@ -17,13 +18,15 @@ import {
   Title,
   Tooltip,
   Legend,
-  ///ChartData,
-  ///ChartType,
-  ///TimeScale,
+  ChartData,
+  ChartType,
+  TimeScale,
+  ScriptableTooltipContext,
   registerables
 } from 'chart.js'
 import { Doughnut } from 'vue-chartjs'
-///import { clone, cloneDeep } from 'lodash'
+import { clone, cloneDeep } from 'lodash'
+import AdherenceCircleType from '@/types/AdherenceCircleType'
 
 ChartJS.register(
   CategoryScale,
@@ -41,10 +44,9 @@ export default defineComponent({
   name: 'CircleDataQualityChart',
   components: { Doughnut },
   props: {
-    dataQualityIndex: {
+    dataQualityBreakdown: {
       required: true,
-      // type: Array as PropType<string[]>
-      type: Number as PropType<number>
+      type: Object as PropType<AdherenceCircleType>
     },
     tConnectStatus: {
       required: true,
@@ -77,11 +79,19 @@ export default defineComponent({
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    const quality = ref(props.dataQualityIndex * 100)
-    const status = ref(props.tConnectStatus)
+    const quality = ref(props.dataQualityBreakdown.score * 100)
+    // const status = computed(() => {return props.tConnectStatus === 'active'})
     const tconnectColor = computed(() => {
-      return (status.value ? 'green' : 'red')
+      return (props.tConnectStatus ? '#57cc99' : '#e76f51')
     })
+    const qualityBreakdown = computed(() => {
+      return `% CGM: ${props.dataQualityBreakdown.p_cgm}\nBolus/day: ${props.dataQualityBreakdown.nBolus_d}\nTime in CL: ${props.dataQualityBreakdown.tCL}`
+    })
+    
+    const externalTooltipHandler = (context: ScriptableTooltipContext<ChartType>) => {
+      // TODO IMPLEMENT CUSTOM TOOLTIP
+      return "hello"
+    }
 
     const data = {
       // labels: [
@@ -90,19 +100,20 @@ export default defineComponent({
       // ],
       datasets: [
         {
-          label: 'Data Quality',
+          label: qualityBreakdown.value,
           data: [quality.value, 100 - quality.value],
           backgroundColor: [
-            'rgb(0, 153, 255)',
+            '#81c3d7',
             'rgba(0,0,0,0)'
           ],
           borderWidth: 0,
+          borderRadius: 3,
           spacing: 10,
-          rotation: 180
+          // rotation: 166
           // hoverOffset: 4
         },
         {
-          label: 'tConnect status',
+          label: props.tConnectStatus ? 'Connected' : 'Disconnected',
           data:[100],
           backgroundColor: [tconnectColor.value],
           borderWidth: 0

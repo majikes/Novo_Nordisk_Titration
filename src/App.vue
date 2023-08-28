@@ -2,7 +2,7 @@
 <template>
   <div v-if="auth.authStatus === 'authenticated' && auth.route === 'authenticated'" id="content-wrapper"
     class="text-gray-700 h-screen flex flex-col">
-    <!-- todo - for some reason auth.authStatus was not guarding until auth object loads, but further down the page the auth.route totally is??? v confusing. -->
+    <!-- nav bar links -->
     <nav class="flex flex-row justify-center my-4">
       <router-link
         v-if="groupComputed.includes('physician') || groupComputed.includes('crc') || groupComputed.includes('admin')"
@@ -125,7 +125,9 @@
         </div>
       </router-link>
     </nav>
+    <!-- main view -->
     <router-view class="mx-auto max-w-4xl px-4 overflow-y-scroll overflow-x-visible flex-1 main-container" />
+    <!-- footer / drawer -->
     <div class="flex w-full text-center px-4 py-3 gap-2">
       <div class="flex items-end">
         <DebugButton v-if="auth.authStatus === 'authenticated' || groupComputed.includes('superadmin')" />
@@ -238,15 +240,3 @@ export default defineComponent({
   }
 });
 </script>
-
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
