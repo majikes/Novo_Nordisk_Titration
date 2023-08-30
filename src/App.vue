@@ -155,6 +155,65 @@ import awsconfig from '@/aws-exports.js'
 import { lowerCase } from 'lodash'
 Amplify.configure(awsconfig)
 
+// General:
+
+// GET /getsubjects
+
+// SubjectOverview:
+
+// GET /generatedataforstudyoverview
+
+// AGP:
+
+// GET /getsubjectvaliddates
+// GET /generatedataforagp
+// GET /gettitratedates
+// GET /getbasaldosehistory
+
+// Titrate:
+
+// POST /sendnewbasaldose
+
+// History:
+
+// (duplicate) GET /getbasaldosehistory
+
+// Participant Management:
+
+// GET /getsubjectsandstatus
+// (maybe POST) GET /updatesubjectstatus
+
+// Physician Management:
+
+// GET /getphysiciansandstatus
+// (maybe POST) GET /updatephysicianstatus
+
+// Add Participant:
+
+// (duplicate) GET /getsubjects
+// POST /addsubject
+
+// Add Physician:
+
+// GET /getphysicians
+// POST /addphysician
+
+// Download:
+
+// GET /downloadsubjectdata
+
+// Participant Home:
+
+// (duplicate) GET  /getbasaldosehistory
+
+// SMBG Titration Rules:
+
+// N/A
+
+// User Settings:
+
+// N/A
+
 // export default class App extends Vue {}
 export default defineComponent({
   name: 'App',
@@ -207,21 +266,21 @@ export default defineComponent({
     //console.log("auth.user.signInUserSession.idToken.payload: "+JSON.stringify(auth.user.signInUserSession.idToken.payload, null, 2));
     //console.log("authGroup: "+authGroupState.authGroup);
 
-    const error = ref(null)
-    const loading = ref(true)
-    onMounted(async () => {
-      await api.get<any[]>(`${apiRootURL}/test`).then(
-        (subjectlist: any[]) => {
-          const true_subjectlist: Subject[] = subjectlist.map(subject_convert)
-          console.log("Auth: " + auth + " TEST: " + true_subjectlist)
-          ///subjects.value = true_subjectlist
-        }).catch(err => {
-          error.value = err.message
-          console.log(error.value)
-        }).finally(() => {
-          loading.value = false
-        })
-    })
+    // const error = ref(null)
+    // const loading = ref(true)
+    // onMounted(async () => {
+    //   await api.get<any[]>(`${apiRootURL}/test`).then(
+    //     (subjectlist: any[]) => {
+    //       const true_subjectlist: Subject[] = subjectlist.map(subject_convert)
+    //       console.log("Auth: " + auth + " TEST: " + true_subjectlist)
+    //       ///subjects.value = true_subjectlist
+    //     }).catch(err => {
+    //       error.value = err.message
+    //       console.log(error.value)
+    //     }).finally(() => {
+    //       loading.value = false
+    //     })
+    // })
 
     // TODO update state with this call, add mechanism to force reload
     // const subjectList = ref<string[]>([])
@@ -235,7 +294,7 @@ export default defineComponent({
     //       console.log(error.value)
     //     })
     // })
-    console.log("From App.vue page, auth: " + auth + ", authGroup: " + groupComputed.value);
+    // console.log("From App.vue page, auth: " + auth + ", authGroup: " + groupComputed.value);
     return { auth, debugModeStore, groupComputed, route }
   }
 });

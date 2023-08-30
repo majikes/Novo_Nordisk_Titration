@@ -6,8 +6,13 @@
     </div>
     <div class="my-8 grid grid-cols-4 gap-2" id="add-user">
       <!-- <SubjectDropdown/> -->
-      <UserDropdown userType="Physician" />
-      <router-link class="user-mgmt-btn w-full bg-gray-100" :to="{ name: 'AddParticipant' }">Add new user</router-link>
+      <!-- <UserDropdown userType="Physician" /> -->
+      <router-link v-if="adminMode" class="user-mgmt-btn w-full bg-gray-100" :to="{ name: 'AddPhysician' }">
+        Add new physician
+      </router-link>
+      <router-link v-else class="user-mgmt-btn w-full bg-gray-100" :to="{ name: 'AddParticipant' }">
+        Add new subject
+      </router-link>
     </div>
 
     <div class="flex justify-between my-4 px-4 py-2 rounded-lg bg-gray-200">
@@ -108,7 +113,7 @@ export default defineComponent({
     function loadList() {
       console.log('loading subject list')
       subjects.value = []
-      
+
       let endpoint = 'getparticipantidssupervisedbytheuser'
       // TODO RE-ADD WITH ADMIN NOVO ENDPOINT
       if (adminMode.value) {
