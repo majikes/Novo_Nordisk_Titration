@@ -48,6 +48,29 @@
         </div>
       </div>
 
+      <div v-if="groupComputed.includes('crc') || groupComputed.includes('admin')" class="adduser-form-cell">
+        <!-- <label for="validationCustom02"></label> -->
+        <label for="validationCustom13">Physician</label>
+        <select :disabled="modalVisible || physAndCRCLoading" v-model="inputObj.physician" class="adduser-select-input peer"
+          id="validationCustom02" required>
+          <option disabled value="" selected>{{ physAndCRCLoading ? 'Loading...' : 'Select Physician...'}}</option>
+          <option v-for="physician in physicians" :value="physician[0]" :key="physician[0]">{{ physician[1] }} {{
+              physician[2]
+          }}</option>
+        </select>
+        <div class="invalid-feedback">Please select a Physician.</div>
+      </div>
+      <div v-if="groupComputed.includes('physician') || groupComputed.includes('admin')" class="adduser-form-cell">
+        <!-- <label for="validationCustom02"></label> -->
+        <label for="validationCustom14">CRC</label>
+        <select :disabled="modalVisible || physAndCRCLoading" v-model="inputObj.crc" class="adduser-select-input peer"
+          id="validationCustom02" required>
+          <option disabled value="" selected>{{ physAndCRCLoading ? 'Loading...' : 'Select CRC...'}}</option>
+          <option v-for="crc in crcs" :value="crc[0]" :key="crc[0]">{{ crc[1] }} {{ crc[2] }}</option>
+        </select>
+        <div class="invalid-feedback">Please select a CRC.</div>
+      </div>
+
       <div class="adduser-form-cell">
         <label for="validationCustom07">Weight [Kg]</label>
         <input type="number" :disabled="modalVisible" v-model="inputObj.weight" class="adduser-text-input peer"
@@ -389,6 +412,40 @@ export default defineComponent({
     }
     loadSubjectIDS()
 
+    const physAndCRCLoading = ref(false)
+    const physAndCRCErrors = ref(null)
+    function loadPhysAndCRC() {
+      physAndCRCLoading.value = true
+      // Endpoint: /getphysiciansandcrcs 
+      // Method: GET
+      // Input: username(string)
+      console.log('GET request to /getphysiciansandcrcs')
+      const req_url = `${apiRootURL}/getphysiciansandcrcs?username=${auth.user.username}&role=${groupComputed.value[0]}`
+      console.log(`request to ${req_url}`)
+      api.getAuth<any>(req_url, tokenComputed.value).then(
+        (response: any) => {
+          // sites.value = ['site 1', 'site 2', 'site 3']
+          console.log('successful getphysiciansandcrcs request')
+          console.log(response)
+          if (typeof (response.physicians) !== 'undefined') {
+            physicians.value = response.physicians
+          }
+          if (typeof (response.crcs) !== 'undefined') {
+            crcs.value = response.crcs
+          }
+          // TODO ADD LOGIC THAT POPULATES EITHER
+          // physicians OR crcs
+          // DEPENDING ON USER GROUP
+        }).catch(err => {
+          physAndCRCErrors.value = err.message
+          console.log(err.message)
+          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+        }).finally(() => {
+          physAndCRCLoading.value = false
+        })
+    }
+    loadPhysAndCRC()
+
     const modalVisible = ref(false)
 
     const inputObjOrig = ref({
@@ -410,6 +467,8 @@ export default defineComponent({
 
     const inputObj = ref({
       id: '',
+      crc: '',
+      physician: '',
       email: '',
       weight: null as number | null,
       height: null as number | null,
@@ -430,6 +489,8 @@ export default defineComponent({
 
     const inputNameMap = ref({
       id: 'Subject ID',
+      crc: 'CRC',
+      physician: 'Physician',
       email: 'Email',
       weight: 'Weight',
       height: 'Height',
@@ -466,6 +527,17 @@ export default defineComponent({
       if (!idIsLen.value) { problems.push('ID must be 5 characters in length') }
       if (!idNotTaken.value) { problems.push('ID must not already be assigned to an existing subject') }
       validTmp &&= idIsDigits.value && idIsLen.value && idNotTaken.value
+
+      const crcValid = inputObj.value.crc !== ''
+      const physicianValid = inputObj.value.physician !== ''
+      if (groupComputed.value.includes('crc') || groupComputed.value.includes('admin')) {
+        if (!physicianValid) { problems.push('Select a physician') }
+        validTmp &&= physicianValid
+      }
+      if (groupComputed.value.includes('physician') || groupComputed.value.includes('admin')) {
+        if (!crcValid) { problems.push('Select a CRC') }
+        validTmp &&= crcValid
+      }
 
       const sexValid = sexes.includes(inputObj.value.sex)
       if (!sexValid) { problems.push('Select a sex') }
@@ -560,7 +632,17 @@ export default defineComponent({
       }
     })
 
+    function setPhysOrCRC() {
+      const selfVal = auth.user.username
+      if (groupComputed.value.includes('crc')) {
+        inputObj.value.crc = selfVal
+      } else if (groupComputed.value.includes('physician')) {
+        inputObj.value.physician = selfVal
+      }
+    }
+
     function showModal() {
+      setPhysOrCRC()
       modalVisible.value = true
       // profEditable.value = false
       // tirEditMode.value = false
@@ -603,6 +685,8 @@ export default defineComponent({
         // },
         new_user: {
           id: inputObj.value.id,
+          crc: inputObj.value.crc,
+          physician: inputObj.value.physician,
           email: inputObj.value.email,
           weight: inputObj.value.weight,
           height: inputObj.value.height,
@@ -655,7 +739,7 @@ export default defineComponent({
       addUserLoading, subjectsErrors, idFieldLoading,
       subjectIDs, basalStep, basalMin, basalMax, reservoirStep, reservoirMin, reservoirMax,
       maxDoseStep, maxDoseMin, maxDoseMax, minDoseStep, minDoseMin, minDoseMax, doseIncrementStep,
-      doseIncrementMin, doseIncrementMax
+      doseIncrementMin, doseIncrementMax, physAndCRCLoading
     }
   }
 })
