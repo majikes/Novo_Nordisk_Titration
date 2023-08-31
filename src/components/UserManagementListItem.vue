@@ -112,7 +112,7 @@ export default defineComponent({
       const oldStatus = !selectedStatus
       // basically a flag that we check at .finally() to see if we need to swap back
       let toggleChange = false
-      let updateEndpoint = 'updatesubjectstatus'
+      let updateEndpoint = 'updateparticipantstatus'
       let idparam = 'subject_id'
       if (adminMode.value) {
         updateEndpoint = 'updateuserstatus'

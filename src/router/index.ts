@@ -2,6 +2,7 @@ import { createWebHistory, createRouter, RouteRecordRaw } from "vue-router"
 import StudyOverview from '../views/StudyOverview.vue'
 import AGP from '../views/AGP.vue'
 import TitrateView from '../views/TitrateView.vue'
+import BasalDoseHistory from '../views/BasalDoseHistory.vue'
 import ProfileView from '../views/ProfileView.vue'
 import DataEntry from '../views/DataEntry.vue'
 import SmbgTitrationRules from '../views/SmbgTitrationRules.vue'
@@ -30,11 +31,11 @@ const routes : Array<RouteRecordRaw> = [
         name: 'TitrateView',
         component: TitrateView
     },
-    // {
-    //     path: '/profile-history/:subjectId?',
-    //     name: 'ProfileHistory',
-    //     component: ProfileHistory
-    // },
+    {
+        path: '/history/:subjectId?',
+        name: 'BasalDoseHistory',
+        component: BasalDoseHistory
+    },
     {
         path: '/profile-view/:subjectId',
         name: 'ProfileView',
