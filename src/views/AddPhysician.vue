@@ -369,7 +369,7 @@ export default defineComponent({
           role: inputObj.value.role,
           site: site,
         },
-        project: 'pedapai'
+        project: 'novonordisktitration'
       }
 
       console.log('POST request to /addnewuser')

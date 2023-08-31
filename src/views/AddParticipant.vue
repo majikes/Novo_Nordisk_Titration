@@ -684,7 +684,7 @@ export default defineComponent({
         //   active_profile: 0,
         // },
         new_user: {
-          id: inputObj.value.id,
+          username: inputObj.value.id,
           crc: inputObj.value.crc,
           physician: inputObj.value.physician,
           role: 'participant',
