@@ -687,6 +687,7 @@ export default defineComponent({
           id: inputObj.value.id,
           crc: inputObj.value.crc,
           physician: inputObj.value.physician,
+          role: 'participant',
           email: inputObj.value.email,
           weight: inputObj.value.weight,
           height: inputObj.value.height,
