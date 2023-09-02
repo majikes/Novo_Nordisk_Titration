@@ -10,7 +10,7 @@ import SmbgTitrationRules from '../views/SmbgTitrationRules.vue'
 // import PhysicianManagement from '../views/PhysicianManagement.vue'
 import UserManagement from '../views/UserManagement.vue'
 import AddParticipant from '../views/AddParticipant.vue'
-import AddPhysician from '../views/AddPhysician.vue'
+import AddNonParticipant from '../views/AddNonParticipant.vue'
 import DataDownload from '../views/DataDownload.vue'
 import UserSettings from '../views/UserSettings.vue'
 
@@ -57,19 +57,19 @@ const routes : Array<RouteRecordRaw> = [
         component: UserManagement
     },
     {
-        path: '/physician-management',
-        name: 'PhysicianManagement',
+        path: '/non-participant-management',
+        name: 'NonParticipantManagement',
         component: UserManagement
     },
     {
-        path: '/add-user',
+        path: '/add-participant',
         name: 'AddParticipant',
         component: AddParticipant
     },
     {
-        path: '/add-physician',
-        name: 'AddPhysician',
-        component: AddPhysician
+        path: '/add-non-participant',
+        name: 'AddNonParticipant',
+        component: AddNonParticipant
     },
     {
         path: '/download',

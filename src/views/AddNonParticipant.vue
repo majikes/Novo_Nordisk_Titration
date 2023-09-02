@@ -149,7 +149,7 @@ import { useErrorStore } from '@/stores/ErrorStore'
 import ToolTip from '@/components/ToolTip.vue'
 
 export default defineComponent({
-  name: 'AddPhysician',
+  name: 'AddNonParticipant',
   components: { ToolTip },
   setup() {
     const route = useRoute()
@@ -213,10 +213,10 @@ export default defineComponent({
     const sites = ref([] as any[])
     const roles = computed(() => {
       let returnRoles = [] as string[]
-      if (groupComputed.value.includes('crc') || groupComputed.value.includes('physician') || groupComputed.value.includes('admin')) {
+      if (groupComputed.value.includes('admin')) {
         returnRoles = ['crc', 'physician']
       } else if (groupComputed.value.includes('superadmin')) {
-        returnRoles = ['admin', 'superadmin']
+        returnRoles = ['admin']
       }
       return returnRoles
     })
@@ -230,7 +230,7 @@ export default defineComponent({
       // Example: username = 'pcolmegna', project = 'pedapai'
       const endpoint = 'getprojectsites'
       console.log(`GET request to /${endpoint}`)
-      const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&project=pedapai&role=${groupComputed.value[0]}`
+      const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&role=${groupComputed.value[0]}`
       console.log(`request to ${req_url}`)
       api.getAuth<any>(req_url, tokenComputed.value).then(
         (response: any) => {

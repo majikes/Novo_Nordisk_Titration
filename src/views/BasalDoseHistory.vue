@@ -7,10 +7,7 @@
     <div class="flex justify-end my-1">
       <SubjectDropdown v-model="selected" />
     </div>
-    <div class="flex justify-between my-4 p-4 rounded-lg bg-gray-200">
-      <!-- 3 col prof hist table -->
-      <div></div>
-    </div>
+    <BasalDoseHistoryTable :doseHistory="basalDoseHistoryConditional" />
     <div v-if="debugModeStore.debugMode">
 
     </div>
@@ -21,7 +18,7 @@
 import { computed, defineComponent, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import SubjectDropdown from '@/components/SubjectDropdown.vue'
-import ProfileTableSimple from '@/components/ProfileTableSimple.vue'
+import BasalDoseHistoryTable from '@/components/BasalDoseHistoryTable.vue'
 import { api } from '@/functions/GlobalFunctions'
 import { useApiURL } from '@/globalConfigPlugin'
 import { useDebugModeStore } from '@/stores/debugModeStore'
@@ -32,7 +29,7 @@ import BasalDoseType from '@/types/BasalDoseType'
 
 export default defineComponent({
   name: 'BasalDoseHistory',
-  components: { SubjectDropdown },
+  components: { SubjectDropdown, BasalDoseHistoryTable },
   props: {},
   setup() {
     const debugModeStore = useDebugModeStore()
@@ -70,7 +67,15 @@ export default defineComponent({
 
 
 
+    const basalDoseHistoryTest = [
+      { "id": "103", "date": "08/29/2023", "timeOfDayInMinutes": 1340, "basalDoseValue": 40 },
+      { "id": "102", "date": "08/22/2023", "timeOfDayInMinutes": 1300, "basalDoseValue": 45 },
+      { "id": "101", "date": "08/15/2023", "timeOfDayInMinutes": 1160, "basalDoseValue": 43 }
+    ] as BasalDoseType[]
     const basalDoseHistory = ref([] as BasalDoseType[])
+    const basalDoseHistoryConditional = computed(() => {
+      return debugModeStore.debugMode ? basalDoseHistoryTest : basalDoseHistory.value
+    })
     const basalsLoading = ref(false)
 
     function getBasalDoseHistory() {
@@ -84,11 +89,23 @@ export default defineComponent({
       console.log(`request to ${req_url}`)
       // server response:
       // {"id":"103","date":"08/29/2023", "timeOfDayInMinutes":1340, "basalDoseValue":40}
-      api.getAuth(req_url, tokenComputed.value).then(
-        (response: any) => {
+      api.getAuth<any[]>(req_url, tokenComputed.value).then(
+        (doseHistoryList: any[]) => {
           console.log('successful basal dose history request')
-          console.log(response)
-          
+          console.log(doseHistoryList)
+          for (const dose of doseHistoryList) {
+            const tmpDose = {
+              id: '',
+              date: '',
+              timeOfDayInMinutes: -1,
+              basalDoseValue: -1,
+            }
+            tmpDose.id = dose.id
+            tmpDose.date = dose.date
+            tmpDose.timeOfDayInMinutes = dose.timeOfDayInMinutes
+            tmpDose.basalDoseValue = dose.basalDoseValue
+            basalDoseHistory.value.push(tmpDose)
+          }
         }).catch(err => {
           console.log(err.message)
           errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
@@ -100,7 +117,7 @@ export default defineComponent({
     getBasalDoseHistory()
 
     return {
-      debugModeStore, selected, groupComputed, basalsLoading, basalDoseHistory
+      debugModeStore, selected, groupComputed, basalsLoading, basalDoseHistory, basalDoseHistoryConditional
     }
   }
 })

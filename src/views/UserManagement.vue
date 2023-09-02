@@ -7,32 +7,36 @@
     <div class="my-8 grid grid-cols-4 gap-2" id="add-user">
       <!-- <SubjectDropdown/> -->
       <!-- <UserDropdown userType="Physician" /> -->
-      <router-link v-if="adminMode" class="user-mgmt-btn w-full bg-gray-100" :to="{ name: 'AddPhysician' }">
-        Add new physician
+      <router-link v-if="superAdminMode" class="user-mgmt-btn w-full bg-gray-100" :to="{ name: 'AddNonParticipant' }">
+        Add new admin
       </router-link>
-      <router-link v-else class="user-mgmt-btn w-full bg-gray-100" :to="{ name: 'AddParticipant' }">
+      <router-link v-if="adminMode" class="user-mgmt-btn w-full bg-gray-100" :to="{ name: 'AddNonParticipant' }">
+        Add new physician / CRC
+      </router-link>
+      <router-link v-if="physCRCMode" class="user-mgmt-btn w-full bg-gray-100" :to="{ name: 'AddParticipant' }">
         Add new subject
       </router-link>
     </div>
 
-    <div class="flex justify-between my-4 px-4 py-2 rounded-lg bg-gray-200">
+    <div class="grid force-center-content my-4 px-4 py-2 rounded-lg bg-gray-200" :class="{ 'grid-cols-3' : !adminMode, 'grid-cols-4': adminMode || superAdminMode }">
       <div class="user-mgmt-cell" id="id-header">
-        <strong>ID</strong>
+        <strong class="px-2">ID</strong>
       </div>
-      <div v-if="adminMode" class="user-mgmt-cell" id="role-header">
+      <div v-if="adminMode || superAdminMode" class="user-mgmt-cell" id="role-header">
         <strong>Role</strong>
       </div>
       <div class="user-mgmt-cell flex justify-center" id="status-header">
         <strong>Status</strong>
       </div>
       <div class="user-mgmt-cell flex justify-end" id="status-control-header">
-        <strong>Status Control</strong>
+        <strong class="px-2">Status Control</strong>
       </div>
     </div>
     <div v-if="debugModeStore.debugMode">
       <!-- <div> -->
       <div>{{ groupComputed }}</div>
       <div>{{ subjectsorted }}</div>
+      <div>physCRCMode: {{physCRCMode}}; adminMode: {{ adminMode }}; superAdminMode: {{ superAdminMode }}</div>
       <!-- <div>{{ subjectActiveStore }}</div> -->
     </div>
     <!-- <div>{{ subjectActiveStore }}</div> -->
@@ -90,8 +94,14 @@ export default defineComponent({
       return token
     })
 
+    const physCRCMode = computed(() => {
+      return groupComputed.value.includes('physician') || groupComputed.value.includes('crc')
+    })
     const adminMode = computed(() => {
-      return route.path === '/physician-management' && (groupComputed.value.includes('admin') || groupComputed.value.includes('superadmin'))
+      return groupComputed.value.includes('admin')
+    })
+    const superAdminMode = computed(() => {
+      return groupComputed.value.includes('superadmin')
     })
 
     // const subjectActiveStore = ref({} as any)
@@ -116,10 +126,11 @@ export default defineComponent({
 
       let endpoint = 'getparticipantidssupervisedbytheuser'
       // TODO RE-ADD WITH ADMIN NOVO ENDPOINT
-      if (adminMode.value) {
+      if (adminMode.value || superAdminMode.value) {
         endpoint = 'getassignedusers'
       }
       const list_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}`
+      console.log(`request to ${list_url}`)
       api.getAuth<any[]>(list_url, tokenComputed.value).then(
         (subjectlist: any[]) => {
           // clear the mapping
@@ -182,7 +193,7 @@ export default defineComponent({
 
     return {
       adminMode, error, groupComputed, loading, subjects, subjectsorted,
-      debugModeStore, route
+      debugModeStore, route, physCRCMode, superAdminMode
     }
   }
 })

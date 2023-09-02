@@ -1,6 +1,6 @@
 <template>
   <div class="group control-row rounded-lg w-full mx-4 pt-1 pb-2 px-4 even:bg-gray-100">
-    <div v-if="adminMode" class="user-mgmt-cell grid content-center">
+    <div v-if="adminMode || superAdminMode" class="user-mgmt-cell grid content-center">
       {{ userlistitem.fullname }}
     </div>
     <div v-else class="user-mgmt-cell grid content-center">
@@ -8,7 +8,7 @@
         {{ userlistitem.id }}
       </router-link>
     </div>
-    <div v-if="adminMode" class="user-mgmt-cell grid content-center">
+    <div v-if="adminMode || superAdminMode" class="user-mgmt-cell grid content-center">
       {{ userlistitem.role }}
     </div>
     <div class="flex">
@@ -80,8 +80,14 @@ export default defineComponent({
       console.log(`token: ${token}`)
       return token
     })
+    const physCRCMode = computed(() => {
+      return groupComputed.value.includes('physician') || groupComputed.value.includes('crc')
+    })
     const adminMode = computed(() => {
-      return route.path === '/physician-management' && (groupComputed.value.includes('admin') || groupComputed.value.includes('superadmin'))
+      return groupComputed.value.includes('admin')
+    })
+    const superAdminMode = computed(() => {
+      return groupComputed.value.includes('superadmin')
     })
 
     const options = ref([
@@ -97,7 +103,14 @@ export default defineComponent({
       else { return 'unknown' }
     })
     const isActive = computed(() => { return active.value === 1 })
+    const displayName = computed(() => { return adminMode.value ? props.userlistitem.fullname : props.userlistitem.id })
     // const computedActive = computed(() => { return lowerCase(status.value) === 'active' })
+
+    // Updating status of Phy/Crc/Participant is not refreshing the UI even-though the db is getting updated and sending correct response to the frontend
+    // 'pedapai' is being sent as projectname to most of the endpoints. I hardcoded 'novonordisktitration' in lambda functions to test user management pages. It has to be changed
+    // Couldn't verify 'SuperAdmin' adding 'Admin' because its not displaying the 'Management' tab/screen
+    // Admin (gSantini) login is displaying 'Physician mgmt' and also 'Participant mgmt' tabs
+    // Basal History page doesn't exist so couldn't test it
 
     const loading = ref(false)
     const updateMsg = ref(null)
@@ -111,7 +124,6 @@ export default defineComponent({
       // const oldStatus = selectedStatus === '1' ? '0' : '1'
       const oldStatus = !selectedStatus
       // basically a flag that we check at .finally() to see if we need to swap back
-      let toggleChange = false
       let updateEndpoint = 'updateparticipantstatus'
       let idparam = 'subject_id'
       if (adminMode.value) {
@@ -136,29 +148,28 @@ export default defineComponent({
             }
             updateMsg.value = response.ttest.message
           }
+          let response_content = {} as any
           if (typeof (response.body) !== 'undefined') {
-            const response_body = JSON.parse(response.body)
-            console.log(response_body)
-            if (typeof (response_body.update_success) !== 'undefined' && response_body.update_success !== -1) {
-              toggleChange = true
+            response_content = JSON.parse(response.body)
+          } else { response_content = response }
+          console.log(response_content)
+          if (typeof (response_content.update_success) !== 'undefined') {
+            if (response_content.update_success === -1) {
+              errors.errorLog(`${componentName}; error updating user ${displayName.value}`, true)
             }
-          }
+            active.value = response_content.active_status_db
+          } 
         }).catch(err => {
           console.log(err.message)
           errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
         }).finally(() => {
-          if (toggleChange) {
-            active.value = selectedStatus ? 1 : 0
-          } else {
-            active.value = oldStatus ? 1 : 0
-          }
           loading.value = false
         })
     }
 
     return {
       active, isActive, loading, updateActiveStatus, debugModeStore,
-      groupComputed, options, statusString, adminMode
+      groupComputed, options, statusString, physCRCMode, adminMode, superAdminMode
     }
   }
 })

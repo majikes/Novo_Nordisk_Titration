@@ -1,12 +1,8 @@
 <template>
-    <div class="flex flex-wrap justify-between gap-4 mt-4">
-      <div v-if="userlistitems">
-        <UserManagementListItem
-            v-for="userlistitem in userlistitems" :key="userlistitem.id" 
-            :userlistitem="userlistitem" 
-            />
-      </div>
-    </div>
+  <div v-if="userlistitems" class="flex flex-wrap justify-between mt-4">
+    <UserManagementListItem v-for="userlistitem in userlistitems" :key="userlistitem.id"
+        :userlistitem="userlistitem" />
+  </div>
 </template>
 
 
@@ -18,9 +14,9 @@ import { lowerCase } from 'lodash'
 
 export default defineComponent({
     name: 'UserManagementList',
-    components: {UserManagementListItem},
+    components: { UserManagementListItem },
     props: {
-        userlistitems:{
+        userlistitems: {
             required: true,
             type: Array as PropType<UserListItem[]>
         },
@@ -28,7 +24,7 @@ export default defineComponent({
     },
     setup(props) {
 
-    return { }
+        return {}
     }
 })
 
