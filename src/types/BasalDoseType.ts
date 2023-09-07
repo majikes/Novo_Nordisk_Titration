@@ -1,8 +1,10 @@
 interface BasalDoseType {
     id: string,
     date: string | Date,
-    timeOfDayInMinutes: number,
+    basalDoseTimeOfDayInMinutes: number,
     basalDoseValue: number,
+    src_id: string,
+    time: number
   }
 
 export default BasalDoseType

@@ -2,34 +2,44 @@
 <template>
   <div class="agp">
     <div class="control-row-header" id="header">
-      <h1 class="text-2xl font-bold">AGP</h1>
+      <h1 class="text-2xl font-bold">Ambulatory Glucose Profile</h1>
     </div>
+    <!-- datepicker / subject dropdown -->
     <div class="control-row content-end">
-      <div>
-        <label for="startDate">Start date:</label>
-        <input type="date" class="form-input date-input" id="startDate" :disabled="subjectDateDisabled" :min="firstLog"
-          :max="lastLog" v-model="startDate">
-      </div>
-      <div>
-        <label for="endDate">End date:</label>
-        <input type="date" class="form-input date-input" id="endDate" :disabled="subjectDateDisabled" :min="firstLog"
-          :max="lastLog" v-model="endDate">
+      <div class="grid content-end pb-1" id="titrationdatepickerstandin">
+        <VueDatePicker v-model="date" :min-date="dateBounds.min" :max-date="dateBounds.max" :enable-time-picker="false"
+          :disabled="noSubjSelected || !validDateReq" :start-date="dateBounds.max" range auto-apply />
       </div>
       <div class="grid content-end">
-        <button class="form-input btn" id="graph-button" :disabled="buttonDisabled" @click="graphData">Graph</button>
+        <button class="btn w-52" id="graph-button" :disabled="buttonDisabled" @click="graphData">Graph</button>
       </div>
-      <SubjectDropdown v-model="selected"/>
+      <SubjectDropdown v-model="selected" />
     </div>
-    <div class="control-row content-end py-3">
-      <div id="titrate-link">
-        <!-- <router-link class="form-input btn"
-          :to="{ name: 'TitrationView', params: { subjectId: route.params.subjectId } }">Titrate
-        </router-link> -->
+    <!-- titrate link / latest basal dose -->
+    <div class="grid grid-cols-2 justify-between content-end p-4 bg-gray-200 rounded-lg my-4">
+      <router-link :to="{ name: 'TitrateView', params: { subjectId: route.params.subjectId } }">
+        <div class="btn w-52 force-center-content">
+          Titrate {{ route.params.subjectId }}
+        </div>
+      </router-link>
+      <div class="flex justify-between rounded-lg bg-white px-4 w-full" id="basaldoselatest">
+        <div class="force-center-content ">Current basal insulin dose: </div>
+        <div class="force-center-content px-2"
+          :class="{ 'text-gray-500': basalsLoading, 'font-semibold': !basalsLoading }">
+          {{ lastDoseText }}
+        </div>
+        <div class="force-center-content">
+          <router-link :to="{ name: 'BasalDoseHistory', params: { subjectId: route.params.subjectId } }">
+            <div class="btn-small force-center-content">
+              History
+            </div>
+          </router-link>
+        </div>
       </div>
     </div>
     <div class="grid py-3 content-center place-items-center" v-if="subjectDetailsLoading">Loading subject details...
     </div>
-
+    <!-- agp/tir graphs -->
     <div class="grid grid-cols-12 py-1">
       <div class="col-span-10">
         <!-- glucose row -->
@@ -52,48 +62,65 @@
 </template>
   
 <script lang="ts">
-import { computed, defineComponent, onMounted, ref } from 'vue'
+import { computed, defineComponent, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import QuantileChart from '@/components/QuantileChart.vue'
+import VueDatePicker from '@vuepic/vue-datepicker'
+import TiRChart from '@/components/TiRChart.vue'
 import SubjectGraphable from '@/types/SubjectGraphable'
 import QuantileGraphable from '@/types/QuantileGraphable'
 import SubjectDetails from '@/types/SubjectDetails'
 import SubjectDropdown from '@/components/SubjectDropdown.vue'
+import SubjectDatesFromAPIType from '@/types/SubjectDatesFromAPIType'
+import BasalDoseType from '@/types/BasalDoseType'
 import { useSubjectIdStore } from '@/stores/SubjectIdStore'
 import { api, dateConvertToISO } from '@/functions/GlobalFunctions'
-import TiRChart from '@/components/TiRChart.vue'
 import { useApiURL, useApiURLNovo } from '@/globalConfigPlugin'
-import { first } from 'lodash'
+import { useDebugModeStore } from '@/stores/debugModeStore'
+import { useAuthenticator } from '@aws-amplify/ui-vue'
+import { useErrorStore } from '@/stores/ErrorStore'
+import { lowerCase } from 'lodash'
 
 export default defineComponent({
   name: 'AGP',
-  components: { QuantileChart, SubjectDropdown, TiRChart },
+  components: { QuantileChart, SubjectDropdown, TiRChart, VueDatePicker },
   setup() {
+    const debugModeStore = useDebugModeStore()
+    const auth = useAuthenticator()
     const apiRootURL = useApiURL()
     const apiRootURLNovo = useApiURLNovo()
     // initialize selected ref() used for dropdown v-model to url value
     // and treat undefined param as '' to properly select empty option
+    const errors = useErrorStore()
+    const componentName = 'AGP'
+    const groupComputed = computed(() => {
+      let group = [] as string[]
+      if (typeof (auth.user) !== 'undefined' &&
+        typeof (auth.user.signInUserSession) !== 'undefined' &&
+        typeof (auth.user.signInUserSession.idToken.payload["cognito:groups"]) !== 'undefined') {
+        group = auth.user.signInUserSession.idToken.payload["cognito:groups"].map(lowerCase)
+      }
+      console.log(`group: ${group}`)
+      return group
+    })
+    const tokenComputed = computed(() => {
+      // 'Authorization': cognitoUser.signInUserSession.idToken.jwtToken
+      let token = ''
+      if (typeof (auth.user.signInUserSession) !== 'undefined' && typeof (auth.user.signInUserSession.idToken.jwtToken) !== 'undefined') {
+        token = auth.user.signInUserSession.idToken.jwtToken
+      }
+      console.log(`token: ${token}`)
+      return token
+    })
     const route = useRoute()
     const selected = ref('')
     selected.value = route.params.subjectId === undefined ? '' : route.params.subjectId as string
-
-    // 'loading' and other flags that we'll need
-    // primarily used to enable and disable fields for input
-    const subjectListLoading = ref(true)
-    const subjectDetailsLoading = ref(false)
-    const subjectGraphLoading = ref(false)
-    // this one is a computed value
-    // true if subjid is empty OR if subjectDetails are loading
-    const subjectDateDisabled = computed(() => {
-      return (subjectDetailsLoading.value || selected.value === '')
-    })
-    // v-model of date inputs
-    const startDate = ref('')
-    const endDate = ref('')
-    // then computed value that disables button
-    // if either date input is empty ('')
-    const buttonDisabled = computed(() => {
-      return (startDate.value === '' || endDate.value === '')
+    watch(selected, () => {
+      console.log(`dropdown: ${selected.value}`)
+      console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
+      getValidDates()
+      getBasalDoseHistory()
+      getTitrationDates()
     })
 
     const subjectIdStore = useSubjectIdStore()
@@ -106,165 +133,196 @@ export default defineComponent({
     const tir2Graphable = ref([] as number[])
     // loaded flag for QuantileChart etc, should be false when subj changes
     const loaded = ref(false)
+    const datesLoaded = ref(false)
+
+    // date bounds load
+    // 
+    const date = ref([] as Date[])
+    const dateTS = computed(() => {
+      let retArr = [] as number[]
+      for (const d of date.value) {
+        const utcMilllisecondsSinceEpoch = d.getTime() + (d.getTimezoneOffset() * 60 * 1000)
+        const utcSecondsSinceEpoch = Math.round(utcMilllisecondsSinceEpoch / 1000)
+        retArr.push(utcSecondsSinceEpoch)
+      }
+      return retArr
+    })
+    // const startDate = 
+    const dateBounds = ref({
+      min: {} as Date,
+      max: {} as Date
+    })
+    const datesValid = computed(() => {
+      let retValid = true
+      if (date.value !== null && date.value.length === 2) {
+        for (const d of date.value) {
+          retValid &&= d >= dateBounds.value.min
+          retValid &&= d <= dateBounds.value.max
+        }
+      } else {
+        retValid = false
+      }
+      return retValid
+    })
+
+    // 'loading' and other flags that we'll need
+    // primarily used to enable and disable fields for input
+    const subjectListLoading = ref(true)
+    const subjectDetailsLoading = ref(false)
+    const subjectGraphLoading = ref(false)
+    const customRangeDrawn = ref(false)
+    // this one is a computed value
+    // true if subjid is empty OR if subjectDetails are loading
+    const subjectDateDisabled = computed(() => {
+      return (subjectDetailsLoading.value || selected.value === '')
+    })
+    const noSubjSelected = computed(() => {
+      return selected.value === ''
+    })
+    // then computed value that disables button
+    // if either date input is empty ('')
+    const buttonDisabled = computed(() => {
+      return (!datesValid.value)
+    })
 
     //////////////////////////
     // functions
     //////////////////////////
 
-    // subjectList load
-    // const subjectList = ref<string[]>([])
-    // const error = ref(null)
-    // onMounted(async () => {
-    //   await api.get<string[]>('http://localhost:3000/subjectListLimited').then(
-    //     (apiSubjectList:string[]) => {
-    //       subjectList.value = apiSubjectList
-    //     }).catch(err => {
-    //       error.value = err.message
-    //       console.log(error.value)
-    //     }).finally(() => {
-    //       subjectListLoading.value = false
-    //     })
-    // })
+    const yesterday_local = ref({} as Date)
+    const one_week_ago_local = ref({} as Date)
 
-    // route change callback on select change
-    // const router = useRouter()
-    function changeSelected(event: Event) {
-      // TODO idk if we even need this guard anymore thanks to v-model
-      if (event.target instanceof HTMLSelectElement) {
-        console.log(`dropdown: ${selected.value}`)
-        console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
-        // router.push({ name: 'AGP', params: { subjectId: selected.value } })
-        // loaded.value = false
-        getDateRangeLimits()
-      }
-    }
-
-    // TODO on changeSelected and on pageload IF selected != '', get subject details
-    // while loading, disable date inputs, subject dropdown, 'graph' button
-    // incoming dates from API are MM/DD/YYYY, min and max HTML attrs are YYYY-MM-DD
-    const firstLog = ref('')
-    const lastLog = ref('')
+    const firstDate = ref('')
+    const lastDate = ref('')
     const sdError = ref(null)
-    function getDateRangeLimits() {
-      console.log(`getDateRangeLimits subjid: ${selected.value}`)
+    const validDateReq = ref(false)
+    function getValidDates() {
+      console.log(`getValidDates subjid: ${selected.value}`)
       if (selected.value !== '') {
-        // reset firstLog and lastLog
-        firstLog.value = ''
-        lastLog.value = ''
+        // reset firstDate and lastDate
+        firstDate.value = ''
+        lastDate.value = ''
+        customRangeDrawn.value = false
         subjectDetailsLoading.value = true
-        // await api.get
-        // api call for deets, for now only firstLog and lastLog
-        // const req_url = `${apiRootURL}/getsubjects?subject_id=${selected.value}`
-        // console.log(`request to ${req_url}`)
-        // api.get<SubjectDetails>(req_url).then(
-        //   (subjectDetails: SubjectDetails) => {
-        //     firstLog.value = dateConvertToISO(subjectDetails.firstLog)
-        //     lastLog.value = dateConvertToISO(subjectDetails.lastLog)
-        //     console.log(`subject available dates: ${firstLog.value} - ${lastLog.value}`)
-        //     console.log(subjectDetails)
-        //   }).catch(err => {
-        //     sdError.value = err.message
-        //     console.log(sdError.value)
-        //   }).finally(() => {
-        //     subjectDetailsLoading.value = false
-        //   })
-        const defaultStartDate = '01/01/2021'
-        const startDates = {
-          '81101': '07/27/2021',
-          '81102': '08/12/2021',
-          '81103': '08/19/2021',
-          '81104': '08/13/2021',
-          '81105': '08/13/2021',
-          '81106': '08/12/2021',
-          '81107': '08/13/2021',
-          '81108': '08/26/2021',
-          '81109': '09/02/2021',
-          '81110': '08/24/2021',
-          '81111': '08/25/2021',
-          '81113': '10/14/2021',
-          '81114': '09/24/2021',
-          '81115': '09/13/2021',
-          '81116': '09/13/2021',
-          '81117': '10/01/2021',
-          '81118': '09/22/2021',
-          '81119': '10/08/2021',
-          '81120': '10/21/2021',
-          '81121': '10/18/2021',
-          '81122': '10/15/2021',
-          '81123': '10/20/2021',
-          '81124': '10/20/2021',
-          '81125': '10/18/2021',
-          '81126': '10/25/2021',
-          '81127': '10/22/2021',
-          '81128': '10/25/2021',
-          '81129': '10/27/2021',
-          '81130': '10/21/2021',
-          '81131': '10/22/2021'
-        }
-        const endDate = '12/31/2023'
-        console.log('HARDCODED DATERANGE GET')
-        const startDate = '08/12/2021'
-        if (selected.value in startDates) {
-          const storedStart = (startDates as any)[selected.value]
-          // console.log(`subjid: ${selected.value}; storedVal: ${storedStart}`)
-          firstLog.value = dateConvertToISO(storedStart)
-          let endTmp = new Date(storedStart)
-          endTmp.setMonth(endTmp.getMonth() + 2)
-          ///lastLog.value = endTmp.toISOString().split('T')[0]
-          lastLog.value = dateConvertToISO(endDate)
-        } else { 
-          firstLog.value = dateConvertToISO(startDate)
-          lastLog.value = dateConvertToISO(endDate)
-        }
-        
+        datesLoaded.value = false
+        subjectGraphLoading.value = true
+        validDateReq.value = false
 
-        console.log(`dates: ${firstLog.value} - ${lastLog.value}`)
-        subjectDetailsLoading.value = false
+        yesterday_local.value = new Date()
+        yesterday_local.value.setDate(yesterday_local.value.getDate() - 1)
+        one_week_ago_local.value = new Date()
+        one_week_ago_local.value.setDate(one_week_ago_local.value.getDate() - 7)
+
+        const endpoint = 'getsubjectvaliddates'
+        const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&subject_id=${selected.value}`
+        console.log(`request to ${req_url}`)
+        api.getAuth<SubjectDatesFromAPIType>(req_url, tokenComputed.value).then(
+          (firstAGPResponse: SubjectDatesFromAPIType) => {
+            console.log(`first AGP get SUCCESS for subject ${selected.value}`)
+            console.log(firstAGPResponse)
+            if (typeof (firstAGPResponse.startAndEndDates) !== 'undefined') {
+              validDateReq.value = true
+              console.log('start and end dates:', firstAGPResponse.startAndEndDates)
+              const dateBoundMin = new Date(firstAGPResponse.startAndEndDates.min_TS * 1000)
+              const dateBoundMax = new Date(firstAGPResponse.startAndEndDates.max_TS * 1000)
+              console.log('datebounds:', dateBoundMin, dateBoundMax)
+              dateBounds.value.min = dateBoundMin
+              dateBounds.value.max = dateBoundMax
+            }
+            datesLoaded.value = true
+          }).catch(err => {
+            sdError.value = err.message
+            errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+            dateBounds.value.min = yesterday_local.value
+            dateBounds.value.max = one_week_ago_local.value
+            console.log(sdError.value)
+          }).finally(() => {
+            subjectDetailsLoading.value = false
+            subjectGraphLoading.value = false
+          })
       }
     }
     // initial invoke on page load to get available date ranges
-    getDateRangeLimits()
+    // watch
+    getValidDates()
 
-    // helper function to just validate date range input
-    // TODOS:
-    // - make sure range is in correct order
-    // - implement validation from adduser??
-    // - implement daterangepicker
-    // const validDates = computed(() => {
-    //   if (firstLog.value === '' || lastLog.value === '' || startDate.value === '' || endDate.value === '') {
-    //     return false
-    //   } else {
-    //     const firstLogDate = new Date(firstLog.value)
-    //     const lastLogDate = new Date(lastLog.value)
-    //     const startDateDate = new Date(startDate.value)
-    //     const endDateDate = new Date(endDate.value)
-    //     if (endDateDate > lastLogDate || startDateDate < firstLogDate || startDateDate > endDateDate) {
-    //       return false
-    //     } else {
-    //       return true
-    //     }
-    //   }
-    // })
+
+    const basalDoseHistory = ref([] as BasalDoseType[])
+    const lastDoseText = computed(() => {
+      let doseStr = 'N/A'
+      if (basalsLoading.value) {
+        doseStr = 'Loading...'
+      } else if (basalDoseHistory.value.length <= 0) {
+        doseStr = 'N/A'
+      } else {
+        doseStr = `${basalDoseHistory.value[0].basalDoseValue}U`
+      }
+      return doseStr
+    })
+
+    const basalsLoading = ref(false)
+    function getBasalDoseHistory() {
+      console.log('loading dose histories')
+      basalsLoading.value = true
+      console.log('clearing displayed basal dose history')
+      basalDoseHistory.value = [] as BasalDoseType[]
+      const endpoint = 'getbasaldosehistory'
+      console.log(`GET request to /${endpoint}`)
+      const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&subject_username=${selected.value}`
+      console.log(`request to ${req_url}`)
+      // server response:
+      // {"id":"103","date":"08/29/2023", "timeOfDayInMinutes":1340, "basalDoseValue":40}
+      api.getAuth<any[]>(req_url, tokenComputed.value).then(
+        (doseHistoryList: any[]) => {
+          console.log('successful basal dose history request')
+          console.log(doseHistoryList)
+          for (const dose of doseHistoryList) {
+            const tmpDose = {
+              id: '',
+              date: '',
+              basalDoseTimeOfDayInMinutes: -1,
+              basalDoseValue: -1,
+              src_id: '-1',
+              time: -1,
+            }
+            tmpDose.id = dose.id
+            tmpDose.date = dose.date
+            tmpDose.basalDoseTimeOfDayInMinutes = dose.basalDoseTimeOfDayInMinutes
+            tmpDose.basalDoseValue = dose.basalDoseValue
+            tmpDose.src_id = dose.src_id
+            tmpDose.time = dose.time
+            basalDoseHistory.value.push(tmpDose)
+          }
+        }).catch(err => {
+          console.log(err.message)
+          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+        }).finally(() => {
+          console.log('done')
+          basalsLoading.value = false
+        })
+    }
+    getBasalDoseHistory()
+
+
     const validDates = ref(true)
 
     // get / update data to graph
     const graphError = ref(null)
     function graphData() {
-      if (!validDates.value) {
-        console.log(`${startDate.value} - ${endDate.value}: invalid range`)
+      if (!datesValid.value) {
+        console.log(`${date.value}: invalid range`)
       } else {
-        console.log(`${startDate.value} - ${endDate.value}: VALID`)
-        const startTS = Math.floor((new Date(startDate.value).valueOf()) / 1000)
-        const endTS = Math.floor((new Date(endDate.value).valueOf()) / 1000)
+        console.log(`${date.value}: VALID`)
         // console.log('graphing...')
         // console.log(startTS,endTS)
         loaded.value = false
         subjectGraphLoading.value = true
         // TODO pass dates as arguments
         ///const req_url = `${apiRootURL}/getsubjects?subject_id=${selected.value}&day1=${startTS.valueOf()}&day2=${endTS.valueOf()}`
-        const req_url = `${apiRootURLNovo}/agp?subject_id=${selected.value}&day1=${startTS.valueOf()}&day2=${endTS.valueOf()}`
+        // const req_url = `${apiRootURLNovo}/agp?username=${auth.user.username}&subject_id=${selected.value}&day1=${date.value[0].toISOString().split('T')[0]}&day2=${date.value[1].toISOString().split('T')[0]}`
+        const req_url = `${apiRootURLNovo}/agp?username=${auth.user.username}&subject_id=${selected.value}&day1=${dateTS.value[0]}&day2=${dateTS.value[1]}`
         console.log(`request to ${req_url}`)
-        api.get<SubjectGraphable>(req_url).then(
+        api.getAuth<SubjectGraphable>(req_url, tokenComputed.value).then(
           (subjectGraphable: SubjectGraphable) => {
             console.log('success!')
             console.log(subjectGraphable)
@@ -312,11 +370,32 @@ export default defineComponent({
       }
     }
 
+    // get titration dates as well
+    const titrationDatesLoading = ref(false)
+    function getTitrationDates() {
+      titrationDatesLoading.value = true
+      const endpoint = 'gettitratedates'
+      const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&subject_username=${selected.value}`
+      console.log(`request to ${req_url}`)
+      api.getAuth<any>(req_url, tokenComputed.value).then(
+        (response: any) => {
+          console.log(`${endpoint} success!`)
+          console.log(response)
+          // TODO need correct response format
+        }).catch(err => {
+          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+          console.log(err.message)
+        }).finally(() => {
+          titrationDatesLoading.value = false
+        })
+    }
+    getTitrationDates()
+
     return {
-      selected, changeSelected,
+      selected, date, dateBounds, noSubjSelected,
       subjectDateDisabled, subjectDetailsLoading, subjectListLoading, subjectGraphLoading,
-      graphData, graphableGlucose, graphableInsulin, loaded, startDate, endDate, firstLog, lastLog, buttonDisabled,
-      route, sdError, tir1Graphable, tir2Graphable
+      graphData, graphableGlucose, graphableInsulin, loaded, buttonDisabled, datesValid,
+      route, sdError, tir1Graphable, tir2Graphable, validDateReq, lastDoseText, basalsLoading
     }
   }
 })

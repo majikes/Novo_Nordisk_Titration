@@ -6,7 +6,7 @@
   </div>
   <div v-for="(dose, index) in doseHistory" :key="index" class="dose-history-table-simple-row">
     <div class="px-4">{{dose.date}}</div>
-    <div class="px-4">{{dose.timeOfDayInMinutes}}</div>
+    <div class="px-4">{{dose.basalDoseTimeOfDayInMinutes}}</div>
     <div class="px-4">{{dose.basalDoseValue}}</div>
   </div>
 </template>

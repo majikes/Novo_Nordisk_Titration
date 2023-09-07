@@ -7,7 +7,7 @@
     <div class="flex justify-end my-1">
       <SubjectDropdown v-model="selected" />
     </div>
-    <BasalDoseHistoryTable :doseHistory="basalDoseHistoryConditional" />
+    <BasalDoseHistoryTable :doseHistory="basalDoseHistory" />
     <div v-if="debugModeStore.debugMode">
 
     </div>
@@ -66,16 +66,7 @@ export default defineComponent({
     })
 
 
-
-    const basalDoseHistoryTest = [
-      { "id": "103", "date": "08/29/2023", "timeOfDayInMinutes": 1340, "basalDoseValue": 40 },
-      { "id": "102", "date": "08/22/2023", "timeOfDayInMinutes": 1300, "basalDoseValue": 45 },
-      { "id": "101", "date": "08/15/2023", "timeOfDayInMinutes": 1160, "basalDoseValue": 43 }
-    ] as BasalDoseType[]
     const basalDoseHistory = ref([] as BasalDoseType[])
-    const basalDoseHistoryConditional = computed(() => {
-      return debugModeStore.debugMode ? basalDoseHistoryTest : basalDoseHistory.value
-    })
     const basalsLoading = ref(false)
 
     function getBasalDoseHistory() {
@@ -85,7 +76,7 @@ export default defineComponent({
       basalDoseHistory.value = [] as BasalDoseType[]
       const endpoint = 'getbasaldosehistory'
       console.log(`GET request to /${endpoint}`)
-      const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&subject_id=${selected.value}`
+      const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_username=${selected.value}`
       console.log(`request to ${req_url}`)
       // server response:
       // {"id":"103","date":"08/29/2023", "timeOfDayInMinutes":1340, "basalDoseValue":40}
@@ -97,13 +88,17 @@ export default defineComponent({
             const tmpDose = {
               id: '',
               date: '',
-              timeOfDayInMinutes: -1,
+              basalDoseTimeOfDayInMinutes: -1,
               basalDoseValue: -1,
+              src_id: '-1',
+              time: -1,
             }
             tmpDose.id = dose.id
             tmpDose.date = dose.date
-            tmpDose.timeOfDayInMinutes = dose.timeOfDayInMinutes
+            tmpDose.basalDoseTimeOfDayInMinutes = dose.basalDoseTimeOfDayInMinutes
             tmpDose.basalDoseValue = dose.basalDoseValue
+            tmpDose.src_id = dose.src_id
+            tmpDose.time = dose.time
             basalDoseHistory.value.push(tmpDose)
           }
         }).catch(err => {
@@ -117,7 +112,7 @@ export default defineComponent({
     getBasalDoseHistory()
 
     return {
-      debugModeStore, selected, groupComputed, basalsLoading, basalDoseHistory, basalDoseHistoryConditional
+      debugModeStore, selected, groupComputed, basalsLoading, basalDoseHistory, 
     }
   }
 })
