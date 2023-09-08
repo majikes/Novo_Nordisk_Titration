@@ -26,14 +26,11 @@
 
     <!-- titrate link / latest basal dose -->
     <div class="grid grid-cols-2 justify-between content-end p-4 gap-2 bg-gray-200 rounded-lg my-4">
-      <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoselatest" title="9/12/2023">
+      <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoselatest" :title="lastDoseDateText">
         <!-- :title="lastDoseDate" -->
         <div class="force-center-content ">Current basal insulin dose: </div>
-        <!-- <div class="force-center-content px-2" :class="{'text-gray-500': basalsLoading, 'font-semibold': !basalsLoading }">
+        <div class="force-center-content px-2" :class="{'text-gray-500': basalsLoading, 'font-semibold': !basalsLoading }">
             {{lastDoseText}}
-        </div> -->
-        <div class="force-center-content px-4 font-semibold">
-          10U
         </div>
       </div>
       <div class="flex items-center justify-end">
@@ -46,7 +43,7 @@
 
       <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoserec" title="9/23/2023">
         <div class="force-center-content ">New recommended basal insulin dose: </div>
-        <div class="force-center-content px-4 font-semibold">
+        <div class="force-center-content px-2 font-semibold">
           N/A
           <!-- {{newDoseText}} -->
         </div>
@@ -88,6 +85,7 @@ import QuantileChart from '@/components/QuantileChart.vue'
 import SubjectGraphable from '@/types/SubjectGraphable'
 import QuantileGraphable from '@/types/QuantileGraphable'
 import TitrateGraphable from '@/types/TitrateGraphable'
+import BasalDoseType from '@/types/BasalDoseType'
 import { api } from '@/functions/GlobalFunctions'
 import TiRChart from '@/components/TiRChart.vue'
 import { useApiURL, useApiURLNovo } from '@/globalConfigPlugin'
@@ -160,6 +158,7 @@ export default defineComponent({
       // loaded.value = false
       graphData()
       getTitration()
+      getBasalDoseHistory()
     })
 
     //////////////////////////
@@ -259,6 +258,71 @@ export default defineComponent({
     }
     getTitration()
 
+    const lastDoseText = computed(() => {
+      let doseStr = 'N/A'
+      if (basalsLoading.value) {
+        doseStr = 'Loading...'
+      } else if (basalDoseHistory.value.length <= 0) {
+        doseStr = 'N/A'
+      } else {
+        doseStr = `${basalDoseHistory.value[0].basalDoseValue}U`
+      }
+      return doseStr
+    })
+    const lastDoseDateText = computed(() => {
+      let retStr = ''
+      if (!basalsLoading.value && basalDoseHistory.value.length) {
+        const fullDate = new Date(basalDoseHistory.value[0].time*1000)
+        retStr = `${fullDate.toUTCString()}`
+      }
+      return retStr
+    })
+
+    const basalDoseHistory = ref([] as BasalDoseType[])
+    const basalsLoading = ref(false)
+
+    function getBasalDoseHistory() {
+      console.log('loading')
+      basalsLoading.value = true
+      console.log('clearing displayed basal dose history')
+      basalDoseHistory.value = [] as BasalDoseType[]
+      const endpoint = 'getbasaldosehistory'
+      console.log(`GET request to /${endpoint}`)
+      const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_username=${selected.value}`
+      console.log(`request to ${req_url}`)
+      // server response:
+      // {"id":"103","date":"08/29/2023", "timeOfDayInMinutes":1340, "basalDoseValue":40}
+      api.getAuth<any[]>(req_url, tokenComputed.value).then(
+        (doseHistoryList: any[]) => {
+          console.log('successful basal dose history request')
+          console.log(doseHistoryList)
+          for (const dose of doseHistoryList) {
+            const tmpDose = {
+              id: '',
+              date: '',
+              basalDoseTimeOfDayInMinutes: -1,
+              basalDoseValue: -1,
+              src_id: '-1',
+              time: -1,
+            }
+            tmpDose.id = dose.id
+            tmpDose.date = dose.date
+            tmpDose.basalDoseTimeOfDayInMinutes = dose.basalDoseTimeOfDayInMinutes
+            tmpDose.basalDoseValue = dose.basalDoseValue
+            tmpDose.src_id = dose.src_id
+            tmpDose.time = dose.time
+            basalDoseHistory.value.push(tmpDose)
+          }
+        }).catch(err => {
+          console.log(err.message)
+          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+        }).finally(() => {
+          console.log('done')
+          basalsLoading.value = false
+        })
+    }
+    getBasalDoseHistory()
+
     const submitLoading = ref(false)
     function submitTitration() {
       submitLoading.value = true
@@ -284,9 +348,10 @@ export default defineComponent({
     }
 
     return {
-      selected, subjectDetailsLoading, subjectListLoading, subjectGraphLoading,
-      graphData, graphableGlucose, loaded, submitTitration, titrateLoading,
-      route, tir1Graphable, modifyFlag, debugModeStore, groupComputed, modifyDisabled,
+      selected, subjectDetailsLoading, subjectListLoading, subjectGraphLoading, lastDoseText,
+      graphData, graphableGlucose, loaded, submitTitration, titrateLoading, lastDoseDateText,
+      route, tir1Graphable, modifyFlag, debugModeStore, groupComputed, modifyDisabled, 
+      basalsLoading,
 
     }
   }

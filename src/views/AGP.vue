@@ -17,22 +17,20 @@
     </div>
     <!-- titrate link / latest basal dose -->
     <div class="grid grid-cols-2 justify-between content-end p-4 bg-gray-200 rounded-lg my-4">
-      <router-link :to="{ name: 'TitrateView', params: { subjectId: route.params.subjectId } }">
-        <div class="btn w-52 force-center-content">
-          Titrate {{ route.params.subjectId }}
-        </div>
+      <router-link class="btn w-52 force-center-content"
+        :to="{ name: 'TitrateView', params: { subjectId: route.params.subjectId } }">
+        Titrate {{ route.params.subjectId }}
       </router-link>
-      <div class="flex justify-between rounded-lg bg-white px-4 w-full" id="basaldoselatest">
+      <div class="flex justify-between rounded-lg bg-white px-4 w-full" id="basaldoselatest" :title="lastDoseDateText">
         <div class="force-center-content ">Current basal insulin dose: </div>
         <div class="force-center-content px-2"
           :class="{ 'text-gray-500': basalsLoading, 'font-semibold': !basalsLoading }">
           {{ lastDoseText }}
         </div>
         <div class="force-center-content">
-          <router-link :to="{ name: 'BasalDoseHistory', params: { subjectId: route.params.subjectId } }">
-            <div class="btn-small force-center-content">
-              History
-            </div>
+          <router-link class="btn-small force-center-content"
+            :to="{ name: 'BasalDoseHistory', params: { subjectId: route.params.subjectId } }">
+            History
           </router-link>
         </div>
       </div>
@@ -118,6 +116,11 @@ export default defineComponent({
     watch(selected, () => {
       console.log(`dropdown: ${selected.value}`)
       console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
+      loaded.value = false
+      graphableGlucose.value = {} as QuantileGraphable
+      graphableInsulin.value = {} as QuantileGraphable
+      tir1Graphable.value = [] as number[]
+      tir2Graphable.value = [] as number[]
       getValidDates()
       getBasalDoseHistory()
       getTitrationDates()
@@ -136,7 +139,7 @@ export default defineComponent({
     const datesLoaded = ref(false)
 
     // date bounds load
-    // 
+    // TODO CHECK BULLSHIT UTC STUFF
     const date = ref([] as Date[])
     const dateTS = computed(() => {
       let retArr = [] as number[]
@@ -200,6 +203,7 @@ export default defineComponent({
       console.log(`getValidDates subjid: ${selected.value}`)
       if (selected.value !== '') {
         // reset firstDate and lastDate
+        date.value = [] as Date[]
         firstDate.value = ''
         lastDate.value = ''
         customRangeDrawn.value = false
@@ -259,6 +263,14 @@ export default defineComponent({
       }
       return doseStr
     })
+    const lastDoseDateText = computed(() => {
+      let retStr = ''
+      if (!basalsLoading.value && basalDoseHistory.value.length) {
+        const fullDate = new Date(basalDoseHistory.value[0].time * 1000)
+        retStr = `${fullDate.toUTCString()}`
+      }
+      return retStr
+    })
 
     const basalsLoading = ref(false)
     function getBasalDoseHistory() {
@@ -268,7 +280,7 @@ export default defineComponent({
       basalDoseHistory.value = [] as BasalDoseType[]
       const endpoint = 'getbasaldosehistory'
       console.log(`GET request to /${endpoint}`)
-      const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&subject_username=${selected.value}`
+      const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_username=${selected.value}`
       console.log(`request to ${req_url}`)
       // server response:
       // {"id":"103","date":"08/29/2023", "timeOfDayInMinutes":1340, "basalDoseValue":40}
@@ -392,7 +404,7 @@ export default defineComponent({
     getTitrationDates()
 
     return {
-      selected, date, dateBounds, noSubjSelected,
+      selected, date, dateBounds, noSubjSelected, lastDoseDateText,
       subjectDateDisabled, subjectDetailsLoading, subjectListLoading, subjectGraphLoading,
       graphData, graphableGlucose, graphableInsulin, loaded, buttonDisabled, datesValid,
       route, sdError, tir1Graphable, tir2Graphable, validDateReq, lastDoseText, basalsLoading
