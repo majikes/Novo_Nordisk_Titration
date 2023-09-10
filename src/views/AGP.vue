@@ -8,12 +8,15 @@
     <div class="control-row content-end">
       <div class="grid content-end pb-1" id="titrationdatepickerstandin">
         <VueDatePicker v-model="date" :min-date="dateBounds.min" :max-date="dateBounds.max" :enable-time-picker="false"
-          :disabled="noSubjSelected || !validDateReq" :start-date="dateBounds.max" range auto-apply />
+          :disabled="noSubjSelected || !validDateReq" :start-date="dateBounds.max" range auto-apply :markers="titrationDatesComputed" />
       </div>
       <div class="grid content-end">
         <button class="btn w-52" id="graph-button" :disabled="buttonDisabled" @click="graphData">Graph</button>
       </div>
       <SubjectDropdown v-model="selected" />
+    </div>
+    <div v-if="debugModeStore.debugMode">
+      {{titrationDatesComputed}}
     </div>
     <!-- titrate link / latest basal dose -->
     <div class="grid grid-cols-2 justify-between content-end p-4 bg-gray-200 rounded-lg my-4">
@@ -77,7 +80,7 @@ import { useApiURL, useApiURLNovo } from '@/globalConfigPlugin'
 import { useDebugModeStore } from '@/stores/debugModeStore'
 import { useAuthenticator } from '@aws-amplify/ui-vue'
 import { useErrorStore } from '@/stores/ErrorStore'
-import { lowerCase } from 'lodash'
+import { cloneDeep, lowerCase, range } from 'lodash'
 
 export default defineComponent({
   name: 'AGP',
@@ -315,6 +318,64 @@ export default defineComponent({
     }
     getBasalDoseHistory()
 
+    // vue datepicker specific
+    // https://vue3datepicker.com/props/general-configuration/#markers
+    interface Markers {
+      date: Date | string;
+      type?: 'dot' | 'line';
+      tooltip?: { text: string; color?: string; }[];
+      color?: string;
+    }
+
+    // const titrationDates = ref([] as Markers[])
+    const subjStartDate = ref('' as string)
+
+    const titrationDatesComputed = computed(() => {
+      const tmpMarkers = [] as Markers[]
+      console.log('detected new titration subject startdate')
+      if (subjStartDate.value !== '') {
+        // 18 week study, draw 20 weeks of titration dates to be safe
+        // but ignore first week so start at 1
+        const startDateDate = new Date(subjStartDate.value)
+        console.log(`subjstartdate: ${startDateDate}`)
+        for(const wk of range(1,20)) {
+          const tmpMarker = {} as Markers
+          startDateDate.setDate(startDateDate.getDate() + (7))
+          tmpMarker.date = cloneDeep(startDateDate)
+          tmpMarker.type = 'dot'
+          // console.log(`marker ${wk}:`, tmpMarker)
+          // TODO
+          // add color and tooltip
+          tmpMarkers.push(tmpMarker)
+        }
+      }
+      return tmpMarkers
+    })
+
+    // get titration dates as well
+    const titrationDatesLoading = ref(false)
+    function getTitrationDates() {
+      subjStartDate.value = ''
+      titrationDatesLoading.value = true
+      const endpoint = 'gettitratedates'
+      const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&subject_id=${selected.value}`
+      console.log(`request to ${req_url}`)
+      api.getAuth<any>(req_url, tokenComputed.value).then(
+        (response: any) => {
+          console.log(`${endpoint} success!`)
+          console.log(response)
+          if (typeof(response.subject_start_date) !== 'undefined') {
+            subjStartDate.value = response.subject_start_date
+          }
+        }).catch(err => {
+          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+          console.log(err.message)
+        }).finally(() => {
+          titrationDatesLoading.value = false
+        })
+    }
+    getTitrationDates()
+
 
     const validDates = ref(true)
 
@@ -382,32 +443,12 @@ export default defineComponent({
       }
     }
 
-    // get titration dates as well
-    const titrationDatesLoading = ref(false)
-    function getTitrationDates() {
-      titrationDatesLoading.value = true
-      const endpoint = 'gettitratedates'
-      const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&subject_username=${selected.value}`
-      console.log(`request to ${req_url}`)
-      api.getAuth<any>(req_url, tokenComputed.value).then(
-        (response: any) => {
-          console.log(`${endpoint} success!`)
-          console.log(response)
-          // TODO need correct response format
-        }).catch(err => {
-          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
-          console.log(err.message)
-        }).finally(() => {
-          titrationDatesLoading.value = false
-        })
-    }
-    getTitrationDates()
-
     return {
       selected, date, dateBounds, noSubjSelected, lastDoseDateText,
       subjectDateDisabled, subjectDetailsLoading, subjectListLoading, subjectGraphLoading,
       graphData, graphableGlucose, graphableInsulin, loaded, buttonDisabled, datesValid,
-      route, sdError, tir1Graphable, tir2Graphable, validDateReq, lastDoseText, basalsLoading
+      route, sdError, tir1Graphable, tir2Graphable, validDateReq, lastDoseText, basalsLoading,
+      titrationDatesComputed, debugModeStore
     }
   }
 })

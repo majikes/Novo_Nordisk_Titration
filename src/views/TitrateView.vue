@@ -41,11 +41,12 @@
         </router-link>
       </div>
 
-      <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoserec" title="9/23/2023">
-        <div class="force-center-content ">New recommended basal insulin dose: </div>
-        <div class="force-center-content px-2 font-semibold">
-          N/A
-          <!-- {{newDoseText}} -->
+      <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoserec" :title="lastRecDoseDateText">
+        <div class="force-center-content" :class="{'text-gray-400':!lastRecIsNewRec}">
+          {{ lastRecIsNewRec ? 'NEW' : 'Latest'}} recommended basal insulin dose: 
+        </div>
+        <div class="force-center-content px-2 font-semibold" :class="{'text-gray-400':!lastRecIsNewRec}">
+          {{lastRecDoseText}}
         </div>
       </div>
       <div class="grid grid-cols-2">
@@ -54,21 +55,25 @@
             <input type="text" id="small-input"
               class="block w-12 p-2 border
               rounded-lg text-md focus:ring-blue-500 focus:border-blue-500 bg-gray-700 
-              border-gray-600 placeholder-gray-500 text-white disabled:bg-white disabled:text-gray-500 disabled:border-transparent"
-              :disabled="modifyDisabled" placeholder="N/A" /> <!-- v-model="newDoseModel" -->
+              border-gray-600 placeholder-gray-500 text-white disabled:bg-white disabled:text-gray-500 
+              disabled:border-transparent disabled:placeholder-gray-400"
+              :disabled="modifyDisabled || !lastRecIsNewRec" placeholder="N/A" v-model="newDoseModel" />
           </div>
-          <div class="flex px-2 items-center gap-2">
-            <input type="checkbox" v-model="modifyFlag" />
-            Modify
+          <div class="flex px-2 items-center gap-2" :class="{'text-gray-400':!lastRecIsNewRec}">
+            <input type="checkbox" v-model="modifyFlag" :disabled="!lastRecIsNewRec" />
+            Modify dose
           </div>
           <div v-if="debugModeStore.debugMode">
             modifyFlag: {{ modifyFlag }}
           </div>
         </div>
-        <div class="btn force-center-content w-52" @click="submitTitration">
+        <button class="btn force-center-content w-52" :disabled="!lastRecIsNewRec" @click="submitTitration">
           CONFIRM AND SEND
           <!-- {{newDoseTextConditional}} -->
-        </div>
+        </button>
+      </div>
+      <div class="custom-invalid-feedback flex col-span-2 justify-end"> <!--:class="{ 'invisible': idValid, 'visible': !idValid }">-->
+        <div>{{newDoseProblems}}</div>
       </div>
     </div>
   </div>
@@ -86,13 +91,14 @@ import SubjectGraphable from '@/types/SubjectGraphable'
 import QuantileGraphable from '@/types/QuantileGraphable'
 import TitrateGraphable from '@/types/TitrateGraphable'
 import BasalDoseType from '@/types/BasalDoseType'
+import RecBasalDoseType from '@/types/RecBasalDoseType'
 import { api } from '@/functions/GlobalFunctions'
 import TiRChart from '@/components/TiRChart.vue'
 import { useApiURL, useApiURLNovo } from '@/globalConfigPlugin'
 import { useAuthenticator } from '@aws-amplify/ui-vue'
 import { useDebugModeStore } from '@/stores/debugModeStore'
 import { useErrorStore } from '@/stores/ErrorStore'
-import { lowerCase } from 'lodash'
+import { isEmpty, lowerCase } from 'lodash'
 import '@vuepic/vue-datepicker/dist/main.css'
 // import { max } from 'lodash'
 
@@ -157,7 +163,7 @@ export default defineComponent({
       // router.push({ name: 'AGP', params: { subjectId: selected.value } })
       // loaded.value = false
       graphData()
-      getTitration()
+      getLatestRecDose()
       getBasalDoseHistory()
     })
 
@@ -238,26 +244,6 @@ export default defineComponent({
     graphData()
     // for lambda insert into basal_profile table
 
-    const titrateLoading = ref(false)
-    function getTitration() {
-      titrateLoading.value = true
-      const endpoint = 'titrate'
-      const req_url = `${apiRootURL}/${endpoint}?subject_id=${selected.value}`
-      console.log(`request to ${req_url}`)
-      api.getAuth<any>(req_url, tokenComputed.value).then(
-      (response: any) => {
-        console.log(`${endpoint} success!`)
-        console.log(response)
-        // TODO need correct response format
-      }).catch(err => {
-        errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
-        console.log(err.message)
-      }).finally(() => {
-        titrateLoading.value = false
-      })
-    }
-    getTitration()
-
     const lastDoseText = computed(() => {
       let doseStr = 'N/A'
       if (basalsLoading.value) {
@@ -271,9 +257,9 @@ export default defineComponent({
     })
     const lastDoseDateText = computed(() => {
       let retStr = ''
-      if (!basalsLoading.value && basalDoseHistory.value.length) {
+      if (!basalsLoading.value && basalDoseHistory.value.length > 0) {
         const fullDate = new Date(basalDoseHistory.value[0].time*1000)
-        retStr = `${fullDate.toUTCString()}`
+        retStr = `${fullDate.toISOString()}`
       }
       return retStr
     })
@@ -323,6 +309,89 @@ export default defineComponent({
     }
     getBasalDoseHistory()
 
+    const lastRecDoseText = computed(() => {
+      let doseStr = 'N/A'
+      if (lastRecDoseLoading.value) {
+        doseStr = 'Loading...'
+      } else if (isEmpty(lastRecDose.value)) {
+        doseStr = 'N/A'
+      } else {
+        doseStr = `${lastRecDose.value.dose_value}U`
+      }
+      return doseStr
+    })
+    const lastRecDoseDateText = computed(() => {
+      let retStr = ''
+      if (!lastRecDoseLoading.value && !isEmpty(lastRecDose.value)) {
+        const fullDate = new Date(lastRecDose.value.dose_TS*1000)
+        retStr = `${fullDate.toISOString()}`
+      }
+      return retStr
+    })
+
+    const lastRecIsNewRec = computed(() => {
+      let retBool = false
+      if (basalDoseHistory.value.length <= 0 && !isEmpty(lastRecDose.value)) {
+        const newestBasalTS = basalDoseHistory.value[0].time
+        const newestRecBasalTS = lastRecDose.value.dose_TS
+        retBool ||= newestRecBasalTS > newestBasalTS
+      }
+      return retBool
+    })
+
+    const newDoseModel = ref(null as string | null)
+    const newDoseMin = 0
+    const newDoseMax = 100
+    const newDoseRegex = /\d?/
+    const newDoseIsDigits = computed(() => { 
+      return typeof(newDoseModel.value) === 'string' &&
+             newDoseModel.value.match(newDoseRegex) !== null
+    })
+    const newDoseValid = computed(() => {
+      const newDoseNum = Number(newDoseModel.value)
+      return newDoseIsDigits.value &&
+             newDoseNum >= newDoseMin &&
+             newDoseNum <= newDoseMax
+    })
+    const newDoseProblems = computed(() => {
+      let problemStr = ''
+      if (!lastRecIsNewRec.value) {
+        problemStr = 'Last recommended dose is older than last implemented dose'
+      } else if (!newDoseIsDigits.value) {
+        problemStr = 'Please enter a whole number for the basal dose'
+      } else {
+        const newDoseNum = Number(newDoseModel.value)
+        if (newDoseNum < newDoseMin || newDoseNum > newDoseMax) {
+          problemStr = `Entered value ${newDoseNum} is outside the ${newDoseMin}-${newDoseMax} bounds`
+        }
+      }
+      return problemStr
+    })
+
+    const lastRecDose = ref({} as RecBasalDoseType)
+    const lastRecDoseLoading = ref(false)
+
+    function getLatestRecDose() {
+      lastRecDoseLoading.value = true
+      lastRecDose.value = {} as RecBasalDoseType
+      const endpoint = 'titrate'
+      const req_url = `${apiRootURL}/${endpoint}?subject_id=${selected.value}`
+      console.log(`request to ${req_url}`)
+      api.getAuth<RecBasalDoseType>(req_url, tokenComputed.value).then(
+      (response: RecBasalDoseType) => {
+        console.log(`${endpoint} success!`)
+        console.log(response)
+        lastRecDose.value.dose_TS = response.dose_TS
+        lastRecDose.value.dose_value = response.dose_value
+      }).catch(err => {
+        errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+        console.log(err.message)
+      }).finally(() => {
+        lastRecDoseLoading.value = false
+      })
+    }
+    getLatestRecDose()
+
     const submitLoading = ref(false)
     function submitTitration() {
       submitLoading.value = true
@@ -349,10 +418,10 @@ export default defineComponent({
 
     return {
       selected, subjectDetailsLoading, subjectListLoading, subjectGraphLoading, lastDoseText,
-      graphData, graphableGlucose, loaded, submitTitration, titrateLoading, lastDoseDateText,
+      graphData, graphableGlucose, loaded, submitTitration, lastRecDoseLoading, lastDoseDateText,
       route, tir1Graphable, modifyFlag, debugModeStore, groupComputed, modifyDisabled, 
-      basalsLoading,
-
+      basalsLoading, lastRecDoseDateText, lastRecDoseText, lastRecIsNewRec, newDoseModel, newDoseMin, 
+      newDoseMax, newDoseValid, newDoseProblems
     }
   }
 })

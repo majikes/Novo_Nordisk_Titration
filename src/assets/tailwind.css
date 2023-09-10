@@ -87,7 +87,7 @@
 }
 
 .custom-invalid-feedback {
-    @apply pt-2 text-sm text-red-700 font-light
+    @apply text-sm text-red-700 font-light
 }
 
 .activity-select-input {
