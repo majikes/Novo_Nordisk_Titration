@@ -26,11 +26,13 @@
 
     <!-- titrate link / latest basal dose -->
     <div class="grid grid-cols-2 justify-between content-end p-4 gap-2 bg-gray-200 rounded-lg my-4">
-      <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoselatest" :title="lastDoseDateText">
+      <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoselatest"
+        :title="lastDoseDateText">
         <!-- :title="lastDoseDate" -->
         <div class="force-center-content ">Current basal insulin dose: </div>
-        <div class="force-center-content px-2" :class="{'text-gray-500': basalsLoading, 'font-semibold': !basalsLoading }">
-            {{lastDoseText}}
+        <div class="force-center-content px-2"
+          :class="{ 'text-gray-500': basalsLoading, 'font-semibold': !basalsLoading }">
+          {{ lastDoseText }}
         </div>
       </div>
       <div class="flex items-center justify-end">
@@ -41,40 +43,44 @@
         </router-link>
       </div>
 
-      <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoserec" :title="lastRecDoseDateText">
-        <div class="force-center-content" :class="{'text-gray-400':!lastRecIsNewRec}">
-          {{ lastRecIsNewRec ? 'NEW' : 'Latest'}} recommended basal insulin dose: 
+      <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoserec"
+        :title="lastRecDoseDateText">
+        <div class="force-center-content" :class="{ 'text-gray-400': !lastRecIsNewRec }">
+          {{ lastRecIsNewRec ? 'NEW' : 'Latest' }} recommended basal insulin dose:
         </div>
-        <div class="force-center-content px-2 font-semibold" :class="{'text-gray-400':!lastRecIsNewRec}">
-          {{lastRecDoseText}}
+        <div class="force-center-content px-2 font-semibold" :class="{ 'text-gray-400': !lastRecIsNewRec }">
+          {{ lastRecDoseText }}
         </div>
       </div>
       <div class="grid grid-cols-2">
         <div class="flex">
           <div class="force-center-content px-2 font-semibold">
-            <input type="text" id="small-input"
-              class="block w-12 p-2 border
+            <input type="text" id="small-input" class="block w-12 p-2 border
               rounded-lg text-md focus:ring-blue-500 focus:border-blue-500 bg-gray-700 
-              border-gray-600 placeholder-gray-500 text-white disabled:bg-white disabled:text-gray-500 
-              disabled:border-transparent disabled:placeholder-gray-400"
-              :disabled="modifyDisabled || !lastRecIsNewRec" placeholder="N/A" v-model="newDoseModel" />
+              border-gray-600 placeholder-gray-500 text-white disabled:bg-white disabled:text-gray-400 
+              disabled:border-transparent disabled:placeholder-gray-400" :disabled="modifyDisabled || !lastRecIsNewRec"
+              placeholder="N/A" v-model="newDoseModel" />
           </div>
-          <div class="flex px-2 items-center gap-2" :class="{'text-gray-400':!lastRecIsNewRec}">
+          <div class="flex px-2 items-center gap-2" :class="{ 'text-gray-400': !lastRecIsNewRec }">
             <input type="checkbox" v-model="modifyFlag" :disabled="!lastRecIsNewRec" />
             Modify dose
           </div>
-          <div v-if="debugModeStore.debugMode">
-            modifyFlag: {{ modifyFlag }}
-          </div>
         </div>
-        <button class="btn force-center-content w-52" :disabled="!lastRecIsNewRec" @click="submitTitration">
+        <button class="btn force-center-content w-52" :disabled="!lastRecIsNewRec && !debugModeStore.debugMode"
+          @click="submitTitration">
           CONFIRM AND SEND
           <!-- {{newDoseTextConditional}} -->
         </button>
       </div>
-      <div class="custom-invalid-feedback flex col-span-2 justify-end"> <!--:class="{ 'invisible': idValid, 'visible': !idValid }">-->
-        <div>{{newDoseProblems}}</div>
+      <div class="custom-invalid-feedback flex col-span-2 justify-end">
+        <!--:class="{ 'invisible': idValid, 'visible': !idValid }">-->
+        <div>{{ newDoseProblems }}</div>
       </div>
+    </div>
+    <!-- debug stuff -->
+    <div v-if="debugModeStore.debugMode">
+      <div>modifyFlag: {{ modifyFlag }}</div>
+      basalDoseHistory: {{ basalDoseHistory }}
     </div>
   </div>
 </template>
@@ -110,6 +116,7 @@ export default defineComponent({
     const auth = useAuthenticator()
     const errors = useErrorStore()
     const route = useRoute()
+    const router = useRouter()
     const componentName = 'TitrateView'
     const debugModeStore = useDebugModeStore()
     // let groups = ref([] as string[])
@@ -194,51 +201,51 @@ export default defineComponent({
       const req_url = `${apiRootURL}/agp?subject_id=${selected.value}&day1=${startTS.valueOf()}&day2=${endTS.valueOf()}`
       console.log(`request to ${req_url}`)
       api.getAuth<SubjectGraphable>(req_url, tokenComputed.value).then(
-      (subjectGraphable: SubjectGraphable) => {
-        console.log('success!')
-        console.log(subjectGraphable)
-        graphableGlucose.value.id = selected.value
-        // graphableInsulin.value.id = selected.value
-        const glucTraces = [
-          { label: '05th Percentile', trace: subjectGraphable.glucose05th },
-          { label: '25th Percentile', trace: subjectGraphable.glucose25th },
-          { label: 'Median', trace: subjectGraphable.glucose50th },
-          { label: '75th Percentile', trace: subjectGraphable.glucose75th },
-          { label: '95th Percentile', trace: subjectGraphable.glucose95th },
-        ]
-        const insTraces = [
-          { label: '05th Percentile', trace: subjectGraphable.iob05th },
-          { label: '25th Percentile', trace: subjectGraphable.iob25th },
-          { label: 'Median', trace: subjectGraphable.iob50th },
-          { label: '75th Percentile', trace: subjectGraphable.iob75th },
-          { label: '95th Percentile', trace: subjectGraphable.iob95th },
-        ]
-        graphableGlucose.value.traceGroups = [
-          {
-            type: 'glucose',
-            traces: glucTraces,
-          },
-        ]
-        // graphableInsulin.value.traceGroups = [
-        //   {
-        //     type: 'insulin',
-        //     traces: insTraces,
-        //     colors: {
-        //       inner: 'rgba(219, 39, 119, 0.7)',
-        //       outer: 'rgba(244, 114, 182, 0.7)'
-        //     }
-        //   },
-        // ]
-        tir1Graphable.value = subjectGraphable.tControlMean
-        // tir2Graphable.value = subjectGraphable.tControlMean
-        loaded.value = true
-      }).catch(err => {
-        graphError.value = err.message
-        errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
-        console.log(graphError.value)
-      }).finally(() => {
-        subjectGraphLoading.value = false
-      })
+        (subjectGraphable: SubjectGraphable) => {
+          console.log('success!')
+          console.log(subjectGraphable)
+          graphableGlucose.value.id = selected.value
+          // graphableInsulin.value.id = selected.value
+          const glucTraces = [
+            { label: '05th Percentile', trace: subjectGraphable.glucose05th },
+            { label: '25th Percentile', trace: subjectGraphable.glucose25th },
+            { label: 'Median', trace: subjectGraphable.glucose50th },
+            { label: '75th Percentile', trace: subjectGraphable.glucose75th },
+            { label: '95th Percentile', trace: subjectGraphable.glucose95th },
+          ]
+          const insTraces = [
+            { label: '05th Percentile', trace: subjectGraphable.iob05th },
+            { label: '25th Percentile', trace: subjectGraphable.iob25th },
+            { label: 'Median', trace: subjectGraphable.iob50th },
+            { label: '75th Percentile', trace: subjectGraphable.iob75th },
+            { label: '95th Percentile', trace: subjectGraphable.iob95th },
+          ]
+          graphableGlucose.value.traceGroups = [
+            {
+              type: 'glucose',
+              traces: glucTraces,
+            },
+          ]
+          // graphableInsulin.value.traceGroups = [
+          //   {
+          //     type: 'insulin',
+          //     traces: insTraces,
+          //     colors: {
+          //       inner: 'rgba(219, 39, 119, 0.7)',
+          //       outer: 'rgba(244, 114, 182, 0.7)'
+          //     }
+          //   },
+          // ]
+          tir1Graphable.value = subjectGraphable.tControlMean
+          // tir2Graphable.value = subjectGraphable.tControlMean
+          loaded.value = true
+        }).catch(err => {
+          graphError.value = err.message
+          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+          console.log(graphError.value)
+        }).finally(() => {
+          subjectGraphLoading.value = false
+        })
 
     }
     graphData()
@@ -250,15 +257,15 @@ export default defineComponent({
         doseStr = 'Loading...'
       } else if (basalDoseHistory.value.length <= 0) {
         doseStr = 'N/A'
-      } else {
+      } else if (typeof (basalDoseHistory.value[0]) !== 'undefined') {
         doseStr = `${basalDoseHistory.value[0].basalDoseValue}U`
       }
       return doseStr
     })
     const lastDoseDateText = computed(() => {
       let retStr = ''
-      if (!basalsLoading.value && basalDoseHistory.value.length > 0) {
-        const fullDate = new Date(basalDoseHistory.value[0].time*1000)
+      if (!basalsLoading.value && basalDoseHistory.value.length > 0 && typeof (basalDoseHistory.value[0]) !== 'undefined') {
+        const fullDate = new Date(basalDoseHistory.value[0].time * 1000)
         retStr = `${fullDate.toISOString()}`
       }
       return retStr
@@ -323,7 +330,7 @@ export default defineComponent({
     const lastRecDoseDateText = computed(() => {
       let retStr = ''
       if (!lastRecDoseLoading.value && !isEmpty(lastRecDose.value)) {
-        const fullDate = new Date(lastRecDose.value.dose_TS*1000)
+        const fullDate = new Date(lastRecDose.value.dose_TS * 1000)
         retStr = `${fullDate.toISOString()}`
       }
       return retStr
@@ -331,7 +338,7 @@ export default defineComponent({
 
     const lastRecIsNewRec = computed(() => {
       let retBool = false
-      if (basalDoseHistory.value.length <= 0 && !isEmpty(lastRecDose.value)) {
+      if (basalDoseHistory.value.length <= 0 && typeof (basalDoseHistory.value[0]) !== 'undefined' && !isEmpty(lastRecDose.value)) {
         const newestBasalTS = basalDoseHistory.value[0].time
         const newestRecBasalTS = lastRecDose.value.dose_TS
         retBool ||= newestRecBasalTS > newestBasalTS
@@ -343,15 +350,15 @@ export default defineComponent({
     const newDoseMin = 0
     const newDoseMax = 100
     const newDoseRegex = /\d?/
-    const newDoseIsDigits = computed(() => { 
-      return typeof(newDoseModel.value) === 'string' &&
-             newDoseModel.value.match(newDoseRegex) !== null
+    const newDoseIsDigits = computed(() => {
+      return typeof (newDoseModel.value) === 'string' &&
+        newDoseModel.value.match(newDoseRegex) !== null
     })
     const newDoseValid = computed(() => {
       const newDoseNum = Number(newDoseModel.value)
       return newDoseIsDigits.value &&
-             newDoseNum >= newDoseMin &&
-             newDoseNum <= newDoseMax
+        newDoseNum >= newDoseMin &&
+        newDoseNum <= newDoseMax
     })
     const newDoseProblems = computed(() => {
       let problemStr = ''
@@ -375,20 +382,21 @@ export default defineComponent({
       lastRecDoseLoading.value = true
       lastRecDose.value = {} as RecBasalDoseType
       const endpoint = 'titrate'
-      const req_url = `${apiRootURL}/${endpoint}?subject_id=${selected.value}`
+      const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_id=${selected.value}`
       console.log(`request to ${req_url}`)
       api.getAuth<RecBasalDoseType>(req_url, tokenComputed.value).then(
-      (response: RecBasalDoseType) => {
-        console.log(`${endpoint} success!`)
-        console.log(response)
-        lastRecDose.value.dose_TS = response.dose_TS
-        lastRecDose.value.dose_value = response.dose_value
-      }).catch(err => {
-        errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
-        console.log(err.message)
-      }).finally(() => {
-        lastRecDoseLoading.value = false
-      })
+        (response: RecBasalDoseType) => {
+          console.log(`${endpoint} success!`)
+          console.log(response)
+          lastRecDose.value.dose_TS = response.dose_TS
+          lastRecDose.value.dose_value = response.dose_value
+          newDoseModel.value = String(response.dose_value)
+        }).catch(err => {
+          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+          console.log(err.message)
+        }).finally(() => {
+          lastRecDoseLoading.value = false
+        })
     }
     getLatestRecDose()
 
@@ -396,32 +404,37 @@ export default defineComponent({
     function submitTitration() {
       submitLoading.value = true
       const endpoint = 'saveandsendnewbasaldose'
-      const req_url = `${apiRootURL}/${endpoint}?subject_id=${selected.value}`
+      const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_id=${selected.value}`
       console.log(`request to ${req_url}`)
       const requestObj = {
-        newdose: 10 //newDoseModel.value
+        newdose: newDoseModel.value
       }
       api.postAuth<any, any>(req_url, tokenComputed.value, JSON.stringify(
         requestObj
       )).then(
-      (response: any) => {
-        console.log(`${endpoint} success!`)
-        console.log(response)
-        // TODO need correct response format
-      }).catch(err => {
-        errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
-        console.log(err.message)
-      }).finally(() => {
-        submitLoading.value = false
-      })
+        (response: any) => {
+          console.log(`${endpoint} success!`)
+          console.log(response)
+          // TODO need correct response format
+        }).catch(err => {
+          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+          console.log(err.message)
+        }).finally(() => {
+          submitLoading.value = false
+          // submitTitrationRedirect()
+        })
+    }
+
+    function submitTitrationRedirect() {
+      router.push({ name: 'StudyOverview' })
     }
 
     return {
       selected, subjectDetailsLoading, subjectListLoading, subjectGraphLoading, lastDoseText,
       graphData, graphableGlucose, loaded, submitTitration, lastRecDoseLoading, lastDoseDateText,
-      route, tir1Graphable, modifyFlag, debugModeStore, groupComputed, modifyDisabled, 
-      basalsLoading, lastRecDoseDateText, lastRecDoseText, lastRecIsNewRec, newDoseModel, newDoseMin, 
-      newDoseMax, newDoseValid, newDoseProblems
+      route, tir1Graphable, modifyFlag, debugModeStore, groupComputed, modifyDisabled,
+      basalsLoading, lastRecDoseDateText, lastRecDoseText, lastRecIsNewRec, newDoseModel, newDoseMin,
+      newDoseMax, newDoseValid, newDoseProblems, basalDoseHistory
     }
   }
 })
