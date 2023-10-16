@@ -10,11 +10,14 @@
     </div>
 
     <!-- Quantile graph and TIR -->
-    <div class="grid grid-cols-12 py-1">
+    <div class="grid grid-cols-12 min-h-[400px] py-1">
+      <LoadingHover v-if="!loaded">
+        <div class="font-semibold">Loading...</div>
+      </LoadingHover>
       <div class="col-span-11">
         <!-- glucose row -->
         <div class="py-2" id="quantile-caption"><span class="font-semibold">Glucose</span></div>
-        <div id="quantile-container">
+        <div class="relative" id="quantile-container">
           <QuantileChart v-if="loaded" :graphableData="graphableGlucose" :loaded="loaded" dataType="glucose" />
         </div>
       </div>
@@ -45,7 +48,8 @@
 
       <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoserec"
         :title="lastRecDoseDateText">
-        <div class="force-center-content" :class="{ 'text-gray-400': !lastRecIsNewRec }">
+        <div class="force-center-content"
+          :class="{ 'text-gray-400': !lastRecIsNewRec, 'font-semibold': lastRecIsNewRec }">
           {{ lastRecIsNewRec ? 'NEW' : 'Latest' }} recommended basal insulin dose:
         </div>
         <div class="force-center-content px-2 font-semibold" :class="{ 'text-gray-400': !lastRecIsNewRec }">
@@ -66,9 +70,9 @@
             Modify dose
           </div>
         </div>
-        <button class="btn force-center-content w-52" :disabled="!lastRecIsNewRec && !debugModeStore.debugMode"
-          @click="submitTitration">
-          CONFIRM AND SEND
+        <button class="btn force-center-content w-52" :disabled="!lastRecIsNewRec || !newDoseValid"
+          :class="{ 'font-semibold': newDoseValid }" @click="submitTitration">
+          CONFIRM + SEND {{ newDoseValid ? `${newDoseModel}U` : '' }}
           <!-- {{newDoseTextConditional}} -->
         </button>
       </div>
@@ -80,7 +84,16 @@
     <!-- debug stuff -->
     <div v-if="debugModeStore.debugMode">
       <div>modifyFlag: {{ modifyFlag }}</div>
-      basalDoseHistory: {{ basalDoseHistory }}
+      <div>newDoseIsDigits: {{ newDoseIsDigits }}</div>
+      <div>newDoseProblems: {{ newDoseProblems }}</div>
+      <div>newDoseModel: {{ newDoseModel }}</div>
+      <div>lastRecIsNewRec: {{ lastRecIsNewRec }}</div>
+      <div>basalDoseHistory.length: {{ basalDoseHistory.length }}</div>
+      <div>basalDoseHistory[0]: {{ basalDoseHistory[0] }}</div>
+      <div>lastRecDose: {{ lastRecDose }}</div>
+      <div>isEmpty(lastRecDose): {{ isEmpty(lastRecDose) }}</div>
+      <div>lastRecDose.dose_TS !== undefined: {{ typeof (lastRecDose.dose_TS) !== 'undefined' }}</div>
+      <div>basalDoseHistory: {{ basalDoseHistory }}</div>
     </div>
   </div>
 </template>
@@ -106,11 +119,12 @@ import { useDebugModeStore } from '@/stores/debugModeStore'
 import { useErrorStore } from '@/stores/ErrorStore'
 import { isEmpty, lowerCase } from 'lodash'
 import '@vuepic/vue-datepicker/dist/main.css'
+import LoadingHover from '@/components/LoadingHover.vue'
 // import { max } from 'lodash'
 
 export default defineComponent({
   name: 'TitrateView',
-  components: { QuantileChart, SubjectDropdown, TiRChart },
+  components: { LoadingHover, QuantileChart, SubjectDropdown, TiRChart },
   setup() {
     const apiRootURL = useApiURL()
     const auth = useAuthenticator()
@@ -320,7 +334,7 @@ export default defineComponent({
       let doseStr = 'N/A'
       if (lastRecDoseLoading.value) {
         doseStr = 'Loading...'
-      } else if (isEmpty(lastRecDose.value)) {
+      } else if (typeof (lastRecDose.value.dose_TS) === 'undefined') {
         doseStr = 'N/A'
       } else {
         doseStr = `${lastRecDose.value.dose_value}U`
@@ -329,7 +343,7 @@ export default defineComponent({
     })
     const lastRecDoseDateText = computed(() => {
       let retStr = ''
-      if (!lastRecDoseLoading.value && !isEmpty(lastRecDose.value)) {
+      if (!lastRecDoseLoading.value && typeof (lastRecDose.value.dose_TS) !== 'undefined') {
         const fullDate = new Date(lastRecDose.value.dose_TS * 1000)
         retStr = `${fullDate.toISOString()}`
       }
@@ -338,9 +352,11 @@ export default defineComponent({
 
     const lastRecIsNewRec = computed(() => {
       let retBool = false
-      if (basalDoseHistory.value.length <= 0 && typeof (basalDoseHistory.value[0]) !== 'undefined' && !isEmpty(lastRecDose.value)) {
+      if (basalDoseHistory.value.length > 0 && typeof (basalDoseHistory.value[0]) !== 'undefined' && typeof (lastRecDose.value.dose_TS) !== 'undefined') {
         const newestBasalTS = basalDoseHistory.value[0].time
         const newestRecBasalTS = lastRecDose.value.dose_TS
+        console.log(`nominal: ${newestBasalTS}`)
+        console.log(`rec    : ${newestRecBasalTS}`)
         retBool ||= newestRecBasalTS > newestBasalTS
       }
       return retBool
@@ -349,7 +365,7 @@ export default defineComponent({
     const newDoseModel = ref(null as string | null)
     const newDoseMin = 0
     const newDoseMax = 100
-    const newDoseRegex = /\d?/
+    const newDoseRegex = /^\d+$/
     const newDoseIsDigits = computed(() => {
       return typeof (newDoseModel.value) === 'string' &&
         newDoseModel.value.match(newDoseRegex) !== null
@@ -388,8 +404,8 @@ export default defineComponent({
         (response: RecBasalDoseType) => {
           console.log(`${endpoint} success!`)
           console.log(response)
-          lastRecDose.value.dose_TS = response.dose_TS
-          lastRecDose.value.dose_value = response.dose_value
+          lastRecDose.value.dose_TS = response.rec_dose_TS
+          lastRecDose.value.dose_value = response.rec_dose_value
           newDoseModel.value = String(response.dose_value)
         }).catch(err => {
           errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
@@ -407,7 +423,7 @@ export default defineComponent({
       const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_id=${selected.value}`
       console.log(`request to ${req_url}`)
       const requestObj = {
-        newdose: newDoseModel.value
+        newdose: Number(newDoseModel.value)
       }
       api.postAuth<any, any>(req_url, tokenComputed.value, JSON.stringify(
         requestObj
@@ -434,7 +450,8 @@ export default defineComponent({
       graphData, graphableGlucose, loaded, submitTitration, lastRecDoseLoading, lastDoseDateText,
       route, tir1Graphable, modifyFlag, debugModeStore, groupComputed, modifyDisabled,
       basalsLoading, lastRecDoseDateText, lastRecDoseText, lastRecIsNewRec, newDoseModel, newDoseMin,
-      newDoseMax, newDoseValid, newDoseProblems, basalDoseHistory
+      newDoseMax, newDoseValid, newDoseProblems, basalDoseHistory, lastRecDose, isEmpty,
+      newDoseIsDigits,
     }
   }
 })

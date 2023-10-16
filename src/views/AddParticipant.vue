@@ -154,9 +154,8 @@
           id="validationCustom03" required>
           <!-- todo v-model real arms -->
           <option disabled value="" selected>Select intervention arm...</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
+          <option value="0">Control (0)</option>
+          <option value="1">Experimental (1)</option>
         </select>
         <div class="invalid-feedback">Please select an intervention arm.</div>
       </div>
@@ -228,13 +227,16 @@
     <!-- "sumbit" control -->
     <div class="adduser-form-cell flex justify-center">
       <div class="adduser-form-cell flex justify-center">
-        <button class="btn w-96" :disabled="!inputValid.valid" @click="showModal">
+        <button class="btn w-96" :disabled="!inputValid.valid && !debugModeStore.debugMode" @click="showModal">
           Initialize Titration and Add User
         </button>
       </div>
     </div>
     <!-- "are you sure" modal -->
     <div v-if="modalVisible" class="adduser-modal bg-transparent" id="modal-container">
+      <LoadingHover v-if="addUserLoading">
+        <div class="font-semibold">Submitting...</div>
+      </LoadingHover>
       <div class="bg-gradient-to-b from-orange-100 from-0% via-white via-5% to-white to-10% rounded-lg w-full p-4">
         <div class="flex justify-center my-6 font-semibold">
           Review Information:
@@ -281,10 +283,11 @@ import { api } from '@/functions/GlobalFunctions'
 import { useApiURL } from '@/globalConfigPlugin'
 import { cloneDeep, lowerCase } from 'lodash'
 import ToolTip from '@/components/ToolTip.vue'
+import LoadingHover from '@/components/LoadingHover.vue'
 
 export default defineComponent({
   name: 'AddParticipant',
-  components: { ToolTip },
+  components: { LoadingHover, ToolTip },
   setup() {
     const route = useRoute()
     const router = useRouter()
@@ -365,16 +368,16 @@ export default defineComponent({
     const basalMax = 250
     const reservoirStep = 0.01
     const reservoirMin = 1
-    const reservoirMax = 250
+    const reservoirMax = 900
     const maxDoseStep = 0.01
     const maxDoseMin = 1
     const maxDoseMax = 250
     const minDoseStep = 0.01
     const minDoseMin = 1
     const minDoseMax = 250
-    const doseIncrementStep = 0.01
-    const doseIncrementMin = 1
-    const doseIncrementMax = 250
+    const doseIncrementStep = 0.1
+    const doseIncrementMin = 0.5
+    const doseIncrementMax = 5
 
     const subjectsLoading = ref(false)
     const subjectsErrors = ref(null)
@@ -720,7 +723,7 @@ export default defineComponent({
       }).catch(err => {
         console.log(err.message)
         addUserErrors.value = err.message
-        errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+        errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`, true)
       }).finally(() => {
         addUserLoading.value = false
       })

@@ -126,7 +126,7 @@
       </router-link>
     </nav>
     <!-- main view -->
-    <router-view class="mx-auto max-w-4xl px-4 overflow-y-scroll overflow-x-visible flex-1 main-container" />
+    <router-view class="mx-auto max-w-[900px] overflow-y-scroll overflow-x-visible flex-1 main-container" />
     <!-- footer / drawer -->
     <div class="flex w-full text-center px-4 py-3 gap-2">
       <div class="flex items-end">

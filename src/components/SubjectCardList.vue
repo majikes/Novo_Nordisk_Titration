@@ -23,7 +23,8 @@
           stroke-linecap="round" stroke-linejoin="round"></path>
       </svg>
       <div class="w-48">
-        <select :disabled="loading" class="form-select select-input" name="filter" id="filter-select" v-model="filterVar">
+        <select :disabled="loading" class="form-select select-input" name="filter" id="filter-select"
+          v-model="filterVar">
           <option value="none">Filter by...</option>
           <option value="status">Active Only</option>
         </select>
@@ -31,7 +32,9 @@
     </div>
   </div>
   <div class="relative flex flex-wrap justify-between gap-4 mt-6">
-    <LoadingHover v-if="loading" />
+    <LoadingHover v-if="loading">
+      <div class="font-semibold">Loading...</div>
+    </LoadingHover>
     <SubjectCard v-for="card in filteredBySelected" :key="card.username" :card="card" />
   </div>
 </template>

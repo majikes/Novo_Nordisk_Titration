@@ -100,6 +100,9 @@
 
     <!-- "are you sure" modal -->
     <div v-if="modalVisible" class="adduser-modal bg-transparent" id="modal-container">
+      <LoadingHover v-if="addUserLoading">
+        <div class="font-semibold">Submitting...</div>
+      </LoadingHover>
       <div class="bg-gradient-to-b from-orange-100 from-0% via-white via-5% to-white to-10% rounded-lg w-full p-4">
         <div class="flex justify-center my-6 font-semibold">
           Review Information:
@@ -147,10 +150,11 @@ import { useApiURL } from '@/globalConfigPlugin'
 import { cloneDeep, lowerCase } from 'lodash'
 import { useErrorStore } from '@/stores/ErrorStore'
 import ToolTip from '@/components/ToolTip.vue'
+import LoadingHover from '@/components/LoadingHover.vue'
 
 export default defineComponent({
   name: 'AddNonParticipant',
-  components: { ToolTip },
+  components: { LoadingHover, ToolTip },
   setup() {
     const route = useRoute()
     const router = useRouter()
@@ -230,7 +234,7 @@ export default defineComponent({
       // Example: username = 'pcolmegna', project = 'pedapai'
       const endpoint = 'getprojectsites'
       console.log(`GET request to /${endpoint}`)
-      const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&role=${groupComputed.value[0]}`
+      const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&project=${'novonordisktitration'}&role=${groupComputed.value[0]}`
       console.log(`request to ${req_url}`)
       api.getAuth<any>(req_url, tokenComputed.value).then(
         (response: any) => {
@@ -384,7 +388,7 @@ export default defineComponent({
       }).catch(err => {
         addUserErrors.value = err.message
         console.log(err.message)
-        errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+        errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`, true)
       }).finally(() => {
         addUserLoading.value = false
       })
