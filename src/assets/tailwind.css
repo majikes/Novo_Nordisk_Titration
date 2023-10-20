@@ -229,6 +229,10 @@
 .dose-history-table-simple-row {
     @apply grid grid-cols-3 rounded-md px-4 py-1 even:bg-gray-100
 }
+
+.smbg-history-table-simple-row {
+    @apply grid grid-cols-3 rounded-md px-4 py-1 even:bg-gray-100
+}
 /* .disabled {
     @apply text-gray-400
 } */

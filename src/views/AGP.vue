@@ -5,30 +5,33 @@
       <h1 class="text-2xl font-bold">Ambulatory Glucose Profile</h1>
     </div>
     <!-- datepicker / subject dropdown -->
-    <div class="control-row content-end">
-      <div class="grid content-end pb-1" id="titrationdatepickerstandin">
+    <div class="grid grid-cols-3 my-1 content-end">
+      <div v-if="subjectListStore.currentSubject.interventionArm === 1" class="grid content-end pb-1 pr-5"
+        id="titrationdatepickerstandin">
         <VueDatePicker v-model="date" :min-date="dateBounds.min" :max-date="dateBounds.max" :enable-time-picker="false"
-          :disabled="noSubjSelected || !validDateReq" :start-date="dateBounds.max" range auto-apply :markers="titrationDatesComputed" />
+          :disabled="noSubjSelected || !validDateReq" :start-date="dateBounds.max" range auto-apply
+          :markers="titrationDatesComputed" />
       </div>
-      <div class="grid content-end">
+      <div v-if="subjectListStore.currentSubject.interventionArm === 1" class="grid content-end">
         <button class="btn w-52" id="graph-button" :disabled="buttonDisabled" @click="graphData">Graph</button>
       </div>
-      <SubjectDropdown v-model="selected" />
+      <div class="col-start-3 ml-auto">
+        <SubjectDropdown v-model="selected" />
+      </div>
     </div>
     <div v-if="debugModeStore.debugMode">
-      {{titrationDatesComputed}}
+      {{ titrationDatesComputed }}
     </div>
     <!-- titrate link / latest basal dose -->
     <div class="grid grid-cols-2 justify-between content-end p-4 bg-gray-200 rounded-lg my-4">
-      <router-link class="btn w-52 force-center-content"
-        :to="{ name: 'TitrateView', params: { subjectId: route.params.subjectId } }">
+      <button class="btn w-52 force-center-content" :disabled="!subjectListStore.titrateable" @click="titrateRedirect">
         Titrate {{ route.params.subjectId }}
-      </router-link>
-      <div class="flex justify-between rounded-lg bg-white px-4 w-full" id="basaldoselatest" :title="lastDoseDateText">
+      </button>
+      <div class="flex justify-between rounded-lg bg-white px-4 w-full" id="basaldoselatest"
+        :title="subjectListStore.lastDoseDateText">
         <div class="force-center-content ">Current basal insulin dose: </div>
-        <div class="force-center-content px-2"
-          :class="{ 'text-gray-500': basalsLoading, 'font-semibold': !basalsLoading }">
-          {{ lastDoseText }}
+        <div class="force-center-content px-2 font-semibold">
+          {{ subjectListStore.lastDoseText }}
         </div>
         <div class="force-center-content">
           <router-link class="btn-small force-center-content"
@@ -37,25 +40,48 @@
           </router-link>
         </div>
       </div>
+      <div v-if="titrateProblems.visible" class="custom-invalid-feedback col-start-1 flex pt-2.5 justify-start">
+        <div>{{ titrateProblems.details }}</div>
+      </div>
+      <div v-if="doseProblems.visible" class="custom-invalid-feedback col-start-2 flex pt-2.5 justify-end">
+        <div>{{ doseProblems.details }}</div>
+      </div>
     </div>
-    <div class="grid py-3 content-center place-items-center" v-if="subjectDetailsLoading">Loading subject details...
-    </div>
-    <!-- agp/tir graphs -->
-    <div class="grid grid-cols-12 py-1">
-      <div class="col-span-10">
-        <!-- glucose row -->
-        <div class="py-2" id="quantile-caption"><span class="font-semibold">Glucose</span></div>
-        <div id="quantile-container">
-          <QuantileChart v-if="loaded" :graphableData="graphableGlucose" :loaded="loaded" dataType="glucose" />
+    <!-- agp/tir graphs EXPERIMENTAL ARM (1) -->
+    <div class="relative" id="agp-container">
+      <div v-if="subjectDetailsLoading">
+        <LoadingHover>
+          <div class="font-semibold">Loading subject valid dates...</div>
+        </LoadingHover>
+      </div>
+      <div v-if="subjectListStore.currentSubject.interventionArm === 1" class="grid grid-cols-12 py-1">
+        <div class="col-span-10">
+          <!-- glucose row -->
+          <div class="py-2" id="quantile-caption"><span class="font-semibold">Glucose</span></div>
+          <div id="quantile-container">
+            <QuantileChart v-if="loaded" :graphableData="graphableGlucose" :loaded="loaded" dataType="glucose" />
+          </div>
+        </div>
+        <div class="grid">
+          <div class="pl-3 py-2" id="tir1-caption"><span class="font-semibold">Plotted period</span></div>
+          <TiRChart class="h-80 w-10 justify-self-center" v-if="loaded" :tirData="tir1Graphable" :loaded="loaded" />
+        </div>
+        <div class="grid">
+          <div class="pl-3 py-2" id="tir2-caption"><span class="font-semibold">1 week before</span></div>
+          <TiRChart class="h-80 w-10 justify-self-center" v-if="loaded" :tirData="tir2Graphable" :loaded="loaded" />
         </div>
       </div>
-      <div class="grid">
-        <div class="pl-3 py-2" id="tir1-caption"><span class="font-semibold">Plotted period</span></div>
-        <TiRChart class="h-80 w-10 justify-self-center" v-if="loaded" :tirData="tir1Graphable" :loaded="loaded" />
+    </div>
+    <!-- smbg/hypo table CONTROL ARM (0) -->
+    <div class="relative" id="smbg-container">
+      <div v-if="smbgsLoading">
+        <LoadingHover>
+          <div class="font-semibold">Loading SMBG table...</div>
+        </LoadingHover>
       </div>
-      <div class="grid">
-        <div class="pl-3 py-2" id="tir2-caption"><span class="font-semibold">1 week before</span></div>
-        <TiRChart class="h-80 w-10 justify-self-center" v-if="loaded" :tirData="tir2Graphable" :loaded="loaded" />
+      <div v-if="subjectListStore.currentSubject.interventionArm === 0">
+        <div class="py-2 font-semibold">SMBGs</div>
+        <SMBGTable :smbgs="smbgs" />
       </div>
     </div>
 
@@ -64,7 +90,7 @@
   
 <script lang="ts">
 import { computed, defineComponent, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import QuantileChart from '@/components/QuantileChart.vue'
 import VueDatePicker from '@vuepic/vue-datepicker'
 import TiRChart from '@/components/TiRChart.vue'
@@ -74,17 +100,21 @@ import SubjectDetails from '@/types/SubjectDetails'
 import SubjectDropdown from '@/components/SubjectDropdown.vue'
 import SubjectDatesFromAPIType from '@/types/SubjectDatesFromAPIType'
 import BasalDoseType from '@/types/BasalDoseType'
-import { useSubjectIdStore } from '@/stores/SubjectIdStore'
 import { api, dateConvertToISO } from '@/functions/GlobalFunctions'
 import { useApiURL, useApiURLNovo } from '@/globalConfigPlugin'
 import { useDebugModeStore } from '@/stores/debugModeStore'
 import { useAuthenticator } from '@aws-amplify/ui-vue'
 import { useErrorStore } from '@/stores/ErrorStore'
-import { cloneDeep, lowerCase, range } from 'lodash'
+import { cloneDeep, isEmpty, lowerCase, range } from 'lodash'
+import { useSubjectListStore } from '@/stores/SubjectListStore'
+import SMBGsAndHyposFromAPIType from '@/types/SMBGsAndHyposFromAPIType'
+import SMBGTable from '@/components/SMBGTable.vue'
+import SMBGFromAPIType from '@/types/SMBGFromAPIType'
+import LoadingHover from '@/components/LoadingHover.vue'
 
 export default defineComponent({
   name: 'AGP',
-  components: { QuantileChart, SubjectDropdown, TiRChart, VueDatePicker },
+  components: { LoadingHover, QuantileChart, SMBGTable, SubjectDropdown, TiRChart, VueDatePicker },
   setup() {
     const debugModeStore = useDebugModeStore()
     const auth = useAuthenticator()
@@ -113,23 +143,39 @@ export default defineComponent({
       console.log(`token: ${token}`)
       return token
     })
+    const subjectListStore = useSubjectListStore()
+
     const route = useRoute()
+    const router = useRouter()
     const selected = ref('')
     selected.value = route.params.subjectId === undefined ? '' : route.params.subjectId as string
     watch(selected, () => {
       console.log(`dropdown: ${selected.value}`)
-      console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
-      loaded.value = false
-      graphableGlucose.value = {} as QuantileGraphable
-      graphableInsulin.value = {} as QuantileGraphable
-      tir1Graphable.value = [] as number[]
-      tir2Graphable.value = [] as number[]
-      getValidDates()
-      getBasalDoseHistory()
-      getTitrationDates()
     })
+    watch(() => subjectListStore.currentSubject.id,
+      (subjid) => {
+        if (typeof (subjid) !== 'undefined') {
+          console.log('valid subject change detected for pinia subject store')
+          loaded.value = false
+          graphableGlucose.value = {} as QuantileGraphable
+          graphableInsulin.value = {} as QuantileGraphable
+          tir1Graphable.value = [] as number[]
+          tir2Graphable.value = [] as number[]
+          getValidDates()
+          getTitrationDates()
+          getSMBGs()
+        }
+      })
 
-    const subjectIdStore = useSubjectIdStore()
+    // loaded.value = false
+    // graphableGlucose.value = {} as QuantileGraphable
+    // graphableInsulin.value = {} as QuantileGraphable
+    // tir1Graphable.value = [] as number[]
+    // tir2Graphable.value = [] as number[]
+    // getValidDates()
+    // getTitrationDates()
+    // getSMBGs()
+
     // the actual graphable data we'll be updating
     // TODO find out how we strictly type this without populating data
     // i think it might just be ref({} as SubjectGraphable), idk
@@ -191,8 +237,52 @@ export default defineComponent({
       return (!datesValid.value)
     })
 
+    // not in correct arm, no new rec
+    const titrateProblems = computed(() => {
+      let problems = {
+        visible: false,
+        details: ''
+      }
+      if (!noSubjSelected.value) {
+        if (!subjectListStore.loaded) {
+          problems.visible = true
+          problems.details = `Loading subject list...`
+        } else if (subjectListStore.currentSubject.interventionArm === 0) {
+          problems.visible = true
+          problems.details = `Subject ${subjectListStore.currentSubject.id} is in the Control arm; Titration functions are disabled.`
+        } else if (subjectListStore.currentSubject.loading) {
+          problems.visible = true
+          problems.details = `Loading dose details for subject ${subjectListStore.currentSubject.id} ...`
+        } else if (!subjectListStore.currentSubjectNewRec) {
+          problems.visible = true
+          problems.details = `Subject ${subjectListStore.currentSubject.id} has no new recommended doses.`
+        }
+      }
+      return problems
+    })
+    const doseProblems = computed(() => {
+      let problems = {
+        visible: false,
+        details: ''
+      }
+      if (!noSubjSelected.value) {
+        if (!isEmpty(subjectListStore.currentSubject.dose_problems)) {
+          problems.visible = true
+          problems.details = `${subjectListStore.currentSubject.dose_problems}`
+        } else if (subjectListStore.currentSubject.loading) {
+          problems.visible = true
+          problems.details = `Loading dose details for subject ${subjectListStore.currentSubject.id} ...`
+        }
+      }
+      return problems
+    })
+
     //////////////////////////
     // functions
+    //////////////////////////
+
+    //////////////////////////
+    // experimental arm
     //////////////////////////
 
     const yesterday_local = ref({} as Date)
@@ -203,8 +293,9 @@ export default defineComponent({
     const sdError = ref(null)
     const validDateReq = ref(false)
     function getValidDates() {
-      console.log(`getValidDates subjid: ${selected.value}`)
-      if (selected.value !== '') {
+      // only run for non-empty subjectIDs and subjects in experimental arm
+      if (selected.value !== '' && subjectListStore.currentSubject.interventionArm === 1) {
+        console.log(`getValidDates subjid: ${selected.value}`)
         // reset firstDate and lastDate
         date.value = [] as Date[]
         firstDate.value = ''
@@ -253,70 +344,32 @@ export default defineComponent({
     // watch
     getValidDates()
 
-
-    const basalDoseHistory = ref([] as BasalDoseType[])
-    const lastDoseText = computed(() => {
-      let doseStr = 'N/A'
-      if (basalsLoading.value) {
-        doseStr = 'Loading...'
-      } else if (basalDoseHistory.value.length <= 0) {
-        doseStr = 'N/A'
-      } else {
-        doseStr = `${basalDoseHistory.value[0].basalDoseValue}U`
-      }
-      return doseStr
-    })
-    const lastDoseDateText = computed(() => {
-      let retStr = ''
-      if (!basalsLoading.value && basalDoseHistory.value.length) {
-        const fullDate = new Date(basalDoseHistory.value[0].time * 1000)
-        retStr = `${fullDate.toUTCString()}`
-      }
-      return retStr
-    })
-
-    const basalsLoading = ref(false)
-    function getBasalDoseHistory() {
-      console.log('loading dose histories')
-      basalsLoading.value = true
-      console.log('clearing displayed basal dose history')
-      basalDoseHistory.value = [] as BasalDoseType[]
-      const endpoint = 'getbasaldosehistory'
-      console.log(`GET request to /${endpoint}`)
-      const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_username=${selected.value}`
-      console.log(`request to ${req_url}`)
-      // server response:
-      // {"id":"103","date":"08/29/2023", "timeOfDayInMinutes":1340, "basalDoseValue":40}
-      api.getAuth<any[]>(req_url, tokenComputed.value).then(
-        (doseHistoryList: any[]) => {
-          console.log('successful basal dose history request')
-          console.log(doseHistoryList)
-          for (const dose of doseHistoryList) {
-            const tmpDose = {
-              id: '',
-              date: '',
-              basalDoseTimeOfDayInMinutes: -1,
-              basalDoseValue: -1,
-              src_id: '-1',
-              time: -1,
+    // get titration dates as well
+    const titrationDatesLoading = ref(false)
+    function getTitrationDates() {
+      // only run for non-empty subjectIDs and subjects in experimental arm
+      if (selected.value !== '' && subjectListStore.currentSubject.interventionArm === 1) {
+        subjStartDate.value = ''
+        titrationDatesLoading.value = true
+        const endpoint = 'gettitratedates'
+        const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&subject_id=${selected.value}`
+        console.log(`request to ${req_url}`)
+        api.getAuth<any>(req_url, tokenComputed.value).then(
+          (response: any) => {
+            console.log(`${endpoint} success!`)
+            console.log(response)
+            if (typeof (response.subject_start_date) !== 'undefined') {
+              subjStartDate.value = response.subject_start_date
             }
-            tmpDose.id = dose.id
-            tmpDose.date = dose.date
-            tmpDose.basalDoseTimeOfDayInMinutes = dose.basalDoseTimeOfDayInMinutes
-            tmpDose.basalDoseValue = dose.basalDoseValue
-            tmpDose.src_id = dose.src_id
-            tmpDose.time = dose.time
-            basalDoseHistory.value.push(tmpDose)
-          }
-        }).catch(err => {
-          console.log(err.message)
-          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
-        }).finally(() => {
-          console.log('done')
-          basalsLoading.value = false
-        })
+          }).catch(err => {
+            errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+            console.log(err.message)
+          }).finally(() => {
+            titrationDatesLoading.value = false
+          })
+      }
     }
-    getBasalDoseHistory()
+    getTitrationDates()
 
     // vue datepicker specific
     // https://vue3datepicker.com/props/general-configuration/#markers
@@ -338,7 +391,7 @@ export default defineComponent({
         // but ignore first week so start at 1
         const startDateDate = new Date(subjStartDate.value)
         console.log(`subjstartdate: ${startDateDate}`)
-        for(const wk of range(1,20)) {
+        for (const wk of range(1, 20)) {
           const tmpMarker = {} as Markers
           startDateDate.setDate(startDateDate.getDate() + (7))
           tmpMarker.date = cloneDeep(startDateDate)
@@ -351,31 +404,6 @@ export default defineComponent({
       }
       return tmpMarkers
     })
-
-    // get titration dates as well
-    const titrationDatesLoading = ref(false)
-    function getTitrationDates() {
-      subjStartDate.value = ''
-      titrationDatesLoading.value = true
-      const endpoint = 'gettitratedates'
-      const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&subject_id=${selected.value}`
-      console.log(`request to ${req_url}`)
-      api.getAuth<any>(req_url, tokenComputed.value).then(
-        (response: any) => {
-          console.log(`${endpoint} success!`)
-          console.log(response)
-          if (typeof(response.subject_start_date) !== 'undefined') {
-            subjStartDate.value = response.subject_start_date
-          }
-        }).catch(err => {
-          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
-          console.log(err.message)
-        }).finally(() => {
-          titrationDatesLoading.value = false
-        })
-    }
-    getTitrationDates()
-
 
     const validDates = ref(true)
 
@@ -443,12 +471,48 @@ export default defineComponent({
       }
     }
 
+    function titrateRedirect() {
+      router.push({ name: 'TitrateView', params: { subjectId: route.params.subjectId } })
+    }
+
+    //////////////////////////
+    // control arm
+    //////////////////////////
+
+
+    const smbgsLoading = ref(false)
+    const smbgs = ref([] as SMBGFromAPIType[])
+    function getSMBGs() {
+      // only run for non-empty subjectIDs and subjects in experimental arm
+      if (selected.value !== '' && subjectListStore.currentSubject.interventionArm === 0) {
+        smbgs.value = [] as SMBGFromAPIType[]
+        smbgsLoading.value = true
+
+        const endpoint = 'getsmbgsandhypos'
+        const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&requestor_username=${auth.user.username}&subject_username=${selected.value}`
+        console.log(`request to ${req_url}`)
+        api.getAuth<SMBGsAndHyposFromAPIType>(req_url, tokenComputed.value).then(
+          (response: SMBGsAndHyposFromAPIType) => {
+            console.log(`${endpoint} success!`)
+            console.log(response)
+            smbgs.value = response.smbgHistory
+          }).catch(err => {
+            errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
+            console.log(err.message)
+          }).finally(() => {
+            smbgsLoading.value = false
+          })
+      }
+    }
+    getSMBGs()
+
     return {
-      selected, date, dateBounds, noSubjSelected, lastDoseDateText,
+      selected, date, dateBounds, noSubjSelected,
       subjectDateDisabled, subjectDetailsLoading, subjectListLoading, subjectGraphLoading,
       graphData, graphableGlucose, graphableInsulin, loaded, buttonDisabled, datesValid,
-      route, sdError, tir1Graphable, tir2Graphable, validDateReq, lastDoseText, basalsLoading,
-      titrationDatesComputed, debugModeStore
+      route, sdError, tir1Graphable, tir2Graphable, validDateReq, subjectListStore,
+      titrationDatesComputed, debugModeStore, titrateProblems, doseProblems, titrateRedirect,
+      smbgsLoading, smbgs
     }
   }
 })

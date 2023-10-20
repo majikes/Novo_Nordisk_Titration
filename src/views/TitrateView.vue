@@ -9,77 +9,90 @@
       <SubjectDropdown v-model="selected" />
     </div>
 
-    <!-- Quantile graph and TIR -->
-    <div class="grid grid-cols-12 min-h-[400px] py-1">
-      <LoadingHover v-if="!loaded">
-        <div class="font-semibold">Loading...</div>
+    <!-- Loading screen -->
+    <div v-if="!subjectListStore.loaded">
+      <LoadingHover>
+        <div class="font-semibold">Loading subject list...</div>
       </LoadingHover>
-      <div class="col-span-11">
-        <!-- glucose row -->
-        <div class="py-2" id="quantile-caption"><span class="font-semibold">Glucose</span></div>
-        <div class="relative" id="quantile-container">
-          <QuantileChart v-if="loaded" :graphableData="graphableGlucose" :loaded="loaded" dataType="glucose" />
+    </div>
+    <!-- Visible Titrate stuff -->
+    <div v-else-if="titratePageVisible">
+      <!-- Quantile graph and TIR -->
+      <div class="grid grid-cols-12 min-h-[400px] py-1">
+        <LoadingHover v-if="!loaded">
+          <div class="font-semibold">Loading...</div>
+        </LoadingHover>
+        <div class="col-span-11">
+          <!-- glucose row -->
+          <div class="py-2" id="quantile-caption"><span class="font-semibold">Glucose</span></div>
+          <div class="relative" id="quantile-container">
+            <QuantileChart v-if="loaded" :graphableData="graphableGlucose" :loaded="loaded" dataType="glucose" />
+          </div>
+        </div>
+        <div class="grid">
+          <div class="pl-3 py-2" id="tir1-caption"><span class="font-semibold">Prev week</span></div>
+          <TiRChart class="h-80 w-10 justify-self-center" v-if="loaded" :tirData="tir1Graphable" :loaded="loaded" />
         </div>
       </div>
-      <div class="grid">
-        <div class="pl-3 py-2" id="tir1-caption"><span class="font-semibold">Prev week</span></div>
-        <TiRChart class="h-80 w-10 justify-self-center" v-if="loaded" :tirData="tir1Graphable" :loaded="loaded" />
+      <!-- titrate link / latest basal dose -->
+      <div class="grid grid-cols-2 justify-between content-end p-4 gap-2 bg-gray-200 rounded-lg my-4">
+        <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoselatest"
+          :title="subjectListStore.lastDoseDateText">
+          <!-- :title="lastDoseDate" -->
+          <div class="force-center-content ">Current basal insulin dose: </div>
+          <div class="force-center-content px-2"
+            :class="{ 'text-gray-500': !subjectListStore.loaded, 'font-semibold': subjectListStore.loaded }">
+            {{ subjectListStore.lastDoseText }}
+          </div>
+        </div>
+        <div class="flex items-center justify-end">
+          <router-link :to="{ name: 'BasalDoseHistory', params: { subjectId: route.params.subjectId } }">
+            <div class="btn force-center-content w-52">
+              History
+            </div>
+          </router-link>
+        </div>
+        <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoserec"
+          :title="subjectListStore.lastRecDoseDateText">
+          <div class="force-center-content"
+            :class="{ 'text-gray-400': !subjectListStore.currentSubjectNewRec, 'font-semibold': subjectListStore.currentSubjectNewRec }">
+            {{ subjectListStore.currentSubjectNewRec ? 'NEW' : 'Latest' }} recommended basal insulin dose:
+          </div>
+          <div class="force-center-content px-2 font-semibold" :class="{ 'text-gray-400': !subjectListStore.currentSubjectNewRec }">
+            {{ subjectListStore.lastRecDoseText }}
+          </div>
+        </div>
+        <div class="grid grid-cols-2">
+          <div class="flex">
+            <div class="force-center-content px-2 font-semibold">
+              <input type="text" id="small-input" class="block w-12 p-2 border
+                rounded-lg text-md focus:ring-blue-500 focus:border-blue-500 bg-gray-700
+                border-gray-600 placeholder-gray-500 text-white disabled:bg-white disabled:text-gray-400
+                disabled:border-transparent disabled:placeholder-gray-400"
+                :disabled="modifyDisabled || !subjectListStore.currentSubjectNewRec" placeholder="N/A" v-model="newDoseModel" />
+            </div>
+            <div class="flex px-2 items-center gap-2" :class="{ 'text-gray-400': !subjectListStore.currentSubjectNewRec }">
+              <input type="checkbox" v-model="modifyFlag" :disabled="!subjectListStore.currentSubjectNewRec" />
+              Modify dose
+            </div>
+          </div>
+          <button class="btn force-center-content w-52" :disabled="!subjectListStore.currentSubjectNewRec || !newDoseValid"
+            :class="{ 'font-semibold': newDoseValid }" @click="submitTitration">
+            CONFIRM + SEND {{ newDoseValid ? `${newDoseModel}U` : '' }}
+            <!-- {{newDoseTextConditional}} -->
+          </button>
+        </div>
+        <div class="custom-invalid-feedback flex col-span-2 justify-end">
+          <!--:class="{ 'invisible': idValid, 'visible': !idValid }">-->
+          <div>{{ newDoseProblems }}</div>
+        </div>
       </div>
     </div>
-
-    <!-- titrate link / latest basal dose -->
-    <div class="grid grid-cols-2 justify-between content-end p-4 gap-2 bg-gray-200 rounded-lg my-4">
-      <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoselatest"
-        :title="lastDoseDateText">
-        <!-- :title="lastDoseDate" -->
-        <div class="force-center-content ">Current basal insulin dose: </div>
-        <div class="force-center-content px-2"
-          :class="{ 'text-gray-500': basalsLoading, 'font-semibold': !basalsLoading }">
-          {{ lastDoseText }}
-        </div>
-      </div>
-      <div class="flex items-center justify-end">
-        <router-link :to="{ name: 'BasalDoseHistory', params: { subjectId: route.params.subjectId } }">
-          <div class="btn force-center-content w-52">
-            History
-          </div>
-        </router-link>
-      </div>
-
-      <div class="flex justify-between rounded-lg bg-white px-4 py-3 w-full" id="basaldoserec"
-        :title="lastRecDoseDateText">
-        <div class="force-center-content"
-          :class="{ 'text-gray-400': !lastRecIsNewRec, 'font-semibold': lastRecIsNewRec }">
-          {{ lastRecIsNewRec ? 'NEW' : 'Latest' }} recommended basal insulin dose:
-        </div>
-        <div class="force-center-content px-2 font-semibold" :class="{ 'text-gray-400': !lastRecIsNewRec }">
-          {{ lastRecDoseText }}
-        </div>
-      </div>
-      <div class="grid grid-cols-2">
-        <div class="flex">
-          <div class="force-center-content px-2 font-semibold">
-            <input type="text" id="small-input" class="block w-12 p-2 border
-              rounded-lg text-md focus:ring-blue-500 focus:border-blue-500 bg-gray-700 
-              border-gray-600 placeholder-gray-500 text-white disabled:bg-white disabled:text-gray-400 
-              disabled:border-transparent disabled:placeholder-gray-400" :disabled="modifyDisabled || !lastRecIsNewRec"
-              placeholder="N/A" v-model="newDoseModel" />
-          </div>
-          <div class="flex px-2 items-center gap-2" :class="{ 'text-gray-400': !lastRecIsNewRec }">
-            <input type="checkbox" v-model="modifyFlag" :disabled="!lastRecIsNewRec" />
-            Modify dose
-          </div>
-        </div>
-        <button class="btn force-center-content w-52" :disabled="!lastRecIsNewRec || !newDoseValid"
-          :class="{ 'font-semibold': newDoseValid }" @click="submitTitration">
-          CONFIRM + SEND {{ newDoseValid ? `${newDoseModel}U` : '' }}
-          <!-- {{newDoseTextConditional}} -->
-        </button>
-      </div>
-      <div class="custom-invalid-feedback flex col-span-2 justify-end">
-        <!--:class="{ 'invisible': idValid, 'visible': !idValid }">-->
-        <div>{{ newDoseProblems }}</div>
-      </div>
+    <!-- Titrate not visible -->
+    <div v-else class="w-full h-40 force-center-content text-l font-semibold">
+      {{ subjectListStore.currentSubject.id }} is in the {{ (subjectListStore.interventionMap as
+          any)[subjectListStore.currentSubject.interventionArm]
+      }} arm - Titration functions disabled.
     </div>
     <!-- debug stuff -->
     <div v-if="debugModeStore.debugMode">
@@ -87,13 +100,7 @@
       <div>newDoseIsDigits: {{ newDoseIsDigits }}</div>
       <div>newDoseProblems: {{ newDoseProblems }}</div>
       <div>newDoseModel: {{ newDoseModel }}</div>
-      <div>lastRecIsNewRec: {{ lastRecIsNewRec }}</div>
-      <div>basalDoseHistory.length: {{ basalDoseHistory.length }}</div>
-      <div>basalDoseHistory[0]: {{ basalDoseHistory[0] }}</div>
-      <div>lastRecDose: {{ lastRecDose }}</div>
-      <div>isEmpty(lastRecDose): {{ isEmpty(lastRecDose) }}</div>
-      <div>lastRecDose.dose_TS !== undefined: {{ typeof (lastRecDose.dose_TS) !== 'undefined' }}</div>
-      <div>basalDoseHistory: {{ basalDoseHistory }}</div>
+      <div>subjectListStore.currentSubjectNewRec: {{ subjectListStore.currentSubjectNewRec }}</div>
     </div>
   </div>
 </template>
@@ -110,7 +117,6 @@ import SubjectGraphable from '@/types/SubjectGraphable'
 import QuantileGraphable from '@/types/QuantileGraphable'
 import TitrateGraphable from '@/types/TitrateGraphable'
 import BasalDoseType from '@/types/BasalDoseType'
-import RecBasalDoseType from '@/types/RecBasalDoseType'
 import { api } from '@/functions/GlobalFunctions'
 import TiRChart from '@/components/TiRChart.vue'
 import { useApiURL, useApiURLNovo } from '@/globalConfigPlugin'
@@ -120,6 +126,7 @@ import { useErrorStore } from '@/stores/ErrorStore'
 import { isEmpty, lowerCase } from 'lodash'
 import '@vuepic/vue-datepicker/dist/main.css'
 import LoadingHover from '@/components/LoadingHover.vue'
+import { useSubjectListStore } from '@/stores/SubjectListStore'
 // import { max } from 'lodash'
 
 export default defineComponent({
@@ -159,13 +166,22 @@ export default defineComponent({
     const selected = ref('')
     selected.value = route.params.subjectId === undefined ? '' : route.params.subjectId as string
 
+    const subjectListStore = useSubjectListStore()
+    const titratePageVisible = computed(() => {
+      if (subjectListStore.loaded && subjectListStore.currentSubject.interventionArm === 1) {
+        return true
+      } else {
+        return false
+      }
+    })
+
     // 'loading' and other flags that we'll need
     // primarily used to enable and disable fields for input
     const subjectListLoading = ref(true)
     const subjectDetailsLoading = ref(false)
     const subjectGraphLoading = ref(false)
 
-    const subjectIdStore = useSubjectIdStore()
+    // const subjectIdStore = useSubjectIdStore()
     // the actual graphable data we'll be updating
     // TODO find out how we strictly type this without populating data
     // i think it might just be ref({} as SubjectGraphable), idk
@@ -180,12 +196,13 @@ export default defineComponent({
 
     watch(selected, () => {
       console.log(`dropdown: ${selected.value}`)
-      console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
+      // console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
       // router.push({ name: 'AGP', params: { subjectId: selected.value } })
       // loaded.value = false
-      graphData()
-      getLatestRecDose()
-      getBasalDoseHistory()
+      if (titratePageVisible.value) {
+        graphData()
+      }
+      // getBasalDoseHistory()
     })
 
     //////////////////////////
@@ -263,103 +280,16 @@ export default defineComponent({
 
     }
     graphData()
-    // for lambda insert into basal_profile table
 
-    const lastDoseText = computed(() => {
-      let doseStr = 'N/A'
-      if (basalsLoading.value) {
-        doseStr = 'Loading...'
-      } else if (basalDoseHistory.value.length <= 0) {
-        doseStr = 'N/A'
-      } else if (typeof (basalDoseHistory.value[0]) !== 'undefined') {
-        doseStr = `${basalDoseHistory.value[0].basalDoseValue}U`
-      }
-      return doseStr
-    })
-    const lastDoseDateText = computed(() => {
-      let retStr = ''
-      if (!basalsLoading.value && basalDoseHistory.value.length > 0 && typeof (basalDoseHistory.value[0]) !== 'undefined') {
-        const fullDate = new Date(basalDoseHistory.value[0].time * 1000)
-        retStr = `${fullDate.toISOString()}`
-      }
-      return retStr
-    })
-
-    const basalDoseHistory = ref([] as BasalDoseType[])
-    const basalsLoading = ref(false)
-
-    function getBasalDoseHistory() {
-      console.log('loading')
-      basalsLoading.value = true
-      console.log('clearing displayed basal dose history')
-      basalDoseHistory.value = [] as BasalDoseType[]
-      const endpoint = 'getbasaldosehistory'
-      console.log(`GET request to /${endpoint}`)
-      const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_username=${selected.value}`
-      console.log(`request to ${req_url}`)
-      // server response:
-      // {"id":"103","date":"08/29/2023", "timeOfDayInMinutes":1340, "basalDoseValue":40}
-      api.getAuth<any[]>(req_url, tokenComputed.value).then(
-        (doseHistoryList: any[]) => {
-          console.log('successful basal dose history request')
-          console.log(doseHistoryList)
-          for (const dose of doseHistoryList) {
-            const tmpDose = {
-              id: '',
-              date: '',
-              basalDoseTimeOfDayInMinutes: -1,
-              basalDoseValue: -1,
-              src_id: '-1',
-              time: -1,
-            }
-            tmpDose.id = dose.id
-            tmpDose.date = dose.date
-            tmpDose.basalDoseTimeOfDayInMinutes = dose.basalDoseTimeOfDayInMinutes
-            tmpDose.basalDoseValue = dose.basalDoseValue
-            tmpDose.src_id = dose.src_id
-            tmpDose.time = dose.time
-            basalDoseHistory.value.push(tmpDose)
+    watch(() =>subjectListStore.currentSubject.rec_dose_value, 
+      (newRecDoseVal) => {
+        if (typeof(newRecDoseVal) !== 'undefined') {
+          if (newRecDoseVal === null || newRecDoseVal < 0) {
+            newDoseModel.value = null
+          } else {
+            newDoseModel.value = String(newRecDoseVal)
           }
-        }).catch(err => {
-          console.log(err.message)
-          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
-        }).finally(() => {
-          console.log('done')
-          basalsLoading.value = false
-        })
-    }
-    getBasalDoseHistory()
-
-    const lastRecDoseText = computed(() => {
-      let doseStr = 'N/A'
-      if (lastRecDoseLoading.value) {
-        doseStr = 'Loading...'
-      } else if (typeof (lastRecDose.value.dose_TS) === 'undefined') {
-        doseStr = 'N/A'
-      } else {
-        doseStr = `${lastRecDose.value.dose_value}U`
-      }
-      return doseStr
-    })
-    const lastRecDoseDateText = computed(() => {
-      let retStr = ''
-      if (!lastRecDoseLoading.value && typeof (lastRecDose.value.dose_TS) !== 'undefined') {
-        const fullDate = new Date(lastRecDose.value.dose_TS * 1000)
-        retStr = `${fullDate.toISOString()}`
-      }
-      return retStr
-    })
-
-    const lastRecIsNewRec = computed(() => {
-      let retBool = false
-      if (basalDoseHistory.value.length > 0 && typeof (basalDoseHistory.value[0]) !== 'undefined' && typeof (lastRecDose.value.dose_TS) !== 'undefined') {
-        const newestBasalTS = basalDoseHistory.value[0].time
-        const newestRecBasalTS = lastRecDose.value.dose_TS
-        console.log(`nominal: ${newestBasalTS}`)
-        console.log(`rec    : ${newestRecBasalTS}`)
-        retBool ||= newestRecBasalTS > newestBasalTS
-      }
-      return retBool
+        }
     })
 
     const newDoseModel = ref(null as string | null)
@@ -378,7 +308,9 @@ export default defineComponent({
     })
     const newDoseProblems = computed(() => {
       let problemStr = ''
-      if (!lastRecIsNewRec.value) {
+      if (!isEmpty(subjectListStore.currentSubject.dose_problems) || !isEmpty(subjectListStore.currentSubject.rec_dose_problems)) {
+        problemStr = `${subjectListStore.currentSubject.dose_problems}; ${subjectListStore.currentSubject.rec_dose_problems}`
+      } else if (!subjectListStore.currentSubjectNewRec) {
         problemStr = 'Last recommended dose is older than last implemented dose'
       } else if (!newDoseIsDigits.value) {
         problemStr = 'Please enter a whole number for the basal dose'
@@ -390,31 +322,6 @@ export default defineComponent({
       }
       return problemStr
     })
-
-    const lastRecDose = ref({} as RecBasalDoseType)
-    const lastRecDoseLoading = ref(false)
-
-    function getLatestRecDose() {
-      lastRecDoseLoading.value = true
-      lastRecDose.value = {} as RecBasalDoseType
-      const endpoint = 'titrate'
-      const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_id=${selected.value}`
-      console.log(`request to ${req_url}`)
-      api.getAuth<RecBasalDoseType>(req_url, tokenComputed.value).then(
-        (response: RecBasalDoseType) => {
-          console.log(`${endpoint} success!`)
-          console.log(response)
-          lastRecDose.value.dose_TS = response.rec_dose_TS
-          lastRecDose.value.dose_value = response.rec_dose_value
-          newDoseModel.value = String(response.dose_value)
-        }).catch(err => {
-          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
-          console.log(err.message)
-        }).finally(() => {
-          lastRecDoseLoading.value = false
-        })
-    }
-    getLatestRecDose()
 
     const submitLoading = ref(false)
     function submitTitration() {
@@ -446,12 +353,12 @@ export default defineComponent({
     }
 
     return {
-      selected, subjectDetailsLoading, subjectListLoading, subjectGraphLoading, lastDoseText,
-      graphData, graphableGlucose, loaded, submitTitration, lastRecDoseLoading, lastDoseDateText,
+      selected, subjectDetailsLoading, subjectListLoading, subjectGraphLoading, 
+      graphData, graphableGlucose, loaded, submitTitration, 
       route, tir1Graphable, modifyFlag, debugModeStore, groupComputed, modifyDisabled,
-      basalsLoading, lastRecDoseDateText, lastRecDoseText, lastRecIsNewRec, newDoseModel, newDoseMin,
-      newDoseMax, newDoseValid, newDoseProblems, basalDoseHistory, lastRecDose, isEmpty,
-      newDoseIsDigits,
+      newDoseModel, newDoseMin,
+      newDoseMax, newDoseValid, newDoseProblems, isEmpty,
+      newDoseIsDigits, subjectListStore, titratePageVisible,
     }
   }
 })

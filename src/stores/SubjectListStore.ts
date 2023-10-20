@@ -1,9 +1,107 @@
 import { defineStore } from "pinia"
-import { ref } from "vue"
+import { computed, ref } from "vue"
+import SubjectListItemType from "@/types/SubjectListItemType"
 
 export const useSubjectListStore = defineStore('subjectListStore', () => {
-  const subjectList = ref([] as string[])
-  function setSubjectList(subjList:string[]) { subjectList.value = subjList }
-  
-  return { subjectList, setSubjectList }
+  const interventionMap = {
+    '0': 'Control',
+    '1': 'Experimental'
+  }
+  const loaded = ref(false)
+  const loadedTS = ref(null as number | null)
+  const currentSubject = ref({} as SubjectListItemType)
+  // const currentSubjectID = computed(() => currentSubject.value.id)
+  // const currentSubjectArm = computed(() => currentSubject.value.interventionArm)
+  const currentSubjectNewRec = computed(() => {
+    let retBool = false
+    if (currentSubject.value.dose_value !== null && currentSubject.value.dose_TS !== null &&
+      currentSubject.value.rec_dose_value !== null && currentSubject.value.rec_dose_TS !== null &&
+      currentSubject.value.dose_value >= 0 && currentSubject.value.dose_TS > 0 &&
+      currentSubject.value.rec_dose_value >= 0 && currentSubject.value.rec_dose_TS > 0) {
+      retBool = currentSubject.value.rec_dose_TS > currentSubject.value.dose_TS
+    }
+    return retBool
+  })
+
+  const lastRecDoseText = computed(() => {
+    let doseStr = 'N/A'
+    if (!loaded.value || currentSubject.value.loading) {
+      doseStr = 'Loading...'
+    } else if (typeof (currentSubject.value.rec_dose_TS) === 'undefined' || currentSubject.value.rec_dose_value === null || currentSubject.value.rec_dose_value === -1) {
+      doseStr = 'N/A'
+    } else {
+      doseStr = `${currentSubject.value.rec_dose_value}U`
+    }
+    return doseStr
+  })
+  const lastRecDoseDateText = computed(() => {
+    let retStr = ''
+    if (loaded.value && typeof (currentSubject.value.rec_dose_TS) !== 'undefined' && currentSubject.value.rec_dose_TS !== null && currentSubject.value.rec_dose_TS !== -1) {
+      const fullDate = new Date(currentSubject.value.rec_dose_TS * 1000)
+      retStr = `${fullDate.toISOString()}`
+    }
+    return retStr
+  })
+
+  const lastDoseText = computed(() => {
+    let doseStr = 'N/A'
+    if (!loaded.value || currentSubject.value.loading) {
+      doseStr = 'Loading...'
+    } else if (typeof (currentSubject.value.dose_TS) === 'undefined' || currentSubject.value.dose_value === null || currentSubject.value.dose_value === -1) {
+      doseStr = 'N/A'
+    } else {
+      doseStr = `${currentSubject.value.dose_value}U`
+    }
+    return doseStr
+  })
+  const lastDoseDateText = computed(() => {
+    let retStr = ''
+    if (loaded.value && typeof (currentSubject.value.rec_dose_TS) !== 'undefined' && currentSubject.value.dose_TS !== null && currentSubject.value.dose_TS !== -1) {
+      const fullDate = new Date(currentSubject.value.dose_TS * 1000)
+      retStr = `${fullDate.toISOString()}`
+    }
+    return retStr
+  })
+
+  const titrateable = computed(() => {
+    let retBool = false
+    if (currentSubject.value.interventionArm === 1 && currentSubjectNewRec.value ) {
+      retBool = true
+    }
+    return retBool
+  })
+
+  // const subjectDisplayText = computed(() => { 
+  //   if (loaded.value && typeof(currentSubject.value.id) !== 'undefined') {
+  //     return currentSubject.value.id
+  //   } else {
+  //     return 'Loading...'
+  //   }
+  // })
+  const subjectList = ref([] as SubjectListItemType[])
+  const subjectListSorted = computed(() => {
+    return [...subjectList.value].sort((a, b) => {
+      if (a.id > b.id) { return 1 }
+      else { return -1 }
+    })
+  })
+  // idk what this should actually do in the case where nothing is found...
+  // for now defaulting to nothing, so it won't overwrite anything
+  function setCurrentSubject(id: string) {
+    console.log(`setting current subject to ${id}`)
+    const searchRes = subjectList.value.find(obj => obj.id === id)
+    if (typeof (searchRes) !== 'undefined') {
+      currentSubject.value = searchRes
+    } else {
+      currentSubject.value = {} as SubjectListItemType
+    }
+  }
+  // function setSubjectList(subjList:SubjectListItemType[]) { subjectList.value = subjList }
+
+  return {
+    currentSubject, currentSubjectNewRec, loaded, loadedTS, setCurrentSubject, subjectList,
+    subjectListSorted, interventionMap, lastRecDoseText, lastRecDoseDateText, lastDoseText, lastDoseDateText,
+    titrateable,
+
+  }
 })
