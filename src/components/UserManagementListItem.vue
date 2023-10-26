@@ -20,7 +20,10 @@
       </div>
     </div>
     <div class="user-mgmt-cell grid content-center justify-end">
-      <select class="activity-select-input" name="status-control" :id="`status-control-select-${userlistitem.id}`"
+      <div v-if="disabled" class="text-gray-300">
+        disabled
+      </div>
+      <select v-else class="activity-select-input" name="status-control" :id="`status-control-select-${userlistitem.id}`"
         v-model="active" :disabled="loading" @change="updateActiveStatus">
         <option v-for="option in options" :key="option.value" :value="option.value">
           {{ option.text }}
@@ -49,6 +52,10 @@ export default defineComponent({
       required: true,
       type: Object as PropType<UserListItem>
     },
+    disabled: {
+      required: false,
+      type: Boolean as PropType<boolean>
+    }
   },
   setup(props, { emit }) {
     const apiRootURL = useApiURL()

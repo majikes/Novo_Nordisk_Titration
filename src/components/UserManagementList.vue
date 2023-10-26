@@ -1,7 +1,7 @@
 <template>
   <div v-if="userlistitems" class="flex flex-wrap justify-between mt-4">
     <UserManagementListItem v-for="userlistitem in userlistitems" :key="userlistitem.id"
-        :userlistitem="userlistitem" />
+        :userlistitem="userlistitem" :disabled="true" />
   </div>
 </template>
 

@@ -76,7 +76,7 @@
           {{ groupComputed.includes('admin') ? 'Physician / CRC' : 'Admin' }} Management
         </div>
       </router-link>
-      <router-link
+      <!-- <router-link
         v-if="groupComputed.includes('admin') || groupComputed.includes('physician') || groupComputed.includes('crc')"
         class="nav-link group" :to="{ name: 'DataDownload' }">
         <div class=" flex">
@@ -88,8 +88,8 @@
           </svg>
           Download
         </div>
-      </router-link>
-      <router-link v-if="groupComputed.includes('participant')" class="nav-link group" :to="{ name: 'DataEntry' }">
+      </router-link> -->
+      <!-- <router-link v-if="groupComputed.includes('participant')" class="nav-link group" :to="{ name: 'DataEntry' }">
         <div class=" flex">
           <svg class="w-5 nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
             viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -111,7 +111,7 @@
           </svg>
           SMBG Titration rules
         </div>
-      </router-link>
+      </router-link> -->
       <router-link class="nav-link group" :to="{ name: 'UserSettings' }">
         <div class=" flex">
           <svg class="nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"

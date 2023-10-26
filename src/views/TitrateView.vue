@@ -6,7 +6,7 @@
     </div>
     <!-- subject dropdown -->
     <div class="flex justify-end content-end">
-      <SubjectDropdown v-model="selected" />
+      <SubjectDropdown v-model="selected" :titratable-only="true" />
     </div>
 
     <!-- Loading screen -->
@@ -90,9 +90,14 @@
     </div>
     <!-- Titrate not visible -->
     <div v-else class="w-full h-40 force-center-content text-l font-semibold">
-      {{ subjectListStore.currentSubject.id }} is in the {{ (subjectListStore.interventionMap as
-          any)[subjectListStore.currentSubject.interventionArm]
-      }} arm - Titration functions disabled.
+      <div v-if="selected !== ''">
+        {{ subjectListStore.currentSubject.id }} is in the {{ (subjectListStore.interventionMap as
+            any)[subjectListStore.currentSubject.interventionArm]
+        }} arm - Titration functions disabled.
+      </div>
+      <div v-else>
+        No subject selected.
+      </div>
     </div>
     <!-- debug stuff -->
     <div v-if="debugModeStore.debugMode">
@@ -101,6 +106,8 @@
       <div>newDoseProblems: {{ newDoseProblems }}</div>
       <div>newDoseModel: {{ newDoseModel }}</div>
       <div>subjectListStore.currentSubjectNewRec: {{ subjectListStore.currentSubjectNewRec }}</div>
+      <div>subjectListStore.subjectListTitratable: {{ subjectListStore.subjectListTitratable }}</div>
+      <div>subjectListStore.subjectListSorted: {{ subjectListStore.subjectListSorted }}</div>
     </div>
   </div>
 </template>

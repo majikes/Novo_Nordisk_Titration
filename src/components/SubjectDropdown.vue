@@ -1,13 +1,21 @@
 <template>
   <div class="grid content-start w-64" id="subject-dropdown-div">
-    <label for="subject-select">Subject</label>
+    <div class="flex">
+      <label for="subject-select">Subject </label>
+      <span v-if="titratableOnly" class="pl-1"> (titratable only)</span>
+    </div>
     <select class="form-select select-input border-transparent border-r-8" name="subject" id="subject-select"
       ref="subjectselect" :disabled="subjectListLoading" :value="modelValue" @change="changeValue">
       <option disabled value="" selected>{{ subjectSelectText }}
       </option>
       <option v-if="subjectListLoading" :value="modelValue">Loading...</option>
+      <option v-else-if="titratableOnly" v-for="subject in subjectListStore.subjectListTitratable" :key="subject.id"
+        :value="subject.id">
+        {{ subject.id }} |
+        {{ (subjectListStore.interventionMap as any)[subject.interventionArm] }}
+      </option>
       <option v-else v-for="subject in subjectListStore.subjectListSorted" :key="subject.id" :value="subject.id">
-        {{ subject.id }} | 
+        {{ subject.id }} |
         {{ (subjectListStore.interventionMap as any)[subject.interventionArm] }}
       </option>
     </select>
@@ -40,6 +48,10 @@ export default defineComponent({
   props: {
     modelValue: {
       type: String as PropType<string>
+    },
+    titratableOnly: {
+      required: false,
+      type: Boolean as PropType<boolean>
     },
     // loaded: {
     //   required: true,
@@ -84,13 +96,13 @@ export default defineComponent({
 
     // loading flags for content
     const subjectListLoading = ref(false)
-    const subjectSelectText = computed(() => { 
+    const subjectSelectText = computed(() => {
       if (subjectListLoading.value) {
         return 'Loading...'
       } else {
         return '-- Please choose a subject --'
       }
-     })
+    })
     const route = useRoute()
 
     // typing emit events
@@ -209,22 +221,24 @@ export default defineComponent({
           // console.log('hi')
         }
       })
-    
-    watch(() => subjectListStore.loaded, 
-    (loadedBool) => {
-      if (loadedBool) {
-        console.log('loaded subject list, setting current subject')
-        // console.log(`selected = ${route.params.subjectId}`)
-        if (typeof(route.params.subjectId) === 'string') {
-          console.log(`attempting to set current subject to ${route.params.subjectId}`)
-          subjectListStore.setCurrentSubject(route.params.subjectId)
+
+    watch(() => subjectListStore.loaded,
+      (loadedBool) => {
+        if (loadedBool) {
+          console.log('loaded subject list, setting current subject')
+          // console.log(`selected = ${route.params.subjectId}`)
+          if (typeof (route.params.subjectId) === 'string') {
+            console.log(`attempting to set current subject to ${route.params.subjectId}`)
+            subjectListStore.setCurrentSubject(route.params.subjectId)
+          }
         }
-      }
-    })
+      })
 
 
-    return { changeValue, debugModeStore, route, subjectselect, subjectListLoading, subjectListStore,
-      subjectSelectText, }
+    return {
+      changeValue, debugModeStore, route, subjectselect, subjectListLoading, subjectListStore,
+      subjectSelectText,
+    }
   }
 })
 </script>

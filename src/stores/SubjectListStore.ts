@@ -63,7 +63,7 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
     return retStr
   })
 
-  const titrateable = computed(() => {
+  const titratable = computed(() => {
     let retBool = false
     if (currentSubject.value.interventionArm === 1 && currentSubjectNewRec.value ) {
       retBool = true
@@ -85,6 +85,19 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
       else { return -1 }
     })
   })
+  const subjectListTitratable = computed(() => {
+    const tmpList = [] as SubjectListItemType[]
+    for (const subj of [...subjectListSorted.value]) {
+      if (subj.interventionArm === 1 && !subj.loading &&
+          subj.dose_value !== null && subj.dose_TS !== null &&
+          subj.rec_dose_value !== null && subj.rec_dose_TS !== null &&
+          subj.dose_value >= 0 && subj.dose_TS > 0 &&
+          subj.rec_dose_value >= 0 && subj.rec_dose_TS > 0) {
+        tmpList.push(subj)
+      }
+    }
+    return tmpList
+  })
   // idk what this should actually do in the case where nothing is found...
   // for now defaulting to nothing, so it won't overwrite anything
   function setCurrentSubject(id: string) {
@@ -101,7 +114,7 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
   return {
     currentSubject, currentSubjectNewRec, loaded, loadedTS, setCurrentSubject, subjectList,
     subjectListSorted, interventionMap, lastRecDoseText, lastRecDoseDateText, lastDoseText, lastDoseDateText,
-    titrateable,
+    titratable, subjectListTitratable,
 
   }
 })
