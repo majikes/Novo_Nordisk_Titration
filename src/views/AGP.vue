@@ -344,6 +344,9 @@ export default defineComponent({
     // watch
     getValidDates()
 
+    // const titrationDates = ref([] as Markers[])
+    const subjStartDate = ref('' as string)
+
     // get titration dates as well
     const titrationDatesLoading = ref(false)
     function getTitrationDates() {
@@ -379,9 +382,6 @@ export default defineComponent({
       tooltip?: { text: string; color?: string; }[];
       color?: string;
     }
-
-    // const titrationDates = ref([] as Markers[])
-    const subjStartDate = ref('' as string)
 
     const titrationDatesComputed = computed(() => {
       const tmpMarkers = [] as Markers[]
