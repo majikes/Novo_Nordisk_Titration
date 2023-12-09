@@ -8,19 +8,22 @@
     <div class="grid grid-cols-3 my-1 content-end">
       <div v-if="subjectListStore.currentSubject.interventionArm === 1" class="grid content-end pb-1 pr-5"
         id="titrationdatepickerstandin">
-        <VueDatePicker v-model="date" :min-date="dateBounds.min" :max-date="dateBounds.max" :enable-time-picker="false"
-          :disabled="noSubjSelected || !validDateReq" :start-date="dateBounds.max" range auto-apply
-          :markers="titrationDatesComputed" />
+        <VueDatePicker v-model="date" :min-date="dateBoundsUTCString.min" :max-date="dateBoundsUTCString.max"
+          :enable-time-picker="false" :disabled="noSubjSelected || !validDateReq" :start-date="dateBoundsUTCString.max"
+          range auto-apply :markers="titrationDatesComputed" />
       </div>
       <div v-if="subjectListStore.currentSubject.interventionArm === 1" class="grid content-end">
-        <button class="btn w-52" id="graph-button" :disabled="buttonDisabled" @click="graphData">Graph</button>
+        <button :class="{ 'btn': !newDateSel, 'btn-highlight': newDateSel }" class="w-52" id="graph-button"
+          :disabled="buttonDisabled" @click="graphData">Graph</button>
       </div>
       <div class="col-start-3 ml-auto">
         <SubjectDropdown v-model="selected" />
       </div>
     </div>
     <div v-if="debugModeStore.debugMode">
-      {{ titrationDatesComputed }}
+      <div>{{ date }}</div>
+      <div>{{ prevDate }}</div>
+      <div>{{ titrationDatesComputed }}</div>
     </div>
     <!-- titrate link / latest basal dose -->
     <div class="grid grid-cols-2 justify-between content-end p-4 bg-gray-200 rounded-lg my-4">
@@ -52,6 +55,13 @@
       <div v-if="subjectDetailsLoading">
         <LoadingHover>
           <div class="font-semibold">Loading subject valid dates...</div>
+        </LoadingHover>
+      </div>
+      <div v-if="subjectGraphLoading">
+        <LoadingHover>
+          <div class="font-semibold">
+            Loading graphable data for dates {{`${date[0].getMonth()+1}/${date[0].getDate()}`}} - {{`${date[1].getMonth()+1}/${date[1].getDate()}`}}...
+          </div>
         </LoadingHover>
       </div>
       <div v-if="subjectListStore.currentSubject.interventionArm === 1" class="grid grid-cols-12 py-1">
@@ -100,7 +110,7 @@ import SubjectDetails from '@/types/SubjectDetails'
 import SubjectDropdown from '@/components/SubjectDropdown.vue'
 import SubjectDatesFromAPIType from '@/types/SubjectDatesFromAPIType'
 import BasalDoseType from '@/types/BasalDoseType'
-import { api, dateConvertToISO } from '@/functions/GlobalFunctions'
+import { api, dateConvertToISO, dateMatch } from '@/functions/GlobalFunctions'
 import { useApiURL, useApiURLNovo } from '@/globalConfigPlugin'
 import { useDebugModeStore } from '@/stores/debugModeStore'
 import { useAuthenticator } from '@aws-amplify/ui-vue'
@@ -190,6 +200,7 @@ export default defineComponent({
     // date bounds load
     // TODO CHECK BULLSHIT UTC STUFF
     const date = ref([] as Date[])
+    const prevDate = ref([] as Date[])
     const dateTS = computed(() => {
       let retArr = [] as number[]
       for (const d of date.value) {
@@ -199,22 +210,79 @@ export default defineComponent({
       }
       return retArr
     })
-    // const startDate = 
     const dateBounds = ref({
       min: {} as Date,
       max: {} as Date
     })
+    const dateBoundsUTCString = computed(() => {
+      const minMaxObj = {
+        min: '',
+        max: ''
+      }
+      // console.log('minmaxobj normal: ', dateBounds.value.min, dateBounds.value.max)
+      // console.log('min max empty:', isEmpty(dateBounds.value.min), isEmpty(dateBounds.value.max))
+      if (typeof (dateBounds.value.min.toLocaleString) === 'function' && typeof (dateBounds.value.max.toLocaleString) === 'function') {
+        minMaxObj.min = dateBounds.value.min.toLocaleString('en-US', { timeZone: 'UTC' })
+        minMaxObj.max = dateBounds.value.max.toLocaleString('en-US', { timeZone: 'UTC' })
+        console.log('minmaxobj: ', minMaxObj)
+      }
+      return minMaxObj
+    })
     const datesValid = computed(() => {
       let retValid = true
-      if (date.value !== null && date.value.length === 2) {
+      if (date.value.length === 2) {
+        const minDate = {
+          year: dateBounds.value.min.getUTCFullYear(),
+          month: dateBounds.value.min.getUTCMonth(),
+          date: dateBounds.value.min.getUTCDate()
+        }
+        const maxDate = {
+          year: dateBounds.value.max.getUTCFullYear(),
+          month: dateBounds.value.max.getUTCMonth(),
+          date: dateBounds.value.max.getUTCDate()
+        }
+        const minDateNew = new Date(minDate.year, minDate.month, minDate.date, 0, 0, 0, 0)
+        const maxDateNew = new Date(maxDate.year, maxDate.month, maxDate.date, 0, 0, 0, 0)
         for (const d of date.value) {
-          retValid &&= d >= dateBounds.value.min
-          retValid &&= d <= dateBounds.value.max
+          const inputDate = {
+            year: d.getFullYear(),
+            month: d.getMonth(),
+            date: d.getDate()
+          }
+          const inputDateNew = new Date(inputDate.year, inputDate.month, inputDate.date, 0, 0, 0, 0)
+          console.log('inputDate:', inputDateNew)
+          console.log('minDate:', minDateNew)
+          console.log('maxDate:', maxDateNew)
+
+          const inMinBound = (inputDateNew >= minDateNew)
+          const inMaxBound = (inputDateNew <= maxDateNew)
+          console.log('inminbound: ', inMinBound)
+          console.log('inmaxbound: ', inMaxBound)
+          retValid &&= inMinBound
+          retValid &&= inMaxBound
         }
       } else {
         retValid = false
       }
       return retValid
+    })
+
+    // some logic to determine whether or not we should highlight the Graph button
+    // this works as a computed var without side effects as long as we're always pushing
+    // date.value to prevDate.value when we press Graph
+    const newDateSel = computed(() => {
+      let retBool = false
+      if (datesValid.value && (
+        (prevDate.value.length === 2 && (!dateMatch(date.value[0],prevDate.value[0]) || !dateMatch(date.value[1],prevDate.value[1]))) ||
+        (prevDate.value.length === 0)
+      )) {
+        // that was a gross conditional. basically, if dates are valid AND (prevDate !== date OR prevDate empty)
+        console.log('new dates selected from watcher!')
+        console.log(`new dates: ${date.value}`)
+        console.log(`old dates: ${prevDate.value}`)
+        retBool = true
+      }
+      return retBool
     })
 
     // 'loading' and other flags that we'll need
@@ -405,7 +473,7 @@ export default defineComponent({
       return tmpMarkers
     })
 
-    const validDates = ref(true)
+    // const validDates = ref(true)
 
     // get / update data to graph
     const graphError = ref(null)
@@ -427,6 +495,8 @@ export default defineComponent({
           (subjectGraphable: SubjectGraphable) => {
             console.log('success!')
             console.log(subjectGraphable)
+            // reset the Graph button highlighting
+            prevDate.value = cloneDeep(date.value)
             graphableGlucose.value.id = selected.value
             graphableInsulin.value.id = selected.value
             const glucTraces = [
@@ -512,7 +582,7 @@ export default defineComponent({
       graphData, graphableGlucose, graphableInsulin, loaded, buttonDisabled, datesValid,
       route, sdError, tir1Graphable, tir2Graphable, validDateReq, subjectListStore,
       titrationDatesComputed, debugModeStore, titrateProblems, doseProblems, titrateRedirect,
-      smbgsLoading, smbgs
+      smbgsLoading, smbgs, dateBoundsUTCString, newDateSel, prevDate
     }
   }
 })

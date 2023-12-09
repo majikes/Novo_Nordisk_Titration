@@ -198,6 +198,14 @@
     @apply mt-1 p-3 rounded-md bg-gray-100 border-transparent disabled:text-gray-400
 }
 
+/* .btn-nocolor {
+    @apply mt-1 p-3 rounded-md bg-gray-100 border-transparent disabled:text-gray-400
+} */
+
+.btn-highlight {
+    @apply mt-1 p-3 rounded-md bg-emerald-300 border-transparent disabled:text-gray-400
+}
+
 .btn-small {
     @apply py-2 px-4 rounded-md bg-gray-100 border-transparent disabled:text-gray-400
 }

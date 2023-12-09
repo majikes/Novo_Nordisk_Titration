@@ -6,7 +6,7 @@
     </div>
     <!-- subject dropdown -->
     <div class="flex justify-end content-end">
-      <SubjectDropdown v-model="selected" :titratable-only="true" />
+      <SubjectDropdown v-model="selected" :titratable-only="true" :disabledProp="modalVisible" />
     </div>
 
     <!-- Loading screen -->
@@ -58,7 +58,8 @@
             :class="{ 'text-gray-400': !subjectListStore.currentSubjectNewRec, 'font-semibold': subjectListStore.currentSubjectNewRec }">
             {{ subjectListStore.currentSubjectNewRec ? 'NEW' : 'Latest' }} recommended basal insulin dose:
           </div>
-          <div class="force-center-content px-2 font-semibold" :class="{ 'text-gray-400': !subjectListStore.currentSubjectNewRec }">
+          <div class="force-center-content px-2 font-semibold"
+            :class="{ 'text-gray-400': !subjectListStore.currentSubjectNewRec }">
             {{ subjectListStore.lastRecDoseText }}
           </div>
         </div>
@@ -69,18 +70,58 @@
                 rounded-lg text-md focus:ring-blue-500 focus:border-blue-500 bg-gray-700
                 border-gray-600 placeholder-gray-500 text-white disabled:bg-white disabled:text-gray-400
                 disabled:border-transparent disabled:placeholder-gray-400"
-                :disabled="modifyDisabled || !subjectListStore.currentSubjectNewRec" placeholder="N/A" v-model="newDoseModel" />
+                :disabled="modifyDisabled || !subjectListStore.currentSubjectNewRec || modalVisible" placeholder="N/A"
+                v-model="newDoseModel" />
             </div>
-            <div class="flex px-2 items-center gap-2" :class="{ 'text-gray-400': !subjectListStore.currentSubjectNewRec }">
-              <input type="checkbox" v-model="modifyFlag" :disabled="!subjectListStore.currentSubjectNewRec" />
+            <div class="flex px-2 items-center gap-2"
+              :class="{ 'text-gray-400': !subjectListStore.currentSubjectNewRec }">
+              <input type="checkbox" v-model="modifyFlag" :disabled="!subjectListStore.currentSubjectNewRec || modalVisible" />
               Modify dose
             </div>
           </div>
-          <button class="btn force-center-content w-52" :disabled="!subjectListStore.currentSubjectNewRec || !newDoseValid"
-            :class="{ 'font-semibold': newDoseValid }" @click="submitTitration">
-            CONFIRM + SEND {{ newDoseValid ? `${newDoseModel}U` : '' }}
-            <!-- {{newDoseTextConditional}} -->
-          </button>
+          <div class="flex">
+            <button class="btn force-center-content w-52"
+              :disabled="!subjectListStore.currentSubjectNewRec || !newDoseValid || modalVisible"
+              :class="{ 'font-semibold': newDoseValid }" @click="showModal">
+              CONFIRM + SEND {{ newDoseValid ? `${newDoseModel}U` : '' }}
+              <!-- {{newDoseTextConditional}} -->
+            </button>
+          </div>
+          <!-- are you sure? modal -->
+          <div v-if="modalVisible" class="adduser-modal bg-transparent" id="modal-container">
+            <LoadingHover v-if="submitTitrationLoading">
+              <div class="font-semibold">Submitting...</div>
+            </LoadingHover>
+            <div
+              class="bg-gradient-to-b from-orange-100 from-0% via-white via-5% to-white to-10% rounded-lg w-full p-4">
+              <div class="flex justify-center my-6 font-semibold">
+                Review Information:
+              </div>
+              <div class="p-4 rounded-lg bg-white">
+                <div class="flex justify-between">
+                  <div class="font-semibold">Participant ID:</div>
+                  <div>{{ selected }}</div>
+                </div>
+                <div class="flex justify-between">
+                  <div class="font-semibold">Dose:</div>
+                  <div>{{ `${newDoseModel}U` }}</div>
+                </div>
+              </div>
+              <div class="p-4 rounded-lg border-2 border-orange-300">
+                <div class="control-row font-semibold">Confirm information and add subject to system?</div>
+                <div class="flex justify-between gap-4 mt-4 mb-2">
+                  <button class="profile-confirm-btn w-64 bg-gray-100" @click="hideModal"
+                    :disabled="submitTitrationLoading">
+                    Cancel
+                  </button>
+                  <button class="profile-confirm-btn w-64 bg-emerald-100 font-semibold"
+                    :disabled="submitTitrationLoading" @click="submitTitration">
+                    {{ submitTitrationLoading ? 'Submitting...' : 'Confirm' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="custom-invalid-feedback flex col-span-2 justify-end">
           <!--:class="{ 'invisible': idValid, 'visible': !idValid }">-->
@@ -288,16 +329,16 @@ export default defineComponent({
     }
     graphData()
 
-    watch(() =>subjectListStore.currentSubject.rec_dose_value, 
+    watch(() => subjectListStore.currentSubject.rec_dose_value,
       (newRecDoseVal) => {
-        if (typeof(newRecDoseVal) !== 'undefined') {
+        if (typeof (newRecDoseVal) !== 'undefined') {
           if (newRecDoseVal === null || newRecDoseVal < 0) {
             newDoseModel.value = null
           } else {
             newDoseModel.value = String(newRecDoseVal)
           }
         }
-    })
+      })
 
     const newDoseModel = ref(null as string | null)
     const newDoseMin = 0
@@ -330,9 +371,9 @@ export default defineComponent({
       return problemStr
     })
 
-    const submitLoading = ref(false)
+    const submitTitrationLoading = ref(false)
     function submitTitration() {
-      submitLoading.value = true
+      submitTitrationLoading.value = true
       const endpoint = 'saveandsendnewbasaldose'
       const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_id=${selected.value}`
       console.log(`request to ${req_url}`)
@@ -346,13 +387,25 @@ export default defineComponent({
           console.log(`${endpoint} success!`)
           console.log(response)
           // TODO need correct response format
+          hideModal()
+          // HORRIBLE BUT FORCE REFRESHING THE PAGE IS EASIEST RN.
+          router.push({ name: 'TitrateView', params: { subjectId: '' } })
         }).catch(err => {
           errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
           console.log(err.message)
         }).finally(() => {
-          submitLoading.value = false
+          submitTitrationLoading.value = false
           // submitTitrationRedirect()
         })
+    }
+
+    const modalVisible = ref(false)
+    function showModal() {
+      modalVisible.value = true
+    }
+
+    function hideModal() {
+      modalVisible.value = false
     }
 
     function submitTitrationRedirect() {
@@ -360,11 +413,11 @@ export default defineComponent({
     }
 
     return {
-      selected, subjectDetailsLoading, subjectListLoading, subjectGraphLoading, 
-      graphData, graphableGlucose, loaded, submitTitration, 
+      selected, subjectDetailsLoading, subjectListLoading, subjectGraphLoading,
+      graphData, graphableGlucose, loaded, submitTitration,
       route, tir1Graphable, modifyFlag, debugModeStore, groupComputed, modifyDisabled,
-      newDoseModel, newDoseMin,
-      newDoseMax, newDoseValid, newDoseProblems, isEmpty,
+      newDoseModel, newDoseMin, submitTitrationLoading, modalVisible,
+      newDoseMax, newDoseValid, newDoseProblems, isEmpty, showModal, hideModal,
       newDoseIsDigits, subjectListStore, titratePageVisible,
     }
   }

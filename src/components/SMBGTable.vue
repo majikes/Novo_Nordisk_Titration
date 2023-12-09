@@ -2,7 +2,7 @@
   <div class="smbg-history-table-simple-row" id="smbg-history-table-header">
     <div class="font-bold px-4">Date</div>
     <div class="font-bold px-4">Time [m]</div>
-    <div class="font-bold px-4">Basal [U]</div>
+    <div class="font-bold px-4">SMBG[mg/dL]</div>
   </div>
   <div v-for="(smbg, index) in smbgs" :key="index" class="smbg-history-table-simple-row">
     <div class="px-4">{{smbg.smbgDate}}</div>

@@ -5,7 +5,7 @@
       <span v-if="titratableOnly" class="pl-1"> (titratable only)</span>
     </div>
     <select class="form-select select-input border-transparent border-r-8" name="subject" id="subject-select"
-      ref="subjectselect" :disabled="subjectListLoading" :value="modelValue" @change="changeValue">
+      ref="subjectselect" :disabled="subjectListLoading || disabledProp" :value="modelValue" @change="changeValue">
       <option disabled value="" selected>{{ subjectSelectText }}
       </option>
       <option v-if="subjectListLoading" :value="modelValue">Loading...</option>
@@ -53,6 +53,10 @@ export default defineComponent({
       required: false,
       type: Boolean as PropType<boolean>
     },
+    disabledProp: {
+      required: false,
+      type: Boolean as PropType<boolean>
+    }
     // loaded: {
     //   required: true,
     //   type: Boolean as PropType<boolean>
