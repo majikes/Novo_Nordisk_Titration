@@ -13,6 +13,7 @@ import AddParticipant from '../views/AddParticipant.vue'
 import AddNonParticipant from '../views/AddNonParticipant.vue'
 import DataDownload from '../views/DataDownload.vue'
 import UserSettings from '../views/UserSettings.vue'
+import AppDownload from '../views/AppDownload.vue'
 
 
 const routes : Array<RouteRecordRaw> = [
@@ -25,6 +26,11 @@ const routes : Array<RouteRecordRaw> = [
         path: '/agp/:subjectId?',
         name: 'AGP',
         component: AGP
+    },
+    {
+        path: '/app-download',
+        name: 'AppDownload',
+        component: AppDownload
     },
     {
         path: '/titration/:subjectId?',

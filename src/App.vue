@@ -52,9 +52,8 @@
           Profile History
         </div>
       </router-link> -->
-      <router-link
-        v-if="groupComputed.includes('physician') || groupComputed.includes('crc')"
-        class="nav-link group" :to="{ name: 'ParticipantManagement' }">
+      <router-link v-if="groupComputed.includes('physician') || groupComputed.includes('crc')" class="nav-link group"
+        :to="{ name: 'ParticipantManagement' }">
         <div class=" flex">
           <svg class="nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
             viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -65,7 +64,8 @@
           Participant Management
         </div>
       </router-link>
-      <router-link v-if="groupComputed.includes('admin') || groupComputed.includes('superadmin')" class="nav-link group" :to="{ name: 'NonParticipantManagement' }">
+      <router-link v-if="groupComputed.includes('admin') || groupComputed.includes('superadmin')" class="nav-link group"
+        :to="{ name: 'NonParticipantManagement' }">
         <div class=" flex">
           <svg class="nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
             viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -112,6 +112,20 @@
           SMBG Titration rules
         </div>
       </router-link> -->
+      <router-link v-if="!groupComputed.includes('participant')" class="nav-link group" :to="{ name: 'AppDownload' }">
+        <div class=" flex">
+          <!-- https://feathericons.dev/?search=box&iconset=feather -->
+          <svg class="nav-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
+            <path
+              d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+            <line x1="12" x2="12" y1="22.08" y2="12" />
+          </svg>
+
+          App Download
+        </div>
+      </router-link>
       <router-link class="nav-link group" :to="{ name: 'UserSettings' }">
         <div class=" flex">
           <svg class="nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
