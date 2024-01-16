@@ -60,7 +60,8 @@
       <div v-if="subjectGraphLoading">
         <LoadingHover>
           <div class="font-semibold">
-            Loading graphable data for dates {{`${date[0].getMonth()+1}/${date[0].getDate()}`}} - {{`${date[1].getMonth()+1}/${date[1].getDate()}`}}...
+            <!-- Loading graphable data for dates {{`${date[0].getMonth()+1}/${date[0].getDate()}`}} - {{`${date[1].getMonth()+1}/${date[1].getDate()}`}}... -->
+            Loading graphable data for specified dates...
           </div>
         </LoadingHover>
       </div>
