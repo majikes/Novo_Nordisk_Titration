@@ -70,18 +70,19 @@
                 rounded-lg text-md focus:ring-blue-500 focus:border-blue-500 bg-gray-700
                 border-gray-600 placeholder-gray-500 text-white disabled:bg-white disabled:text-gray-400
                 disabled:border-transparent disabled:placeholder-gray-400"
-                :disabled="modifyDisabled || !subjectListStore.currentSubjectNewRec || modalVisible" placeholder="N/A"
+                :disabled="newRecDisplayDisabled" placeholder="N/A"
                 v-model="newDoseModel" />
             </div>
             <div class="flex px-2 items-center gap-2"
-              :class="{ 'text-gray-400': !subjectListStore.currentSubjectNewRec }">
-              <input type="checkbox" v-model="modifyFlag" :disabled="!subjectListStore.currentSubjectNewRec || modalVisible" />
+              :class="{ 'text-gray-400': newRecInputDisabled }">
+              <input type="checkbox" v-model="modifyFlag"
+                :disabled="newRecInputDisabled" />
               Modify dose
             </div>
           </div>
           <div class="flex">
             <button class="btn force-center-content w-52"
-              :disabled="!subjectListStore.currentSubjectNewRec || !newDoseValid || modalVisible"
+              :disabled="newRecShowModalDisabled"
               :class="{ 'font-semibold': newDoseValid }" @click="showModal">
               CONFIRM + SEND {{ newDoseValid ? `${newDoseModel}U` : '' }}
               <!-- {{newDoseTextConditional}} -->
@@ -404,6 +405,28 @@ export default defineComponent({
       modalVisible.value = true
     }
 
+    const newRecDisplayDisabled = computed(() => {
+      if (debugModeStore.debugMode) {
+        return modifyDisabled.value || false
+      } else {
+        return modifyDisabled.value || !subjectListStore.currentSubjectNewRec || modalVisible.value
+      }
+    })
+    const newRecInputDisabled = computed(() => {
+      if (debugModeStore.debugMode) {
+        return false
+      } else {
+        return !subjectListStore.currentSubjectNewRec || modalVisible.value
+      }
+    })
+    const newRecShowModalDisabled = computed(() => {
+      if (debugModeStore.debugMode) {
+        return false
+      } else {
+        return !subjectListStore.currentSubjectNewRec || !newDoseValid.value || modalVisible.value
+      }
+    })
+
     function hideModal() {
       modalVisible.value = false
     }
@@ -418,7 +441,8 @@ export default defineComponent({
       route, tir1Graphable, modifyFlag, debugModeStore, groupComputed, modifyDisabled,
       newDoseModel, newDoseMin, submitTitrationLoading, modalVisible,
       newDoseMax, newDoseValid, newDoseProblems, isEmpty, showModal, hideModal,
-      newDoseIsDigits, subjectListStore, titratePageVisible,
+      newDoseIsDigits, subjectListStore, titratePageVisible, newRecDisplayDisabled,
+      newRecInputDisabled, newRecShowModalDisabled,
     }
   }
 })

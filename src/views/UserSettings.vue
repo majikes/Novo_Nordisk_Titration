@@ -38,6 +38,7 @@ export default defineComponent({
     onMounted(
       async()=>{
       const user =  await Auth.currentAuthenticatedUser();
+      console.log(user)
       authGroupState.authGroup = user.signInUserSession.accessToken.payload["cognito:groups"].toString();
       console.log("Current authenticated user: "+authGroupState.authGroup);
     })
