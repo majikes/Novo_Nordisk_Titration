@@ -28,7 +28,7 @@
           AGP
         </div>
       </router-link>
-      <router-link v-if="groupComputed.includes('physician') || groupComputed.includes('crc')" class="nav-link group"
+      <router-link v-if="groupComputed.includes('physician')" class="nav-link group"
         :to="{ name: 'TitrateView', params: { subjectId: route.params.subjectId } }">
         <div class=" flex">
           <svg class="nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"
