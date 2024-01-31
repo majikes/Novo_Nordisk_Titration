@@ -27,9 +27,9 @@
         </div>
         <input type="text" :disabled="modalVisible || subjectsLoading" v-model="inputObj.id"
           class="custom-text-input peer form-control" :class="{ 'custom-valid': idValid, 'custom-invalid': !idValid }"
-          id="validationCustom01" :placeholder="idFieldLoading" required pattern="\d{5}">
+          id="validationCustom01" :placeholder="idFieldLoading" required pattern="\d{6}">
         <div class="custom-invalid-feedback" :class="{ 'invisible': idValid, 'visible': !idValid }">
-          ID must be a 5-digit number that isn't yet in use.
+          ID must be a 6-digit number that isn't yet in use.
         </div>
         <div v-if="debugModeStore.debugMode">
           <div>idNotTaken: {{ idNotTaken }}</div>
@@ -517,9 +517,9 @@ export default defineComponent({
       // console.log(`${inputObj.value.id}: ${!subjectIDs.value.includes(inputObj.value.id)}`)
       return !subjectIDs.value.includes(inputObj.value.id)
     })
-    const idRegex = /\d{5}/
+    const idRegex = /\d{6}/
     const idIsDigits = computed(() => { return inputObj.value.id.match(idRegex) !== null })
-    const idIsLen = computed(() => { return inputObj.value.id.length === 5 })
+    const idIsLen = computed(() => { return inputObj.value.id.length === 6 })
     const idValid = computed(() => { return idNotTaken.value && idIsDigits.value && idIsLen.value })
 
     const inputValid = computed(() => {
