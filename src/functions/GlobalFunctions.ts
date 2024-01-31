@@ -58,6 +58,17 @@ export const api = {
                 'Authorization': token,
             })
         }),
+    
+    // API Key auth
+    getAPIKeyAuth: <TResponse>(url: string, apiKey: string) =>
+        request<TResponse>(url, {
+            headers: new Headers({
+                'Content-Type': 'application/json',
+                // 'Accept': 'application/json',
+                // 'Access-Control-Allow-Headers': 'Content-Type',
+                'x-api-key': apiKey,
+            })
+        }),
 
     // Using `extends` to set a type constraint:
     post: <TBody extends BodyInit, TResponse>(url: string, body: TBody) =>

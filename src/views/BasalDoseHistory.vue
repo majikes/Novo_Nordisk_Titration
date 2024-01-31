@@ -80,7 +80,8 @@ export default defineComponent({
       console.log(`request to ${req_url}`)
       // server response:
       // {"id":"103","date":"08/29/2023", "timeOfDayInMinutes":1340, "basalDoseValue":40}
-      api.getAuth<any[]>(req_url, tokenComputed.value).then(
+      const APIKEYHARDCODED = "7LiuUEWHXNMCOSZdaCS32DQPme5SYHr7JZlsVk1a"
+      api.getAPIKeyAuth<any[]>(req_url, APIKEYHARDCODED).then(
         (doseHistoryList: any[]) => {
           console.log('successful basal dose history request')
           console.log(doseHistoryList)
