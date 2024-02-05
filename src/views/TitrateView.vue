@@ -402,7 +402,7 @@ export default defineComponent({
 
       const requestObj = {
         input: inputJSON,
-        name: `${nowTS}-saveandsendnewbasaldose-${auth.user?.username}-${selected.value}-${newDoseModel.value}[U]`,
+        name: `${nowTS}-saveandsendnewbasaldose-${auth.user?.username}-${selected.value}-${newDoseModel.value}U`,
         stateMachineArn: "arn:aws:states:us-east-1:582050746740:stateMachine:Novo_Titration_Optimize_Save_and_Notify_Recommendations"
       }
       console.log('attempting request with requestObj:', requestObj)
