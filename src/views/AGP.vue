@@ -274,7 +274,7 @@ export default defineComponent({
     const newDateSel = computed(() => {
       let retBool = false
       if (datesValid.value && (
-        (prevDate.value.length === 2 && (!dateMatch(date.value[0],prevDate.value[0]) || !dateMatch(date.value[1],prevDate.value[1]))) ||
+        (prevDate.value.length === 2 && (!dateMatch(date.value[0], prevDate.value[0]) || !dateMatch(date.value[1], prevDate.value[1]))) ||
         (prevDate.value.length === 0)
       )) {
         // that was a gross conditional. basically, if dates are valid AND (prevDate !== date OR prevDate empty)

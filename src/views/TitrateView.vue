@@ -69,20 +69,16 @@
               <input type="text" id="small-input" class="block w-12 p-2 border
                 rounded-lg text-md focus:ring-blue-500 focus:border-blue-500 bg-gray-700
                 border-gray-600 placeholder-gray-500 text-white disabled:bg-white disabled:text-gray-400
-                disabled:border-transparent disabled:placeholder-gray-400"
-                :disabled="newRecDisplayDisabled" placeholder="N/A"
-                v-model="newDoseModel" />
+                disabled:border-transparent disabled:placeholder-gray-400" :disabled="newRecDisplayDisabled"
+                placeholder="N/A" v-model="newDoseModel" />
             </div>
-            <div class="flex px-2 items-center gap-2"
-              :class="{ 'text-gray-400': newRecInputDisabled }">
-              <input type="checkbox" v-model="modifyFlag"
-                :disabled="newRecInputDisabled" />
+            <div class="flex px-2 items-center gap-2" :class="{ 'text-gray-400': newRecInputDisabled }">
+              <input type="checkbox" v-model="modifyFlag" :disabled="newRecInputDisabled" />
               Modify dose
             </div>
           </div>
           <div class="flex">
-            <button class="btn force-center-content w-52"
-              :disabled="newRecShowModalDisabled"
+            <button class="btn force-center-content w-52" :disabled="newRecShowModalDisabled"
               :class="{ 'font-semibold': newDoseValid }" @click="showModal">
               CONFIRM + SEND {{ newDoseValid ? `${newDoseModel}U` : '' }}
               <!-- {{newDoseTextConditional}} -->
@@ -93,8 +89,7 @@
             <LoadingHover v-if="submitTitrationLoading">
               <div class="font-semibold">Submitting...</div>
             </LoadingHover>
-            <div
-              class="bg-gradient-to-b from-orange-100 from-0% via-white via-5% to-white to-10% rounded-lg w-full p-4">
+            <div class="bg-gradient-to-b from-orange-100 from-0% via-white via-5% to-white to-10% rounded-lg w-full p-4">
               <div class="flex justify-center my-6 font-semibold">
                 Review Information:
               </div>
@@ -115,8 +110,8 @@
                     :disabled="submitTitrationLoading">
                     Cancel
                   </button>
-                  <button class="profile-confirm-btn w-64 bg-emerald-100 font-semibold"
-                    :disabled="submitTitrationLoading" @click="submitTitration">
+                  <button class="profile-confirm-btn w-64 bg-emerald-100 font-semibold" :disabled="submitTitrationLoading"
+                    @click="submitTitration">
                     {{ submitTitrationLoading ? 'Submitting...' : 'Confirm' }}
                   </button>
                 </div>
@@ -134,7 +129,7 @@
     <div v-else class="w-full h-40 force-center-content text-l font-semibold">
       <div v-if="selected !== ''">
         {{ subjectListStore.currentSubject.id }} is in the {{ (subjectListStore.interventionMap as
-            any)[subjectListStore.currentSubject.interventionArm]
+          any)[subjectListStore.currentSubject.interventionArm]
         }} arm - Titration functions disabled.
       </div>
       <div v-else>
@@ -378,19 +373,62 @@ export default defineComponent({
       const endpoint = 'saveandsendnewbasaldose'
       const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_id=${selected.value}`
       console.log(`request to ${req_url}`)
+
+      const nowTS = Math.floor(Date.now() / 1000)
+      const inputJSON = JSON.stringify({
+        src_id: 1,
+        arm_type: 1,
+        basalDose: {
+          username: selected.value,
+          doseValue: Number(newDoseModel.value),
+        },
+        subject_username: selected.value,
+        project: "novonordisktitration",
+        requestor: {
+          username: auth.user?.username,
+          role: groupComputed.value.includes('physician') ? "physician" : `${groupComputed.value}`,
+        },
+      })
+      //  error output:
+      // {
+      //   "__type": "com.amazon.coral.service#SerializationException",
+      //     "Message": "Start of structure or map found where not expected."
+      // }
+      //  valid output:
+      // {
+      //   "executionArn": "arn:aws:states:us-east-1:582050746740:execution:Novo_Titration_Optimize_Save_and_Notify_Recommendations:1707172562-saveandsendnewbasaldose-giuliophys-41104-43U",
+      //   "startDate": 1707172567.247
+      // }
+
       const requestObj = {
-        newdose: Number(newDoseModel.value)
+        input: inputJSON,
+        name: `${nowTS}-saveandsendnewbasaldose-${auth.user?.username}-${selected.value}-${newDoseModel.value}[U]`,
+        stateMachineArn: "arn:aws:states:us-east-1:582050746740:stateMachine:Novo_Titration_Optimize_Save_and_Notify_Recommendations"
       }
+      console.log('attempting request with requestObj:', requestObj)
       api.postAuth<any, any>(req_url, tokenComputed.value, JSON.stringify(
         requestObj
       )).then(
         (response: any) => {
-          console.log(`${endpoint} success!`)
           console.log(response)
           // TODO need correct response format
-          hideModal()
-          // HORRIBLE BUT FORCE REFRESHING THE PAGE IS EASIEST RN.
-          router.push({ name: 'TitrateView', params: { subjectId: '' } })
+          if (typeof(response['startDate']) === undefined) {
+            console.log(`${endpoint} success!`)
+            hideModal()
+            // HORRIBLE BUT FORCE REFRESHING THE PAGE IS EASIEST RN.
+            router.push({ name: 'TitrateView', params: { subjectId: '' } })
+          } else {
+            console.log('error detected')
+            let tmpErr = '' 
+            if (typeof(response['message']) !== undefined) {
+              tmpErr = response['message']
+            } else if (typeof(response['Message']) !== undefined) {
+              tmpErr = response['Message']
+            } else {
+              tmpErr = `${response}`
+            }
+            errors.errorLog(`${componentName}; request to ${req_url}: ${tmpErr}`, true)
+          }
         }).catch(err => {
           errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
           console.log(err.message)
