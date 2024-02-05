@@ -412,7 +412,7 @@ export default defineComponent({
         (response: any) => {
           console.log(response)
           // TODO need correct response format
-          if (typeof(response['startDate']) === undefined) {
+          if (typeof(response['startDate']) !== undefined) {
             console.log(`${endpoint} success!`)
             hideModal()
             // HORRIBLE BUT FORCE REFRESHING THE PAGE IS EASIEST RN.
