@@ -264,8 +264,8 @@ export default defineComponent({
       one_week_ago_local.value = new Date()
       one_week_ago_local.value.setDate(one_week_ago_local.value.getDate() - 7)
 
-      const startTS = Math.floor((new Date(yesterday_local.value).valueOf()) / 1000)
-      const endTS = Math.floor((new Date(one_week_ago_local.value).valueOf()) / 1000)
+      const endTS = Math.floor((new Date(yesterday_local.value).valueOf()) / 1000)
+      const startTS = Math.floor((new Date(one_week_ago_local.value).valueOf()) / 1000)
       console.log(`graphing from ${one_week_ago_local.value} to ${yesterday_local.value}...`)
       console.log(startTS, endTS)
 
