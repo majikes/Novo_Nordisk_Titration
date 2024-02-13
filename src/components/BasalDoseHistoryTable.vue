@@ -1,12 +1,12 @@
 <template>
   <div class="dose-history-table-simple-row" id="dose-history-table-header">
     <div class="font-bold px-4">Date</div>
-    <div class="font-bold px-4">Time [m]</div>
+    <div class="font-bold px-4">Time [hh:mm]</div>
     <div class="font-bold px-4">Basal [U]</div>
   </div>
   <div v-for="(dose, index) in doseHistory" :key="index" class="dose-history-table-simple-row">
     <div class="px-4">{{dose.date}}</div>
-    <div class="px-4">{{dose.basalDoseTimeOfDayInMinutes}}</div>
+    <div class="px-4">{{dose.formattedTime}}</div>
     <div class="px-4">{{dose.basalDoseValue}}</div>
   </div>
 </template>

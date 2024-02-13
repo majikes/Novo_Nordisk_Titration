@@ -220,7 +220,7 @@ export default defineComponent({
       if (groupComputed.value.includes('admin')) {
         returnRoles = ['crc', 'physician']
       } else if (groupComputed.value.includes('superadmin')) {
-        returnRoles = ['admin']
+        returnRoles = ['admin', 'cdt-technical', 'cdt-overseer']
       }
       return returnRoles
     })

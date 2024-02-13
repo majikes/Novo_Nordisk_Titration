@@ -1,4 +1,3 @@
-
 <template>
   <div v-if="!groupComputed.includes('participant')" class="profile-history">
     <div class="control-row-header" id="header">
@@ -8,113 +7,147 @@
       <SubjectDropdown v-model="selected" />
     </div>
     <BasalDoseHistoryTable :doseHistory="basalDoseHistory" />
-    <div v-if="debugModeStore.debugMode">
-
-    </div>
+    <div v-if="debugModeStore.debugMode"></div>
   </div>
 </template>
-  
+
 <script lang="ts">
-import { computed, defineComponent, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import SubjectDropdown from '@/components/SubjectDropdown.vue'
-import BasalDoseHistoryTable from '@/components/BasalDoseHistoryTable.vue'
-import { api } from '@/functions/GlobalFunctions'
-import { useApiURL } from '@/globalConfigPlugin'
-import { useDebugModeStore } from '@/stores/debugModeStore'
-import { useAuthenticator } from '@aws-amplify/ui-vue'
-import { lowerCase } from 'lodash'
-import { useErrorStore } from '@/stores/ErrorStore'
-import BasalDoseType from '@/types/BasalDoseType'
+import { computed, defineComponent, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import SubjectDropdown from "@/components/SubjectDropdown.vue";
+import BasalDoseHistoryTable from "@/components/BasalDoseHistoryTable.vue";
+import { api } from "@/functions/GlobalFunctions";
+import { useApiURL } from "@/globalConfigPlugin";
+import { useDebugModeStore } from "@/stores/debugModeStore";
+import { useAuthenticator } from "@aws-amplify/ui-vue";
+import { lowerCase } from "lodash";
+import { useErrorStore } from "@/stores/ErrorStore";
+import BasalDoseType from "@/types/BasalDoseType";
 
 export default defineComponent({
-  name: 'BasalDoseHistory',
+  name: "BasalDoseHistory",
   components: { SubjectDropdown, BasalDoseHistoryTable },
   props: {},
   setup() {
-    const debugModeStore = useDebugModeStore()
-    const auth = useAuthenticator()
-    const errors = useErrorStore()
-    const componentName = 'BasalDoseHistory'
+    const debugModeStore = useDebugModeStore();
+    const auth = useAuthenticator();
+    const errors = useErrorStore();
+    const componentName = "BasalDoseHistory";
     const groupComputed = computed(() => {
-      let group = [] as string[]
-      if (typeof (auth.user) !== 'undefined' &&
-        typeof (auth.user.signInUserSession) !== 'undefined' &&
-        typeof (auth.user.signInUserSession.idToken.payload["cognito:groups"]) !== 'undefined') {
-        group = auth.user.signInUserSession.idToken.payload["cognito:groups"].map(lowerCase)
+      let group = [] as string[];
+      if (
+        typeof auth.user !== "undefined" &&
+        typeof auth.user.signInUserSession !== "undefined" &&
+        typeof auth.user.signInUserSession.idToken.payload["cognito:groups"] !==
+          "undefined"
+      ) {
+        group =
+          auth.user.signInUserSession.idToken.payload["cognito:groups"].map(
+            lowerCase
+          );
       }
-      console.log(`group: ${group}`)
-      return group
-    })
+      console.log(`group: ${group}`);
+      return group;
+    });
     const tokenComputed = computed(() => {
       // 'Authorization': cognitoUser.signInUserSession.idToken.jwtToken
-      let token = ''
-      if (typeof (auth.user.signInUserSession) !== 'undefined' && typeof (auth.user.signInUserSession.idToken.jwtToken) !== 'undefined') {
-        token = auth.user.signInUserSession.idToken.jwtToken
+      let token = "";
+      if (
+        typeof auth.user.signInUserSession !== "undefined" &&
+        typeof auth.user.signInUserSession.idToken.jwtToken !== "undefined"
+      ) {
+        token = auth.user.signInUserSession.idToken.jwtToken;
       }
-      console.log(`token: ${token}`)
-      return token
-    })
-    const route = useRoute()
-    const selected = ref('')
-    const apiRootURL = useApiURL()
-    selected.value = route.params.subjectId === undefined ? '' : route.params.subjectId as string
+      console.log(`token: ${token}`);
+      return token;
+    });
+    const route = useRoute();
+    const selected = ref("");
+    const apiRootURL = useApiURL();
+    selected.value =
+      route.params.subjectId === undefined
+        ? ""
+        : (route.params.subjectId as string);
     watch(selected, () => {
-      console.log(`dropdown: ${selected.value}`)
+      console.log(`dropdown: ${selected.value}`);
       // console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
-      getBasalDoseHistory()
-    })
+      getBasalDoseHistory();
+    });
 
+    function formatTime(minutes: number) {
+      const hours = Math.floor(minutes / 60);
+      const minutesRemaining = minutes % 60;
 
-    const basalDoseHistory = ref([] as BasalDoseType[])
-    const basalsLoading = ref(false)
+      // Format the hours and minutes to always be two digits
+      const formattedHours = hours.toString().padStart(2, "0");
+      const formattedMinutes = minutesRemaining.toString().padStart(2, "0");
+
+      const retStr = `${formattedHours}:${formattedMinutes}`
+
+      return retStr;
+    }
+
+    const basalDoseHistory = ref([] as BasalDoseType[]);
+    const basalsLoading = ref(false);
 
     function getBasalDoseHistory() {
-      console.log('loading')
-      basalsLoading.value = true
-      console.log('clearing displayed basal dose history')
-      basalDoseHistory.value = [] as BasalDoseType[]
-      const endpoint = 'getbasaldosehistory'
-      console.log(`GET request to /${endpoint}`)
-      const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_username=${selected.value}`
-      console.log(`request to ${req_url}`)
+      console.log("loading");
+      basalsLoading.value = true;
+      console.log("clearing displayed basal dose history");
+      basalDoseHistory.value = [] as BasalDoseType[];
+      const endpoint = "getbasaldosehistory";
+      console.log(`GET request to /${endpoint}`);
+      const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_username=${selected.value}`;
+      console.log(`request to ${req_url}`);
       // server response:
       // {"id":"103","date":"08/29/2023", "timeOfDayInMinutes":1340, "basalDoseValue":40}
-      const APIKEYHARDCODED = "7LiuUEWHXNMCOSZdaCS32DQPme5SYHr7JZlsVk1a"
-      api.getAPIKeyAuth<any[]>(req_url, APIKEYHARDCODED).then(
-        (doseHistoryList: any[]) => {
-          console.log('successful basal dose history request')
-          console.log(doseHistoryList)
+      const APIKEYHARDCODED = "7LiuUEWHXNMCOSZdaCS32DQPme5SYHr7JZlsVk1a";
+      api
+        .getAPIKeyAuth<any[]>(req_url, APIKEYHARDCODED)
+        .then((doseHistoryList: any[]) => {
+          console.log("successful basal dose history request");
+          console.log(doseHistoryList);
           for (const dose of doseHistoryList) {
             const tmpDose = {
-              id: '',
-              date: '',
+              id: "",
+              date: "",
               basalDoseTimeOfDayInMinutes: -1,
               basalDoseValue: -1,
-              src_id: '-1',
+              src_id: "-1",
               time: -1,
+              formattedTime: ""
             }
             tmpDose.id = dose.id
             tmpDose.date = dose.date
-            tmpDose.basalDoseTimeOfDayInMinutes = dose.basalDoseTimeOfDayInMinutes
+            tmpDose.basalDoseTimeOfDayInMinutes =
+              dose.basalDoseTimeOfDayInMinutes
             tmpDose.basalDoseValue = dose.basalDoseValue
             tmpDose.src_id = dose.src_id
             tmpDose.time = dose.time
-            basalDoseHistory.value.push(tmpDose)
+            tmpDose.formattedTime = formatTime(dose.basalDoseTimeOfDayInMinutes)
+            basalDoseHistory.value.push(tmpDose);
           }
-        }).catch(err => {
-          console.log(err.message)
-          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
-        }).finally(() => {
-          console.log('done')
-          basalsLoading.value = false
         })
+        .catch((err) => {
+          console.log(err.message);
+          errors.errorLog(
+            `${componentName}; request to ${req_url}: ${err.message}`
+          );
+        })
+        .finally(() => {
+          console.log("done");
+          basalsLoading.value = false;
+        });
     }
-    getBasalDoseHistory()
+    getBasalDoseHistory();
 
     return {
-      debugModeStore, selected, groupComputed, basalsLoading, basalDoseHistory, 
-    }
-  }
-})
+      debugModeStore,
+      selected,
+      groupComputed,
+      basalsLoading,
+      basalDoseHistory,
+    };
+  },
+});
 </script>

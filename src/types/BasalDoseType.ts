@@ -4,7 +4,8 @@ interface BasalDoseType {
     basalDoseTimeOfDayInMinutes: number,
     basalDoseValue: number,
     src_id: string,
-    time: number
+    time: number, 
+    formattedTime: string,
   }
 
 export default BasalDoseType
