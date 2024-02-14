@@ -1,6 +1,6 @@
 
 <template>
-  <div v-if="groupComputed.includes('physician')" class="titration-view">
+  <div v-if="groupComputed.includes('physician') || groupComputed.includes('cdt overseer')" class="titration-view">
     <div class="control-row-header" id="header">
       <h1 class="text-2xl font-bold">Subject Titration</h1>
     </div>
