@@ -487,10 +487,11 @@ export default defineComponent({
         // console.log(startTS,endTS)
         loaded.value = false
         subjectGraphLoading.value = true
+        const endpoint = 'agp'
         // TODO pass dates as arguments
         ///const req_url = `${apiRootURL}/getsubjects?subject_id=${selected.value}&day1=${startTS.valueOf()}&day2=${endTS.valueOf()}`
         // const req_url = `${apiRootURLNovo}/agp?username=${auth.user.username}&subject_id=${selected.value}&day1=${date.value[0].toISOString().split('T')[0]}&day2=${date.value[1].toISOString().split('T')[0]}`
-        const req_url = `${apiRootURLNovo}/agp?username=${auth.user.username}&subject_id=${selected.value}&day1=${dateTS.value[0]}&day2=${dateTS.value[1]}`
+        const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}&subject_id=${selected.value}&day1=${dateTS.value[0]}&day2=${dateTS.value[1]}`
         console.log(`request to ${req_url}`)
         api.getAuth<SubjectGraphable>(req_url, tokenComputed.value).then(
           (subjectGraphable: SubjectGraphable) => {

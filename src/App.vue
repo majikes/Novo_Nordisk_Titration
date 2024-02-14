@@ -5,7 +5,7 @@
     <!-- nav bar links -->
     <nav class="flex flex-row justify-center my-4">
       <router-link
-        v-if="groupComputed.includes('physician') || groupComputed.includes('crc') || groupComputed.includes('admin')"
+        v-if="groupComputed.includes('physician') || groupComputed.includes('crc') || groupComputed.includes('admin') || groupComputed.includes('cdt overseer')"
         class="nav-link group" :to="{ name: 'StudyOverview' }">
         <div class="flex">
           <svg class="nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"
@@ -17,7 +17,7 @@
           Home
         </div>
       </router-link>
-      <router-link v-if="groupComputed.includes('physician') || groupComputed.includes('crc')" class="nav-link group"
+      <router-link v-if="groupComputed.includes('physician') || groupComputed.includes('crc') || groupComputed.includes('cdt overseer')" class="nav-link group"
         :to="{ name: 'AGP', params: { subjectId: route.params.subjectId } }">
         <div class=" flex">
           <svg class="nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"
@@ -28,7 +28,7 @@
           AGP
         </div>
       </router-link>
-      <router-link v-if="groupComputed.includes('physician')" class="nav-link group"
+      <router-link v-if="groupComputed.includes('physician') || groupComputed.includes('cdt overseer')" class="nav-link group"
         :to="{ name: 'TitrateView', params: { subjectId: route.params.subjectId } }">
         <div class=" flex">
           <svg class="nav-svg" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"
@@ -112,11 +112,11 @@
           SMBG Titration rules
         </div>
       </router-link> -->
-      <router-link v-if="groupComputed.includes('crc')" class="nav-link group" :to="{ name: 'CGM Data Availability' }">
+      <router-link v-if="groupComputed.includes('crc') || groupComputed.includes('cdt technical') || groupComputed.includes('cdt overseer')" class="nav-link group" :to="{ name: 'CGM Data Availability' }">
         <div class="flex">
           <!-- https://feathericons.dev/?search=check-circle&iconset=feather -->
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" class="nav-svg" fill="none"
-            stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+            stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
             <polyline points="22 4 12 14.01 9 11.01" />
           </svg>

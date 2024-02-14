@@ -1,5 +1,5 @@
 <template>
-  <div v-if="groupComputed.includes('crc')" class="cgm-data-availability">
+  <div v-if="groupComputed.includes('crc') || groupComputed.includes('cdt technical') || groupComputed.includes('cdt overseer')" class="cgm-data-availability">
     <div class="control-row-header" id="header">
       <h1 class="text-2xl font-bold">CGM Data Availability</h1>
     </div>
