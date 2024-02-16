@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.amplify-button {
+    @apply text-black bg-slate-300
+}
+
 .nav-link {
     @apply mx-1 py-1 px-2 rounded-lg bg-white hover:bg-stone-400 hover:text-white
 }
