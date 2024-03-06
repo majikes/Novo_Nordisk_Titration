@@ -154,7 +154,7 @@
     <!-- footer / drawer -->
     <div class="flex w-full text-center px-4 py-3 gap-2">
       <div class="flex items-end">
-        <DebugButton v-if="groupComputed.includes('cdt dev') || groupComputed.includes('superadmin')" />
+        <DebugButton v-if="groupComputed.includes('cdt dev') || groupComputed.includes('cdt technical') || groupComputed.includes('superadmin')" />
       </div>
       <NotificationDrawer />
     </div>

@@ -68,14 +68,25 @@
             />
             Only real participants
           </div>
+          <div
+            class="flex content-evenly gap-2 py-2"
+            v-if="debugModeStore.debugMode"
+          >
+            <input
+              class="h-5 rounded aspect-square"
+              type="checkbox"
+              v-model="useOldValues"
+            />
+            Use old data
+          </div>
         </div>
       </div>
     </div>
     <!-- debug info -->
-    <div v-if="debugModeStore.debugMode">
+    <!-- <div v-if="debugModeStore.debugMode">
       <div>cgmAvailabilityLoading: {{ cgmAvailabilityLoading }}</div>
       <div>subjectListLoading: {{ subjectListLoading }}</div>
-    </div>
+    </div> -->
     <!-- body -->
     <div v-if="allLoading">
       <LoadingHover>
@@ -224,20 +235,27 @@ export default defineComponent({
     const onlyRealParticipants = ref(true);
     // loaded by the function way lower, used to filter out subjects that are already enrolled
     const subjectListSimple = ref([] as string[]);
+    const useOldValues = ref(false);
 
     const cgmAvailabilityPercentages = ref([] as CGMDataAvailType[]);
     const cgmAvailabilityPercentagesValid = computed(() => {
       const retArr = [] as any[];
-      for (const subj of cgmAvailabilityPercentages.value) {
+      const cgmAvailPcnts = cloneDeep(cgmAvailabilityPercentages.value);
+      for (const subj of cgmAvailPcnts) {
         if (subj.username !== null && validIDRegex.test(subj.username)) {
           const subjCopy = {} as CGMDataAvailType;
           subjCopy.username = String(subj.username);
-          subjCopy.percentageOfCgmAvailable = Number(
-            subj.percentageOfCgmAvailable
-          );
+          // toggle total percent with old values
+          const selectedPcntAvail = useOldValues.value
+            ? subj.percentageOfCgmAvailableOld
+            : subj.percentageOfCgmAvailable;
+          subjCopy.percentageOfCgmAvailable = Number(selectedPcntAvail);
+          // toggle percent per day with old values
+          const dailyPcntAvail = useOldValues.value
+            ? cloneDeep(subj.dailyPercentageOfCgmAvailableOld)
+            : cloneDeep(subj.dailyPercentageOfCgmAvailable);
           subjCopy.dailyPercentageOfCgmAvailable = [] as CGMDataAvailDayType[];
-          const tmpDays = [...subj.dailyPercentageOfCgmAvailable];
-          for (const day of tmpDays) {
+          for (const day of dailyPcntAvail) {
             const tmpDay = {} as CGMDataAvailDayType;
             tmpDay.dayStartTimestamp = day.dayStartTimestamp;
             tmpDay.percentageOfCgmAvailable =
@@ -441,6 +459,7 @@ export default defineComponent({
       timezones,
       selectedTimezone,
       getCgmAvailabilityPercentage,
+      useOldValues,
     };
   },
 });
