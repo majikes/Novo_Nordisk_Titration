@@ -10,26 +10,29 @@
     <!-- lil title / filter control -->
     <div class="control-row-header" id="header">
       <h1 class="text-2xl font-bold">CGM Data Availability</h1>
-      <div class="flex">
-        <!-- tz selector -->
-        <div class="adduser-form-cell">
-          <label for="tz-select">Timezone</label>
-          <select
-            :disabled="allLoading"
-            v-model="selectedTimezone"
-            class="form-select select-input"
-            id="tz-select"
-            required
-          >
-            <option v-for="tz in timezones" :value="tz" :key="tz">
-              {{ tz }}
-            </option>
-          </select>
-          <div class="invalid-feedback">Please select a time zone.</div>
-        </div>
-        <!-- sort / randomization selector container -->
-        <div class="grid">
-          <div class="adduser-form-cell">
+    </div>
+    <div class="grid grid-cols-4">
+      <!-- tz selector -->
+      <div class="adduser-form-cell col-start-3">
+        <label for="tz-select">Timezone</label>
+        <select
+          :disabled="allLoading"
+          v-model="selectedTimezone"
+          class="form-select select-input"
+          id="tz-select"
+          required
+        >
+          <option v-for="tz in timezones" :value="tz" :key="tz">
+            {{ tz }}
+          </option>
+        </select>
+        <div class="invalid-feedback">Please select a time zone.</div>
+      </div>
+      <!-- sort / randomization selector container -->
+      <div class="grid col-start-4">
+        <div class="grid grid-cols-12">
+          <!-- sort criteria selector -->
+          <div class="adduser-form-cell col-span-10">
             <label for="sort-select">Sort criteria</label>
             <select
               :disabled="allLoading"
@@ -47,38 +50,78 @@
               </option>
             </select>
           </div>
-          <!-- randomization selector -->
-          <!-- filterByEnrolled onlyRealParticipants controls -->
-          <div class="flex content-evenly gap-2 p-2">
-            <input
-              class="h-5 rounded aspect-square"
-              type="checkbox"
-              v-model="filterByEnrolled"
-            />
-            Randomization only
+          <!-- sort order selector, desc/asc -->
+          <div class="grid content-end py-3.5 col-span-2">
+            <!-- https://feathericons.dev/?search=arrow-down&iconset=feather -->
+            <div
+              class="interactive-svg-container force-center-content w-8"
+              @click="reverseSortDir"
+            >
+              <svg v-if="sortDirDesc"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                class="interactive-svg"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+              >
+                <line x1="12" x2="12" y1="5" y2="19" />
+                <polyline points="19 12 12 19 5 12" />
+              </svg>
+              <!-- https://feathericons.dev/?search=arrow-up&iconset=feather -->
+              <svg v-else
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                class="interactive-svg"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+              >
+                <line x1="12" x2="12" y1="19" y2="5" />
+                <polyline points="5 12 12 5 19 12" />
+              </svg>
+            </div>
           </div>
-          <div
-            class="flex content-evenly gap-2 py-2"
-            v-if="debugModeStore.debugMode"
-          >
-            <input
-              class="h-5 rounded aspect-square"
-              type="checkbox"
-              v-model="onlyRealParticipants"
-            />
-            Only real participants
-          </div>
-          <div
-            class="flex content-evenly gap-2 py-2"
-            v-if="debugModeStore.debugMode"
-          >
-            <input
-              class="h-5 rounded aspect-square"
-              type="checkbox"
-              v-model="useOldValues"
-            />
-            Use old data
-          </div>
+        </div>
+        <!-- randomization selector -->
+        <!-- filterByEnrolled onlyRealParticipants controls -->
+        <div class="flex content-evenly gap-2 p-2">
+          <input
+            class="h-5 rounded aspect-square"
+            type="checkbox"
+            v-model="filterByEnrolled"
+          />
+          Randomization only
+        </div>
+        <div
+          class="flex content-evenly gap-2 py-2"
+          v-if="debugModeStore.debugMode"
+        >
+          <input
+            class="h-5 rounded aspect-square"
+            type="checkbox"
+            v-model="onlyRealParticipants"
+          />
+          Only real participants
+        </div>
+        <div
+          class="flex content-evenly gap-2 py-2"
+          v-if="debugModeStore.debugMode"
+        >
+          <input
+            class="h-5 rounded aspect-square"
+            type="checkbox"
+            v-model="useOldValues"
+          />
+          Use old data
         </div>
       </div>
     </div>
@@ -93,53 +136,16 @@
         <div class="font-semibold">Loading participant data</div>
       </LoadingHover>
     </div>
-    <div
+    <CGMAvailabilityBlock
       v-for="(
         cgmValidList, index
       ) in cgmAvailabilityPercentagesSortedBySelected"
       :key="index"
-      class="p-2 my-2 grid grid-cols-4 rounded-md bg-gray-200 font-mono"
+      :thresholdDaily="thresholdDaily"
+      :thresholdTotal="thresholdTotal"
+      :participantCGMAvail="cgmValidList"
     >
-      <div
-        class="m-1 p-1 col-span-4 grid grid-cols-4 justify-between rounded-sm"
-        :class="{
-          'bg-emerald-200':
-            cgmValidList.percentageOfCgmAvailable >= thresholdTotal,
-          'bg-red-300': cgmValidList.percentageOfCgmAvailable < thresholdTotal,
-        }"
-      >
-        <h2 class="flex justify-between col-span-3 text-xl font-semibold p-3">
-          {{ cgmValidList.username }} :
-          {{ cgmValidList.percentageOfCgmAvailable }}%
-        </h2>
-        <div class="text-m font-semibold px-2 pt-1 w-full">
-          <h2 class="flex justify-between">
-            <div>first:</div>
-            <div>{{ dateFormat(cgmValidList.firstTimestamp) }}</div>
-          </h2>
-          <h2 class="flex justify-between">
-            <div>last:</div>
-            <div>{{ dateFormat(cgmValidList.lastTimestamp) }}</div>
-          </h2>
-        </div>
-      </div>
-      <div class="p-1 col-span-4 flex flex-wrap w-full gap-1 justify-start">
-        <div
-          v-for="(cgmDay, index2) in cgmValidList.dailyPercentageOfCgmAvailable"
-          :key="index2"
-          :title="`Day start at ${String(
-            new Date(cgmDay.dayStartTimestamp * 1000).toLocaleString('en-US')
-          )}`"
-          class="aspect-square w-20 force-center-content rounded-sm"
-          :class="{
-            'bg-emerald-200': cgmDay.percentageOfCgmAvailable >= thresholdDaily,
-            'bg-red-300': cgmDay.percentageOfCgmAvailable < thresholdDaily,
-          }"
-        >
-          {{ cgmDay.percentageOfCgmAvailable }}%
-        </div>
-      </div>
-    </div>
+    </CGMAvailabilityBlock>
   </div>
 </template>
 
@@ -157,11 +163,13 @@ import { useAuthenticator } from "@aws-amplify/ui-vue";
 import { useDebugModeStore } from "@/stores/debugModeStore";
 import { useErrorStore } from "@/stores/ErrorStore";
 import LoadingHover from "@/components/LoadingHover.vue";
+import CGMAvailabilityBlock from "@/components/CGMAvailabilityBlock.vue";
 
 export default defineComponent({
   name: "CGMDataAvailability",
   components: {
     LoadingHover,
+    CGMAvailabilityBlock,
   },
   props: {},
   setup() {
@@ -288,8 +296,13 @@ export default defineComponent({
     const sortVar = ref("firstTimestamp");
     const sortables = {
       username: "Participant ID",
-      firstTimestamp: "First timestamp",
+      firstTimestamp: "Oldest timestamp",
+      lastTimestamp: "Newest timestamp",
     };
+    const sortDirDesc = ref(true);
+    function reverseSortDir() {
+      sortDirDesc.value = !sortDirDesc.value;
+    }
 
     // const filterVar = ref('none')
 
@@ -312,10 +325,11 @@ export default defineComponent({
             typeof (a as any)[sortVar.value] !== "undefined" &&
             typeof (b as any)[sortVar.value] !== "undefined"
           ) {
+            const directionality = sortDirDesc.value ? -1 : 1;
             if ((a as any)[sortVar.value] > (b as any)[sortVar.value]) {
-              return 1;
+              return 1 * directionality;
             } else {
-              return -1;
+              return -1 * directionality;
             }
           } else {
             return 1;
@@ -344,16 +358,6 @@ export default defineComponent({
     //     }
     //   })
     // })
-
-    function dateFormat(timestamp: number) {
-      const date = new Date(timestamp * 1000);
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      const hr = String(date.getHours()).padStart(2, "0");
-      const min = String(date.getMinutes()).padStart(2, "0");
-      const retStr = `${month}/${day} ${hr}:${min}`;
-      return retStr;
-    }
 
     const cgmAvailabilityLoading = ref(false);
     function getCgmAvailabilityPercentage() {
@@ -441,7 +445,6 @@ export default defineComponent({
       cgmAvailabilityLoading,
       cgmAvailabilityPercentages,
       cgmAvailabilityPercentagesValid,
-      dateFormat,
       thresholdTotal,
       thresholdDaily,
       debugModeStore,
@@ -460,6 +463,8 @@ export default defineComponent({
       selectedTimezone,
       getCgmAvailabilityPercentage,
       useOldValues,
+      sortDirDesc,
+      reverseSortDir,
     };
   },
 });
