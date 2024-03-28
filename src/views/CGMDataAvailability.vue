@@ -1,8 +1,12 @@
 <template>
-  <div v-if="groupComputed.includes('crc') ||
-    groupComputed.includes('cdt technical') ||
-    groupComputed.includes('cdt overseer')
-    " class="cgm-data-availability">
+  <div
+    v-if="
+      groupComputed.includes('crc') ||
+      groupComputed.includes('cdt technical') ||
+      groupComputed.includes('cdt overseer')
+    "
+    class="cgm-data-availability"
+  >
     <!-- lil title / filter control -->
     <div class="control-row-header" id="header">
       <h1 class="text-2xl font-bold">CGM Data Availability</h1>
@@ -11,8 +15,13 @@
       <!-- tz selector -->
       <div class="adduser-form-cell col-start-3">
         <label for="tz-select">Timezone</label>
-        <select :disabled="allLoading" v-model="selectedTimezone" class="form-select select-input" id="tz-select"
-          required>
+        <select
+          :disabled="allLoading"
+          v-model="selectedTimezone"
+          class="form-select select-input"
+          id="tz-select"
+          required
+        >
           <option v-for="tz in timezones" :value="tz" :key="tz">
             {{ tz }}
           </option>
@@ -25,9 +34,18 @@
           <!-- sort criteria selector -->
           <div class="adduser-form-cell col-span-10">
             <label for="sort-select">Sort criteria</label>
-            <select :disabled="allLoading" class="form-select select-input" name="sort" id="sort-select"
-              v-model="sortVar">
-              <option :value="sortVar" v-for="sortVar in Object.keys(sortables)" :key="sortVar">
+            <select
+              :disabled="allLoading"
+              class="form-select select-input"
+              name="sort"
+              id="sort-select"
+              v-model="sortVar"
+            >
+              <option
+                :value="sortVar"
+                v-for="sortVar in Object.keys(sortables)"
+                :key="sortVar"
+              >
                 {{ (sortables as any)[sortVar] }}
               </option>
             </select>
@@ -35,17 +53,40 @@
           <!-- sort order selector, desc/asc -->
           <div class="grid content-end py-3.5 col-span-2">
             <!-- https://feathericons.dev/?search=arrow-down&iconset=feather -->
-            <div class="interactive-svg-container force-center-content w-8" @click="reverseSortDir">
-              <svg v-if="sortDirDesc" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"
-                class="interactive-svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="1.5">
+            <div
+              class="interactive-svg-container force-center-content w-8"
+              @click="reverseSortDir"
+            >
+              <svg
+                v-if="sortDirDesc"
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                class="interactive-svg"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+              >
                 <line x1="12" x2="12" y1="5" y2="19" />
                 <polyline points="19 12 12 19 5 12" />
               </svg>
               <!-- https://feathericons.dev/?search=arrow-up&iconset=feather -->
-              <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"
-                class="interactive-svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="1.5">
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                class="interactive-svg"
+                fill="none"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="1.5"
+              >
                 <line x1="12" x2="12" y1="19" y2="5" />
                 <polyline points="5 12 12 5 19 12" />
               </svg>
@@ -55,15 +96,33 @@
         <!-- randomization selector -->
         <!-- filterByEnrolled onlyRealParticipants controls -->
         <div class="flex content-evenly gap-2 p-2">
-          <input class="h-5 rounded aspect-square" type="checkbox" v-model="filterByEnrolled" />
+          <input
+            class="h-5 rounded aspect-square"
+            type="checkbox"
+            v-model="filterByEnrolled"
+          />
           Randomization only
         </div>
-        <div class="flex content-evenly gap-2 py-2" v-if="debugModeStore.debugMode">
-          <input class="h-5 rounded aspect-square" type="checkbox" v-model="onlyRealParticipants" />
+        <div
+          class="flex content-evenly gap-2 py-2"
+          v-if="debugModeStore.debugMode"
+        >
+          <input
+            class="h-5 rounded aspect-square"
+            type="checkbox"
+            v-model="onlyRealParticipants"
+          />
           Only real participants
         </div>
-        <div class="flex content-evenly gap-2 py-2" v-if="debugModeStore.debugMode">
-          <input class="h-5 rounded aspect-square" type="checkbox" v-model="useOldValues" />
+        <div
+          class="flex content-evenly gap-2 py-2"
+          v-if="debugModeStore.debugMode"
+        >
+          <input
+            class="h-5 rounded aspect-square"
+            type="checkbox"
+            v-model="useOldValues"
+          />
           Use old data
         </div>
       </div>
@@ -79,10 +138,15 @@
         <div class="font-semibold">Loading participant data</div>
       </LoadingHover>
     </div>
-    <CGMAvailabilityBlock v-for="(
+    <CGMAvailabilityBlock
+      v-for="(
         cgmValidList, index
-      ) in cgmAvailabilityPercentagesSortedBySelected" :key="index" :thresholdDaily="thresholdDaily"
-      :thresholdTotal="thresholdTotal" :participantCGMAvail="cgmValidList">
+      ) in cgmAvailabilityPercentagesSortedBySelected"
+      :key="index"
+      :thresholdDaily="thresholdDaily"
+      :thresholdTotal="thresholdTotal"
+      :participantCGMAvail="cgmValidList"
+    >
     </CGMAvailabilityBlock>
   </div>
 </template>
@@ -92,9 +156,13 @@ import { computed, defineComponent, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { api } from "@/functions/GlobalFunctions";
 import { useApiURL } from "@/globalConfigPlugin";
-import { type CGMDataAvailType } from "@/types/CGMDataAvailType";
+import {
+  type CGMDataAvailDayType,
+  type CGMDataAvailTypeMinimal,
+  type CGMDataAvailFrontendType,
+  type CGMDataFromAPIType,
+} from "@/types/CGMDataAvailTypes";
 import { cloneDeep, lowerCase } from "lodash";
-import type { CGMDataAvailDayType } from "@/types/CGMDataAvailDayType";
 import SubjectFullListItemFromAPIType from "@/types/SubjectFullListFromAPIType";
 import { useAuthenticator } from "@aws-amplify/ui-vue";
 import { useDebugModeStore } from "@/stores/debugModeStore";
@@ -127,7 +195,7 @@ export default defineComponent({
         typeof auth.user !== "undefined" &&
         typeof auth.user.signInUserSession !== "undefined" &&
         typeof auth.user.signInUserSession.idToken.payload["cognito:groups"] !==
-        "undefined"
+          "undefined"
       ) {
         group =
           auth.user.signInUserSession.idToken.payload["cognito:groups"].map(
@@ -183,38 +251,39 @@ export default defineComponent({
     const randomizationListSimple = ref([] as string[]);
     const useOldValues = ref(false);
 
-    const cgmAvailabilityPercentages = ref([] as CGMDataAvailType[]);
-    const cgmAvailabilityPercentagesValid = computed(() => {
-      const retArr = [] as any[];
-      const cgmAvailPcnts = cloneDeep(cgmAvailabilityPercentages.value);
-      for (const subj of cgmAvailPcnts) {
-        if (subj.username !== null && validIDRegex.test(subj.username)) {
-          const subjCopy = {} as CGMDataAvailType;
-          subjCopy.username = String(subj.username);
-          // toggle total percent with old values
-          const selectedPcntAvail = useOldValues.value
-            ? subj.percentageOfCgmAvailableOld
-            : subj.percentageOfCgmAvailable;
-          subjCopy.percentageOfCgmAvailable = Number(selectedPcntAvail);
-          // toggle percent per day with old values
-          const dailyPcntAvail = useOldValues.value
-            ? cloneDeep(subj.dailyPercentageOfCgmAvailableOld)
-            : cloneDeep(subj.dailyPercentageOfCgmAvailable);
-          subjCopy.dailyPercentageOfCgmAvailable = [] as CGMDataAvailDayType[];
-          for (const day of dailyPcntAvail) {
-            const tmpDay = {} as CGMDataAvailDayType;
-            tmpDay.dayStartTimestamp = day.dayStartTimestamp;
-            tmpDay.percentageOfCgmAvailable =
-              Math.round(day.percentageOfCgmAvailable * 100) / 100;
-            subjCopy.dailyPercentageOfCgmAvailable.push(tmpDay);
-          }
-          subjCopy.firstTimestamp = subj.firstTimestamp;
-          subjCopy.lastTimestamp = subj.lastTimestamp;
-          retArr.push(subjCopy);
-        }
-      }
-      return retArr;
-    });
+    // const cgmAvailabilityPercentages = ref([] as CGMDataAvailTypeMinimal[]);
+    // const cgmAvailabilityPercentagesValid = computed(() => {
+    //   const retArr = [] as any[];
+    //   const cgmAvailPcnts = cloneDeep(cgmAvailabilityPercentages.value);
+    //   for (const subj of cgmAvailPcnts) {
+    //     if (subj.username !== null && validIDRegex.test(subj.username)) {
+    //       const subjCopy = {} as CGMDataAvailFrontendType;
+    //       subjCopy.username = String(subj.username);
+    //       subjCopy.
+    //       // toggle total percent with old values
+
+    //       // toggle percent per day with old values
+    //       const dailyPcntAvail = useOldValues.value
+    //         ? cloneDeep(subj.dailyPercentageOfCgmAvailableOld)
+    //         : cloneDeep(subj.dailyPercentageOfCgmAvailable);
+    //       subjCopy.dailyPercentageOfCgmAvailable = [] as CGMDataAvailDayType[];
+    //       for (const day of dailyPcntAvail) {
+    //         const tmpDay = {} as CGMDataAvailDayType;
+    //         tmpDay.dayStartTimestamp = day.dayStartTimestamp;
+    //         tmpDay.percentageOfCgmAvailable =
+    //           Math.round(day.percentageOfCgmAvailable * 100) / 100;
+    //         subjCopy.dailyPercentageOfCgmAvailable.push(tmpDay);
+    //       }
+    //       subjCopy.firstTimestamp = subj.firstTimestamp;
+    //       subjCopy.lastTimestamp = subj.lastTimestamp;
+    //       retArr.push(subjCopy);
+    //     }
+    //   }
+    //   return retArr;
+    // });
+    const cgmAvailabilityPercentagesValid = ref(
+      [] as CGMDataAvailFrontendType[]
+    );
 
     const filterByEnrolled = ref(true);
 
@@ -297,7 +366,6 @@ export default defineComponent({
     //   })
     // })
 
-
     // also trigger that function whenever we change selectedTimezone
     watch(
       () => selectedTimezone.value,
@@ -337,48 +405,53 @@ export default defineComponent({
         })
         .finally(() => {
           subjectListLoading.value = false;
-          loadSubjectListAvail(randomizationListSimple.value)
+          loadSubjectListAvail(randomizationListSimple.value);
         });
     }
     loadSubjectList();
 
-    {
-      // const cgmAvailabilityLoading = ref(false);
-      // function getCgmAvailabilityPercentage() {
-      //   cgmAvailabilityLoading.value = true;
-      //   console.log("loading");
-      //   const endpoint = "getCgmAvailabilityPercentage";
-      //   // const req_username = auth.user.username
-      //   const req_username = "testuser";
-      //   console.log(`GET request to /${endpoint}`);
-      //   const req_url = `${apiRootURL}/${endpoint}?requestor_username=${req_username}&timezone=${selectedTimezone.value}`;
-      //   console.log(`request to ${req_url}`);
-      //   // api.getAuth<any>(req_url, tokenComputed.value).then(
-      //   api
-      //     .get<CGMDataFromAPIType>(req_url)
-      //     .then((response: CGMDataFromAPIType) => {
-      //       console.log(`successful ${endpoint} request`);
-      //       console.log(response);
-      //       cgmAvailabilityPercentages.value = response.cgmPercentage;
-      //       if (response.timezone !== selectedTimezone.value) {
-      //         errors.errorLog(
-      //           `${componentName}; backend returned a different timezone than expected. Requested: ${selectedTimezone.value}; Returned: ${response.timezone}. Forcibly setting dropdown to ${response.timezone}...`
-      //         );
-      //         selectedTimezone.value = response.timezone;
-      //       }
-      //     })
-      //     .catch((err) => {
-      //       console.log(err.message);
-      //       errors.errorLog(
-      //         `${componentName}; request to ${req_url}: ${err.message}`
-      //       );
-      //     })
-      //     .finally(() => {
-      //       cgmAvailabilityLoading.value = false;
-      //       console.log("done");
-      //     });
-      // }
-      // getCgmAvailabilityPercentage();
+    function loadSubjectListAvail(participantList: string[]) {
+      for (const participant of participantList) {
+        console.log(`loading cgm availability for participant ${participant}`);
+        // push new fake obj onto list with username and loading = true
+        const tmpParticipant = {} as CGMDataAvailFrontendType;
+        tmpParticipant.username = participant
+        tmpParticipant.dailyPercentageOfCgmAvailable = [] as CGMDataAvailDayType[]
+        tmpParticipant.firstTimestamp = 0
+        tmpParticipant.lastTimestamp = 0
+        tmpParticipant.loading = true
+        cgmAvailabilityPercentagesValid.value.push(tmpParticipant)
+        
+        const endpoint = "getCgmAvailabilityPercentage";
+        const req_username = auth.user.username
+        // const req_username = "testuser";
+        console.log(`GET request to /${endpoint}`);
+        const req_url = `${apiRootURL}/${endpoint}?requestor_username=${req_username}&timezone=${selectedTimezone.value}`;
+        console.log(`request to ${req_url}`);
+        // api.getAuth<any>(req_url, tokenComputed.value).then(
+        api
+          .get<CGMDataFromAPIType>(req_url)
+          .then((response: CGMDataFromAPIType) => {
+            console.log(`successful ${endpoint} request`);
+            console.log(response);
+            cgmAvailabilityPercentages.value = response.cgmPercentage;
+            if (response.timezone !== selectedTimezone.value) {
+              errors.errorLog(
+                `${componentName}; backend returned a different timezone than expected. Requested: ${selectedTimezone.value}; Returned: ${response.timezone}. Forcibly setting dropdown to ${response.timezone}...`
+              );
+              selectedTimezone.value = response.timezone;
+            }
+          })
+          .catch((err) => {
+            console.log(err.message);
+            errors.errorLog(
+              `${componentName}; request to ${req_url}: ${err.message}`
+            );
+          })
+          .finally(() => {
+            console.log("done");
+          });
+      }
     }
 
     const allLoading = computed(() => {
