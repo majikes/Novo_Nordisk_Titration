@@ -12,11 +12,13 @@ interface CGMDataAvailTypeMinimal {
 
 interface CGMDataAvailFrontendType extends CGMDataAvailTypeMinimal {
     loading: boolean,
+    empty: boolean,
+    timezone: string,
 }
 
 interface CGMDataFromAPIType {
     timezone: string,
-    cgmPercentage: CGMDataAvailTypeMinimal[],
+    cgmPercentage: CGMDataAvailTypeMinimal,
     errorMsg: string,
 }
 

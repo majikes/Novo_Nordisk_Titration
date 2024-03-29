@@ -145,7 +145,8 @@
       :key="index"
       :thresholdDaily="thresholdDaily"
       :thresholdTotal="thresholdTotal"
-      :participantCGMAvail="cgmValidList"
+      :time-zone="selectedTimezone"
+      v-model:participantCGMAvail="cgmAvailabilityPercentagesSortedBySelected[index]"
     >
     </CGMAvailabilityBlock>
   </div>
@@ -405,52 +406,21 @@ export default defineComponent({
         })
         .finally(() => {
           subjectListLoading.value = false;
-          loadSubjectListAvail(randomizationListSimple.value);
+          populateSubjectListAvail();
         });
     }
     loadSubjectList();
 
-    function loadSubjectListAvail(participantList: string[]) {
-      for (const participant of participantList) {
-        console.log(`loading cgm availability for participant ${participant}`);
-        // push new fake obj onto list with username and loading = true
-        const tmpParticipant = {} as CGMDataAvailFrontendType;
-        tmpParticipant.username = participant
-        tmpParticipant.dailyPercentageOfCgmAvailable = [] as CGMDataAvailDayType[]
-        tmpParticipant.firstTimestamp = 0
-        tmpParticipant.lastTimestamp = 0
-        tmpParticipant.loading = true
-        cgmAvailabilityPercentagesValid.value.push(tmpParticipant)
-        
-        const endpoint = "getCgmAvailabilityPercentage";
-        const req_username = auth.user.username
-        // const req_username = "testuser";
-        console.log(`GET request to /${endpoint}`);
-        const req_url = `${apiRootURL}/${endpoint}?requestor_username=${req_username}&timezone=${selectedTimezone.value}`;
-        console.log(`request to ${req_url}`);
-        // api.getAuth<any>(req_url, tokenComputed.value).then(
-        api
-          .get<CGMDataFromAPIType>(req_url)
-          .then((response: CGMDataFromAPIType) => {
-            console.log(`successful ${endpoint} request`);
-            console.log(response);
-            cgmAvailabilityPercentages.value = response.cgmPercentage;
-            if (response.timezone !== selectedTimezone.value) {
-              errors.errorLog(
-                `${componentName}; backend returned a different timezone than expected. Requested: ${selectedTimezone.value}; Returned: ${response.timezone}. Forcibly setting dropdown to ${response.timezone}...`
-              );
-              selectedTimezone.value = response.timezone;
-            }
-          })
-          .catch((err) => {
-            console.log(err.message);
-            errors.errorLog(
-              `${componentName}; request to ${req_url}: ${err.message}`
-            );
-          })
-          .finally(() => {
-            console.log("done");
-          });
+    function populateSubjectListAvail() {
+      for (const participant of randomizationListSimple.value) {
+        const tmpCGMAvailBlockInfo = {} as CGMDataAvailFrontendType;
+        tmpCGMAvailBlockInfo.username = participant
+        tmpCGMAvailBlockInfo.dailyPercentageOfCgmAvailable = [] as CGMDataAvailDayType[]
+        tmpCGMAvailBlockInfo.firstTimestamp = 0
+        tmpCGMAvailBlockInfo.lastTimestamp = 0
+        tmpCGMAvailBlockInfo.loading = false
+        tmpCGMAvailBlockInfo.empty = true
+        cgmAvailabilityPercentagesValid.value.push(tmpCGMAvailBlockInfo)
       }
     }
 
@@ -460,7 +430,6 @@ export default defineComponent({
 
     return {
       // cgmAvailabilityLoading,
-      cgmAvailabilityPercentages,
       cgmAvailabilityPercentagesValid,
       thresholdTotal,
       thresholdDaily,
