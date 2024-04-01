@@ -159,7 +159,7 @@
 import { emit } from 'process'
 import { computed, defineComponent, PropType, ref } from 'vue'
 import { useDebugModeStore } from '@/stores/debugModeStore'
-import { profile } from 'console'
+// import { profile } from 'console'
 
 export default defineComponent({
   components: {},

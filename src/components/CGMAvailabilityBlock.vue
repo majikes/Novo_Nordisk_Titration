@@ -123,54 +123,6 @@ const validDays = computed(() => {
   return retObj;
 });
 
-function loadSubjectCGMAvail() {
-  participantCGMAvail.value.loading = true
-  console.log(`loading cgm availability for participant ${participantCGMAvail.value.username}`);
-  // push new fake obj onto list with username and loading = true
-  // const tmpParticipant = {} as CGMDataAvailFrontendType;
-  // tmpParticipant.username = participant
-  // tmpParticipant.dailyPercentageOfCgmAvailable = [] as CGMDataAvailDayType[]
-  // tmpParticipant.firstTimestamp = 0
-  // tmpParticipant.lastTimestamp = 0
-  // tmpParticipant.loading = true
-  // cgmAvailabilityPercentagesValid.value.push(tmpParticipant)
-
-  const endpoint = "getCgmAvailabilityPercentageBySubject";
-  const req_username = auth.user.username
-  // const req_username = "testuser";
-  console.log(`GET request to /${endpoint}`);
-  const req_url = `${apiRootURL}/${endpoint}?requestor_username=${req_username}&timezone=${props.timeZone}&subject_id=${participantCGMAvail.value.username}`;
-  console.log(`request to ${req_url}`);
-  // api.getAuth<any>(req_url, tokenComputed.value).then(
-  api
-    .get<CGMDataFromAPIType>(req_url)
-    .then((response: CGMDataFromAPIType) => {
-      console.log(`successful ${endpoint} request`);
-      console.log(response);
-      const tmpCGMDataAvailMinimal = response.cgmPercentage;
-      participantCGMAvail.value.dailyPercentageOfCgmAvailable = tmpCGMDataAvailMinimal.dailyPercentageOfCgmAvailable;
-      participantCGMAvail.value.firstTimestamp = tmpCGMDataAvailMinimal.firstTimestamp
-      participantCGMAvail.value.lastTimestamp = tmpCGMDataAvailMinimal.lastTimestamp
-      if (response.timezone !== participantCGMAvail.value.timezone) {
-        errors.errorLog(
-          `${componentName}; backend returned a different timezone for participant ${participantCGMAvail.value.username} than expected. Requested: ${props.timeZone}; Returned: ${response.timezone}. Forcibly setting dropdown to ${response.timezone}...`
-        );
-        participantCGMAvail.value.timezone = response.timezone;
-      }
-      participantCGMAvail.value.empty = false
-    })
-    .catch((err) => {
-      console.log(err.message);
-      errors.errorLog(
-        `${componentName}; request to ${req_url}: ${err.message}`
-      );
-    })
-    .finally(() => {
-      console.log("done");
-      participantCGMAvail.value.loading = false
-    });
-}
-
 function dateFormat(timestamp: number) {
   const date = new Date(timestamp * 1000);
   const month = date.getMonth() + 1;
