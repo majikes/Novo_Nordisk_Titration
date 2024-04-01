@@ -16,7 +16,7 @@
       <div class="adduser-form-cell col-start-3">
         <label for="tz-select">Timezone</label>
         <select
-          :disabled="allLoading"
+          disabled
           v-model="selectedTimezone"
           class="form-select select-input"
           id="tz-select"
@@ -360,6 +360,7 @@ export default defineComponent({
     ];
     // TODO DETECT TZ
     const selectedTimezone = ref("America/New_York");
+    selectedTimezone.value = Intl.DateTimeFormat().resolvedOptions().timeZone
 
     // const filteredBySelected = computed(() => {
     //   return [...sortedBySelected.value].filter((card) => {
