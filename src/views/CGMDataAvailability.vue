@@ -388,7 +388,7 @@ export default defineComponent({
     function loadSubjectList() {
       console.log("loading new subjectlist for dropdown");
       subjectListLoading.value = true;
-      let endpoint = "getallruninparticipants";
+      const endpoint = "getallruninparticipants";
       // if (groupComputed.value.includes('admin')) {
       //   endpoint = 'getassignedusers'
       // }
@@ -453,10 +453,10 @@ export default defineComponent({
           }
           // set selected timezone properly
           let requestTimezone = "America/New_York";
-          if (typeof selectedTimezone.value !== "undefined") {
+          if (typeof selectedTimezone.value !== "undefined" && selectedTimezone.value !== "undefined") {
             requestTimezone = selectedTimezone.value;
           }
-          if (typeof timezone !== "undefined") {
+          if (typeof timezone !== "undefined" && timezone !== "undefined") {
             requestTimezone = timezone;
           }
 
@@ -483,8 +483,8 @@ export default defineComponent({
           api
             .get<CGMDataFromAPIType>(req_url)
             .then((response: CGMDataFromAPIType) => {
-              console.log(`successful ${endpoint} request`);
-              console.log(response);
+              console.log(`successful ${endpoint} request for participant ${participantCGMAvail.username}`);
+              // console.log(response);
               const tmpCGMDataAvailMinimal = response.cgmPercentage;
               participantCGMAvail.dailyPercentageOfCgmAvailable =
                 tmpCGMDataAvailMinimal.dailyPercentageOfCgmAvailable;
@@ -507,7 +507,7 @@ export default defineComponent({
               );
             })
             .finally(() => {
-              console.log("done");
+              // console.log("done");
               participantCGMAvail.loading = false;
             });
         } else {

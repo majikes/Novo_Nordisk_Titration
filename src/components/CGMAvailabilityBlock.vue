@@ -2,13 +2,7 @@
   <div class="p-2 my-2 grid grid-cols-4 rounded-md bg-gray-200 font-mono">
     <div
       class="m-1 p-1 col-span-4 grid grid-cols-4 justify-between rounded-sm"
-      :class="{
-        'bg-emerald-200': statusFlags.sufficient,
-        'bg-red-300': statusFlags.insufficient,
-        'bg-orange-300': statusFlags.incomplete,
-        'bg-gray-100': statusFlags.loading,
-        'bg-gray-50': statusFlags.invalid,
-      }"
+      :class="titleBarColorObj"
     >
       <h2 class="flex justify-between col-span-3 text-xl font-semibold p-3">
         {{ participantCGMAvail.username }} :
@@ -146,6 +140,23 @@ const validDays = computed(() => {
   return retObj;
 });
 
+const titleBarColorObj = computed(() => {
+  const retObj = {
+        'bg-emerald-200': statusFlags.value.sufficient,
+        'bg-red-300': statusFlags.value.insufficient,
+        'bg-orange-300': statusFlags.value.incomplete,
+        'bg-gray-100': statusFlags.value.loading,
+        'bg-gray-50': statusFlags.value.invalid,
+      }
+  // const total = 14
+  // const pcnt = Math.round(validDays.value.total / total) * 5
+  // const bgComputed = `bg-gradient-to-r from-orange-300 to-gray-200 to-${pcnt}%` as string
+  // (retObj as any)[bgComputed] = statusFlags.value.incomplete
+  // console.log(`bgComputed: ${bgComputed}`)
+
+  return retObj
+})
+
 function windowSearch(array:boolean[]) {
   // chatgpt!
   const windowSize = 14;
@@ -199,7 +210,8 @@ const statusFlags = computed(() => {
   };
   if (participantCGMAvail.value.empty) {
     retObj.invalid = true;
-  } else if (participantCGMAvail.value.loading) {
+  } 
+  if (participantCGMAvail.value.loading) {
     retObj.loading = true;
     retObj.statusStr = 'Loading...'
   } else if (validDays.value.total < 10) {
