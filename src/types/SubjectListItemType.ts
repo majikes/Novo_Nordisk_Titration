@@ -6,4 +6,4 @@ interface SubjectListItemType extends TitrateInfoType {
     interventionArm: number,
   }
 
-export default SubjectListItemType
+export { type SubjectListItemType }

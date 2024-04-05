@@ -15,13 +15,14 @@ interface CGMDataAvail5MinDiasType extends CGMDataAvail5MinType {
 }
 
 interface SubjectCardFromAPIType {
-  subject_id?: string;
-  active?: boolean;
-  cgm_availability?: CGMDataAvail5MinDiasType[];
+  subject_id: string;
+  active: boolean;
+  cgm_availability: CGMDataAvail5MinDiasType[];
   message: string;
 }
 
 interface SubjectCardFrontendType extends SubjectCardFromAPIType {
+  interventionArm: number;
   loading: boolean;
   empty: boolean;
 }
@@ -30,4 +31,5 @@ export {
   type SubjectCardFromAPIType,
   type SubjectCardFrontendType,
   type CGMDataAvail5MinType,
+  type CGMDataAvail5MinDiasType,
 };

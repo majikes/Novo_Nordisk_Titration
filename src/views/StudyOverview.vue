@@ -3,96 +3,161 @@
     <div class="control-row-header">
       <h1 class="text-2xl font-bold">Study Overview</h1>
     </div>
-    <div v-if="error" class="text-l font-semibold grid content-center place-items-center h-48">
-      <h2 class="h-full">{{ error }}</h2>
+    <div
+      v-if="subjectListError"
+      class="text-l font-semibold grid content-center place-items-center h-48"
+    >
+      <h2 class="h-full">{{ subjectListError }}</h2>
     </div>
     <div v-else>
-      <SubjectCardList :cards="cardList" :loading="loading" />
+      <SubjectCardList :cards="cardList" :loading="subjectListLoading" />
     </div>
   </div>
 </template>
-  
-<script lang="ts">
-import { computed, defineComponent, onMounted, ref } from 'vue'
+
+<script setup lang="ts">
+import { computed, defineComponent, onMounted, ref } from "vue";
 // import CircleDataQualityChart from '@/components/CircleDataQualityChart.vue'
-import SubjectCardList from '@/components/SubjectCardList.vue'
-import Subject from '@/types/Subject'
-import SubjectCardType from '@/types/SubjectCardType'
-import SubjectCardFromAPIType from '@/types/SubjectCardFromAPIType'
-import { api, subject_convert } from '@/functions/GlobalFunctions'
-import { useApiURL } from '@/globalConfigPlugin'
-import { useAuthenticator } from '@aws-amplify/ui-vue'
-import { useErrorStore } from '@/stores/ErrorStore'
+import SubjectCardList from "@/components/SubjectCardList.vue";
+import {
+  type SubjectCardFrontendType,
+  type SubjectCardFromAPIType,
+  CGMDataAvail5MinDiasType,
+} from "@/types/SubjectCardTypes";
+import { type SubjectListItemFromAPIType } from "@/types/SubjectListItemFromAPIType";
+import { type SubjectListItemType } from "@/types/SubjectListItemType";
+import { api } from "@/functions/GlobalFunctions";
+import { useApiURL } from "@/globalConfigPlugin";
+import { useAuthenticator } from "@aws-amplify/ui-vue";
+import { useErrorStore } from "@/stores/ErrorStore";
 
-export default defineComponent({
-  name: 'StudyOverview',
-  components: { SubjectCardList },
-  setup() {
-    const apiRootURL = useApiURL()
-    const auth = useAuthenticator()
-    const errors = useErrorStore()
-    const componentName = 'StudyOverview'
-    const tokenComputed = computed(() => {
-      // 'Authorization': cognitoUser.signInUserSession.idToken.jwtToken
-      let token = ''
-      if (typeof (auth.user.signInUserSession) !== 'undefined' && typeof (auth.user.signInUserSession.idToken.jwtToken) !== 'undefined') {
-        token = auth.user.signInUserSession.idToken.jwtToken
-      }
-      console.log(`token: ${token}`)
-      return token
-    })
-    // TODO the fact that i'm using any here instead of Subject is annoying
-    // try to change in the future
-    const subjects = ref([] as Subject[])
-    const cardList = ref([] as SubjectCardType[])
-
-    const error = ref(null)
-    const loading = ref(true)
-
-    onMounted(async () => {
-      // UPDATED API DEF:
-      // [{ 'subjectUsername': '81101', 
-        //   'connectionStatus': 1, 
-        //   'nDays': -1, 
-        //   'activeStatus': 0, 
-        //   'adherenceCircle': { 'p_cgm': 97.37, 'nBolus_d': 15.57, 'tCL': 91.85, 'score': 0.91 }, 
-        //   'timeInRange': { 'lt54': 0.0, 'bt5470': 0.0, 'bt70180': 71.9, 'bt180250': 25.6, 'gt250': 2.5 } 
-        // },]
-      const req_url = `${apiRootURL}/getdataforstudyoverview?username=${auth.user.username}`
-      await api.getAuth<SubjectCardFromAPIType[]>(req_url, tokenComputed.value).then(
-        (subjectCards: SubjectCardFromAPIType[]) => {
-          // const true_subjectlist: Subject[] = subjectlist.map(subject_convert)
-          // console.log(true_subjectlist)
-          // for now we're going to fake it and generate an array of SubjectCards from
-          // our Subject array
-          console.log('successful studyoverview request:')
-          console.log(subjectCards)
-          const cards = [] as SubjectCardType[]
-          for (const subject of subjectCards) {
-            const card = {} as SubjectCardType
-            card.username = subject.subjectUsername
-            card.status = subject.activeStatus === 1 ? 'active' : 'inactive'
-            card.tconnectStatus = subject.connectionStatus === 1
-            card.tirData = subject.timeInRange
-            card.dataQualityBreakdown = subject.adherenceCircle
-            card.daysToTitrate = subject.nDays
-
-            cards.push(card)
-          }
-          cardList.value = cards
-          // subjects.value = true_subjectlist
-        }).catch(err => {
-          error.value = err.message
-          console.log(error.value)
-          errors.errorLog(`${componentName}; request to ${req_url}: ${err.message}`)
-        }).finally(() => {
-          loading.value = false
-        })
-
-    })
-
-    const loaded = true
-    return { cardList, error, loading, subjects, loaded }
+const apiRootURL = useApiURL();
+const auth = useAuthenticator();
+const errors = useErrorStore();
+const componentName = "StudyOverview";
+const tokenComputed = computed(() => {
+  // 'Authorization': cognitoUser.signInUserSession.idToken.jwtToken
+  let token = "";
+  if (
+    typeof auth.user.signInUserSession !== "undefined" &&
+    typeof auth.user.signInUserSession.idToken.jwtToken !== "undefined"
+  ) {
+    token = auth.user.signInUserSession.idToken.jwtToken;
   }
-})
+  console.log(`token: ${token}`);
+  return token;
+});
+
+const subjectListLoading = ref(false);
+const subjectList = ref([] as SubjectListItemFromAPIType[]);
+const subjectListError = ref(null)
+
+function loadSubjectList() {
+  console.log("loading new subjectlist for dropdown");
+  subjectListLoading.value = true;
+  let endpoint = "getparticipantidssupervisedbytheuser";
+  // if (groupComputed.value.includes('admin')) {
+  //   endpoint = 'getassignedusers'
+  // }
+  const req_url = `${apiRootURL}/${endpoint}?username=${auth.user.username}`;
+  console.log(`request to ${req_url}`);
+  api
+    .getAuth<SubjectListItemFromAPIType[]>(req_url, tokenComputed.value)
+    .then((apiSubjectList: SubjectListItemFromAPIType[]) => {
+      console.log(apiSubjectList);
+      subjectList.value = apiSubjectList;
+    })
+    .catch((err) => {
+      subjectListError.value = err.message
+      console.log(err.message);
+      errors.errorLog(
+        `${componentName}; request to ${req_url}: ${err.message}`
+      );
+    })
+    .finally(() => {
+      subjectListLoading.value = false;
+      populateStudyOverviewSubjectList();
+    });
+}
+loadSubjectList()
+
+const cardList = ref([] as SubjectCardFrontendType[]);
+function populateStudyOverviewSubjectList() {
+  for (const participant of subjectList.value) {
+    const tmpSubjectCard = {} as SubjectCardFrontendType;
+    // stuff from frontend
+    tmpSubjectCard.subject_id = participant.id;
+    tmpSubjectCard.interventionArm = participant.interventionArm;
+    tmpSubjectCard.active = participant.active === 1;
+    // extra card-specific stuff
+    tmpSubjectCard.loading = false;
+    tmpSubjectCard.empty = true;
+    tmpSubjectCard.cgm_availability = [] as CGMDataAvail5MinDiasType[];
+
+    cardList.value.push(tmpSubjectCard);
+    loadStudyOverview(tmpSubjectCard.subject_id);
+  }
+}
+
+function loadStudyOverview(
+  participantOverviewCardUsername: string,
+  force = false
+) {
+  const index = cardList.value.findIndex(
+    (user) => user.subject_id === participantOverviewCardUsername
+  );
+  if (index !== -1) {
+    const participantOverviewCard = cardList.value[index];
+    if (participantOverviewCard.empty || force) {
+      if (participantOverviewCard.empty) {
+        console.log(
+          `first load of participant ${participantOverviewCard.subject_id}`
+        );
+      }
+      if (force) {
+        console.log(
+          `FORCING load of info for participant ${participantOverviewCard.subject_id}`
+        );
+      }
+
+      participantOverviewCard.loading = true;
+      console.log(
+        `loading cgm availability for participant ${participantOverviewCard.subject_id}`
+      );
+
+      const endpoint = "getdataforstudyoverviewbysubject";
+      const req_username = auth.user.username;
+      // const req_username = "testuser";
+      console.log(`GET request to /${endpoint}`);
+      const req_url = `${apiRootURL}/${endpoint}?requestor_username=${req_username}&subject_id=${participantOverviewCard.subject_id}`;
+      console.log(`request to ${req_url}`);
+      // TODO RELOAD FUNCTIONALITY
+      // api.getAuth<any>(req_url, tokenComputed.value).then(
+      api
+        .getAuth<SubjectCardFromAPIType>(req_url, tokenComputed.value)
+        .then((response: SubjectCardFromAPIType) => {
+          console.log(
+            `successful ${endpoint} request for participant ${participantOverviewCard.subject_id}`
+          );
+          console.log(response);
+          participantOverviewCard.cgm_availability = response.cgm_availability;
+          participantOverviewCard.empty = false;
+        })
+        .catch((err) => {
+          console.log(err.message);
+          errors.errorLog(
+            `${componentName}; request to ${req_url}: ${err.message}`
+          );
+        })
+        .finally(() => {
+          // console.log("done");
+          participantOverviewCard.loading = false;
+        });
+    } else {
+      console.log(
+        `participant ${participantOverviewCard.subject_id} info already loaded`
+      );
+    }
+  }
+}
 </script>

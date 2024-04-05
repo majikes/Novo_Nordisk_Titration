@@ -4,4 +4,4 @@ interface SubjectListItemFromAPIType {
     interventionArm: number,
   }
 
-export default SubjectListItemFromAPIType
+export { type SubjectListItemFromAPIType }

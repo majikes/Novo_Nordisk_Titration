@@ -1,6 +1,6 @@
 import { defineStore } from "pinia"
 import { computed, ref } from "vue"
-import SubjectListItemType from "@/types/SubjectListItemType"
+import { type SubjectListItemType } from "@/types/SubjectListItemType"
 
 export const useSubjectListStore = defineStore('subjectListStore', () => {
   const interventionMap = {
