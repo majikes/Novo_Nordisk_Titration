@@ -4,11 +4,13 @@
       class="m-1 p-1 col-span-4 grid grid-cols-4 justify-between rounded-sm"
       :class="titleBarColorObj"
     >
-      <h2 class="flex justify-between col-span-3 text-xl font-semibold p-3">
+      <h2 class="flex col-span-3 text-xl font-semibold p-3" :class="{'text-gray-400': !participantCGMAvail.randomization}">
         {{ participantCGMAvail.username }} :
         {{ statusFlags.statusStr }}
+        <div v-if="!participantCGMAvail.randomization" class="text-gray-400 pl-2">(ENROLLED)</div>
+        <div v-else-if="statusFlags.sufficientPre14" class="text-gray-400 pl-2">{{ statusFlags.statusStrAux }}</div>
       </h2>
-      <div class="text-m font-semibold px-2 pt-1 w-full">
+      <div class="text-m font-semibold px-2 pt-1 w-full" :class="{'text-gray-400': !participantCGMAvail.randomization}">
         <h2 class="flex justify-between">
           <div>first:</div>
           <div>{{ dateFormat(participantCGMAvail.firstTimestamp) }}</div>
@@ -32,6 +34,7 @@
         :class="{
           'bg-emerald-200': cgmDay.percentageOfCgmAvailable >= thresholdDaily,
           'bg-red-300': cgmDay.percentageOfCgmAvailable < thresholdDaily,
+          'text-gray-400': !participantCGMAvail.randomization
         }"
       >
         {{ pcntFormat(cgmDay.percentageOfCgmAvailable) }}
@@ -142,7 +145,7 @@ const validDays = computed(() => {
 
 const titleBarColorObj = computed(() => {
   const retObj = {
-        'bg-emerald-200': statusFlags.value.sufficient,
+        'bg-emerald-200': statusFlags.value.sufficient || statusFlags.value.sufficientPre14,
         'bg-red-300': statusFlags.value.insufficient,
         'bg-orange-300': statusFlags.value.incomplete,
         'bg-gray-100': statusFlags.value.loading,
@@ -204,9 +207,11 @@ const statusFlags = computed(() => {
     invalid: false,
     loading: false,
     incomplete: false,
+    sufficientPre14: false,
     insufficient: false,
     sufficient: false,
-    statusStr: 'No information loaded.'
+    statusStr: 'No information loaded.',
+    statusStrAux: ''
   };
   if (participantCGMAvail.value.empty) {
     retObj.invalid = true;
@@ -222,8 +227,9 @@ const statusFlags = computed(() => {
       retObj.incomplete = true;
       retObj.statusStr = `In progress (${validDays.value.total} days)`
     } else {
-      retObj.sufficient = true;
+      retObj.sufficientPre14 = true;
       retObj.statusStr = `Valid window detected`
+      retObj.statusStrAux = '(< 14 days total)'
     }
   } else if (validDays.value.total >= 14) {
     if (validDays.value.valid < 10) {

@@ -14,6 +14,7 @@ interface CGMDataAvailFrontendType extends CGMDataAvailTypeMinimal {
     loading: boolean,
     empty: boolean,
     timezone: string,
+    randomization: boolean,
 }
 
 interface CGMDataFromAPIType {

@@ -425,6 +425,10 @@ export default defineComponent({
         tmpCGMAvailBlockInfo.lastTimestamp = 0;
         tmpCGMAvailBlockInfo.loading = false;
         tmpCGMAvailBlockInfo.empty = true;
+        tmpCGMAvailBlockInfo.randomization = false;
+        if (!enrolledListSimple.value.includes(participant)) {
+          tmpCGMAvailBlockInfo.randomization = true;
+        }
         cgmAvailabilityPercentagesValid.value.push(tmpCGMAvailBlockInfo);
         loadSubjectCGMAvail(tmpCGMAvailBlockInfo.username);
       }
@@ -479,9 +483,10 @@ export default defineComponent({
           console.log(`GET request to /${endpoint}`);
           const req_url = `${apiRootURL}/${endpoint}?requestor_username=${req_username}&timezone=${requestTimezone}&subject_id=${participantCGMAvail.username}`;
           console.log(`request to ${req_url}`);
+          // TODO RELOAD FUNCTIONALITY
           // api.getAuth<any>(req_url, tokenComputed.value).then(
           api
-            .get<CGMDataFromAPIType>(req_url)
+            .getAuth<CGMDataFromAPIType>(req_url, tokenComputed.value)
             .then((response: CGMDataFromAPIType) => {
               console.log(`successful ${endpoint} request for participant ${participantCGMAvail.username}`);
               // console.log(response);
