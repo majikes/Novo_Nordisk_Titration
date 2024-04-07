@@ -13,11 +13,11 @@
       <div class="text-m font-semibold px-2 pt-1 w-full" :class="{'text-gray-400': !participantCGMAvail.randomization}">
         <h2 class="flex justify-between">
           <div>first:</div>
-          <div>{{ dateFormat(participantCGMAvail.firstTimestamp) }}</div>
+          <div>{{ displayDates.first }}</div>
         </h2>
         <h2 class="flex justify-between">
           <div>last:</div>
-          <div>{{ dateFormat(participantCGMAvail.lastTimestamp) }}</div>
+          <div>{{ displayDates.last }}</div>
         </h2>
       </div>
     </div>
@@ -260,4 +260,23 @@ function pcntFormat(percent: number) {
   const roundedValue = Math.round(percent * 100) / 100;
   return `${roundedValue.toFixed(2)}%`;
 }
+
+const displayDates = computed(() => {
+  const retObj = {
+    first: '',
+    last: '',
+  }
+  if (participantCGMAvail.value.empty) {
+    retObj.first = 'N/A'
+    retObj.last = 'N/A'
+  }
+  if (participantCGMAvail.value.loading) {
+    retObj.first = 'loading...'
+    retObj.last = 'loading...'
+  } else {
+    retObj.first = dateFormat(participantCGMAvail.value.firstTimestamp)
+    retObj.last = dateFormat(participantCGMAvail.value.lastTimestamp)
+  }
+  return retObj
+})
 </script>
