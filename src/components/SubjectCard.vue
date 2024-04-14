@@ -13,7 +13,7 @@
       <div>Status: {{ status }}</div>
     </div>
     <div class="basis-full flex justify-between relative" id="cgm-availability">
-      <ConnStatus24HrChart :conn-data="card.cgm_availability" :loading="card.loading" />
+      <ConnStatus24HrChart :conn-data="card.cgm_availability" :loading="card.loading" :active="isActive" />
     </div>
 
   </div>

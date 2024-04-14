@@ -477,7 +477,7 @@ export default defineComponent({
           // tmpParticipant.loading = true
           // cgmAvailabilityPercentagesValid.value.push(tmpParticipant)
 
-          const endpoint = "getCgmAvailabilityPercentageBySubject";
+          const endpoint = "getCgmAvailabilityPercentageBySubjectv2";
           const req_username = auth.user.username;
           // const req_username = "testuser";
           console.log(`GET request to /${endpoint}`);
