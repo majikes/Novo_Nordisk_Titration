@@ -24,7 +24,7 @@
           id="sort-select"
           v-model="sortVar"
         >
-        <option disabled>Sort by...</option>
+          <option disabled>Sort by...</option>
           <option
             :value="sortVar"
             v-for="sortVar in Object.keys(sortables)"
@@ -72,21 +72,32 @@
       </div>
     </div>
   </div>
-  <div class="flex justify-end">
+  <div
+    v-if="
+      groupComputed.includes('cdt dev') ||
+      groupComputed.includes('cdt technical') ||
+      groupComputed.includes('cdt overseer')
+    "
+    class="flex justify-end"
+  >
     <div class="flex content-evenly gap-2 p-2">
-          <input
-            class="h-5 rounded aspect-square"
-            type="checkbox"
-            v-model="showTestSubjects"
-          />
-          Show test participants
-        </div>
+      <input
+        class="h-5 rounded aspect-square"
+        type="checkbox"
+        v-model="showTestSubjects"
+      />
+      Show test participants
+    </div>
   </div>
   <div class="relative grid grid-cols-3 gap-4 mt-6">
     <LoadingHover v-if="loading">
       <div class="font-semibold">Loading...</div>
     </LoadingHover>
-    <div class="w-full force-center-content" v-for="card in filteredByTest" :key="card.subject_id">
+    <div
+      class="w-full force-center-content"
+      v-for="card in filteredByTest"
+      :key="card.subject_id"
+    >
       <SubjectCard :card="card" />
     </div>
   </div>
@@ -96,6 +107,8 @@ import { computed, defineProps, PropType, ref } from "vue";
 import SubjectCard from "@/components/SubjectCard.vue";
 import LoadingHover from "./LoadingHover.vue";
 import { type SubjectCardFrontendType } from "@/types/SubjectCardTypes";
+import { useAuthenticator } from "@aws-amplify/ui-vue";
+import { lowerCase } from "lodash";
 
 const props = defineProps({
   cards: {
@@ -108,9 +121,25 @@ const props = defineProps({
   },
 });
 
-console.log(props);
+const auth = useAuthenticator();
+const groupComputed = computed(() => {
+  let group = [] as string[];
+  if (
+    typeof auth.user !== "undefined" &&
+    typeof auth.user.signInUserSession !== "undefined" &&
+    typeof auth.user.signInUserSession.idToken.payload["cognito:groups"] !==
+      "undefined"
+  ) {
+    group =
+      auth.user.signInUserSession.idToken.payload["cognito:groups"].map(
+        lowerCase
+      );
+  }
+  console.log(`group: ${group}`);
+  return group;
+});
 
-const studyPrefix = '102'
+const studyPrefix = "102";
 
 const sortVar = ref("username");
 const sortables = {
@@ -124,7 +153,7 @@ const filterables = {
   active: "Active Only",
 };
 
-const showTestSubjects = ref(false)
+const showTestSubjects = ref(false);
 
 const sortedById = computed(() => {
   return [...props.cards].sort((a, b) => {
@@ -168,7 +197,7 @@ const filteredByTest = computed(() => {
     if (showTestSubjects.value) {
       return true;
     } else {
-      return card.subject_id.startsWith(studyPrefix)
+      return card.subject_id.startsWith(studyPrefix);
     }
   });
 });
