@@ -96,7 +96,7 @@ onMounted(() => {
   // whenever any dependencies (like data, resizeState) change, call this!
   watchEffect(() => {
     const { width, height } = resizeState.dimensions;
-    // console.log(`detected width x height change: ${width} x ${height}`)
+    console.log(`detected width x height change: ${width} x ${height}`)
 
     const xAxisBotMargin = 20;
     const xAxisRightMargin = 10;
