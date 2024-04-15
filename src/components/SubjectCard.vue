@@ -25,7 +25,7 @@
         groupComputed.includes('cdt technical') ||
         !groupComputed.includes('physician')
       "
-      class="basis-full flex justify-between relative"
+      class="w-full flex justify-between relative"
       id="cgm-availability"
     >
       <ConnStatus24HrChart

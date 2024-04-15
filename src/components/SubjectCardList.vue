@@ -24,6 +24,7 @@
           id="sort-select"
           v-model="sortVar"
         >
+        <option disabled>Sort by...</option>
           <option
             :value="sortVar"
             v-for="sortVar in Object.keys(sortables)"
@@ -59,7 +60,7 @@
           id="filter-select"
           v-model="filterVar"
         >
-          <option value="none">Filter by...</option>
+          <option disabled>Filter by...</option>
           <option
             :value="filterVar"
             v-for="filterVar in Object.keys(filterables)"
@@ -71,11 +72,21 @@
       </div>
     </div>
   </div>
+  <div class="flex justify-end">
+    <div class="flex content-evenly gap-2 p-2">
+          <input
+            class="h-5 rounded aspect-square"
+            type="checkbox"
+            v-model="showTestSubjects"
+          />
+          Show test participants
+        </div>
+  </div>
   <div class="relative grid grid-cols-3 gap-4 mt-6">
     <LoadingHover v-if="loading">
       <div class="font-semibold">Loading...</div>
     </LoadingHover>
-    <div class="w-full force-center-content" v-for="card in filteredBySelected" :key="card.subject_id">
+    <div class="w-full force-center-content" v-for="card in filteredByTest" :key="card.subject_id">
       <SubjectCard :card="card" />
     </div>
   </div>
@@ -99,6 +110,8 @@ const props = defineProps({
 
 console.log(props);
 
+const studyPrefix = '102'
+
 const sortVar = ref("username");
 const sortables = {
   username: "Subject ID",
@@ -107,8 +120,11 @@ const sortables = {
 };
 const filterVar = ref("none");
 const filterables = {
+  none: "All",
   active: "Active Only",
 };
+
+const showTestSubjects = ref(false)
 
 const sortedById = computed(() => {
   return [...props.cards].sort((a, b) => {
@@ -143,6 +159,16 @@ const filteredBySelected = computed(() => {
       return true;
     } else if (filterVar.value === "active") {
       return card.active;
+    }
+  });
+});
+
+const filteredByTest = computed(() => {
+  return [...filteredBySelected.value].filter((card) => {
+    if (showTestSubjects.value) {
+      return true;
+    } else {
+      return card.subject_id.startsWith(studyPrefix)
     }
   });
 });

@@ -1,5 +1,5 @@
 <template>
-  <div id="cgmAvailabilityContainer" ref="resizeRef">
+  <div class="w-full" id="cgmAvailabilityContainer" ref="resizeRef">
     <svg ref="svgRef" height="60">
       <path class="conn-area" />
       <path class="disconn-area" />
@@ -39,6 +39,7 @@ import {
   timeHour,
 } from "d3";
 import useResizeObserver from "@/use/resizeObserver";
+import { useElementSize } from '@vueuse/core'
 
 const props = defineProps({
   connData: {
@@ -65,11 +66,12 @@ const props = defineProps({
 
 // create ref to pass to D3 for DOM manipulation
 const svgRef = ref(null);
+const resizeRef = ref(null);
 
 // this creates another ref to observe resizing,
 // which we will attach to a DIV,
 // since observing SVGs with the ResizeObserver API doesn't work properly
-const { resizeRef, resizeState } = useResizeObserver();
+// const { resizeRef, resizeState } = useResizeObserver();
 
 // custom computed values that represent just arrays of data points
 // all times
@@ -92,14 +94,15 @@ const multiVector = computed(() => {
 onMounted(() => {
   // pass ref with DOM element to D3, when mounted (DOM available)
   const svg = select(svgRef.value);
+  const { width, height } = useElementSize(resizeRef)
 
   // whenever any dependencies (like data, resizeState) change, call this!
   watchEffect(() => {
-    const { width, height } = resizeState.dimensions;
-    console.log(`detected width x height change: ${width} x ${height}`)
+    // const { width, height } = resizeState.dimensions;
+    // console.log(`detected width x height change: ${width.value} x ${height.value}`)
 
     const xAxisBotMargin = 20;
-    const xAxisRightMargin = 10;
+    const xAxisRightMargin = 0;
     const yMarginTop = 10;
 
     // scales: map index / data values to pixel values on x-axis / y-axis
@@ -110,12 +113,12 @@ onMounted(() => {
         new Date((min(multiVector.value.timeVec) as number) * 1000),
         new Date((max(multiVector.value.timeVec) as number) * 1000),
       ]) // input values...
-      .range([0, width - xAxisRightMargin]); // ... output values
+      .range([0, width.value - xAxisRightMargin]); // ... output values
     // .nice();
 
     const yScale = scaleLinear()
       .domain([0, 1]) // input values...
-      .range([height - xAxisBotMargin, 0 + yMarginTop]); // ... output values
+      .range([height.value - xAxisBotMargin, 0 + yMarginTop]); // ... output values
     
     // https://observablehq.com/@d3/line-with-tooltip
     // svg
@@ -198,7 +201,7 @@ onMounted(() => {
 
     const gx = svg.select(".x-axis");
     gx
-      .attr("transform", `translate(0,${height - xAxisBotMargin})`)
+      .attr("transform", `translate(0,${height.value - xAxisBotMargin})`)
       .call(xAxis);
 
     if (props.active) {
