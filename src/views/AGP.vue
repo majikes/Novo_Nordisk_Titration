@@ -124,7 +124,8 @@ import SMBGsAndHyposFromAPIType from "@/types/SMBGsAndHyposFromAPIType";
 import SMBGTable from "@/components/SMBGTable.vue";
 import SMBGFromAPIType from "@/types/SMBGFromAPIType";
 import LoadingHover from "@/components/LoadingHover.vue";
-import { addDays } from 'date-fns'
+import { add } from 'date-fns';
+import { toZonedTime } from 'date-fns-tz';
 
 export default defineComponent({
   name: "AGP",
@@ -538,20 +539,30 @@ export default defineComponent({
       color?: string;
     }
 
+    const browserTimezone = ref("America/New_York");
+    browserTimezone.value = Intl.DateTimeFormat().resolvedOptions().timeZone
+
     const titrationDatesComputed = computed(() => {
       const tmpMarkers = [] as Markers[];
       console.log("detected new titration subject startdate");
       if (subjStartDate.value !== "") {
+        console.log(`browserTimezone: ${browserTimezone.value}`)
         // 18 week study, draw 20 weeks of titration dates to be safe
         // but ignore first week so start at 1
+        console.log(`subjStartDate.value: ${subjStartDate.value}`);
         const startDateDate = new Date(subjStartDate.value);
-        console.log(`subjstartdate: ${startDateDate}`);
+        console.log(`subjstartdate Date cast: ${startDateDate}`);
+        const zonedDate = toZonedTime(startDateDate, 'GMT')
+        console.log(`zonedDate: ${zonedDate}`);
+        
         for (const wk of range(1, 20)) {
           const tmpMarker = {} as Markers;
-          startDateDate.setDate(startDateDate.getDate() + 7);
-          tmpMarker.date = (cloneDeep(startDateDate)).toLocaleString("en-US", {
-            timeZone: "UTC",
-          });
+          // zonedDate.setDate(zonedDate.getDate() + 7);
+          const tmpDate = add(new Date(zonedDate), {weeks: wk})
+          // tmpMarker.date = (cloneDeep(zonedDate)).toLocaleString("en-US", {
+          //   timeZone: "UTC",
+          // });
+          tmpMarker.date = tmpDate;
           tmpMarker.type = "dot";
           // console.log(`marker ${wk}:`, tmpMarker)
           // TODO
