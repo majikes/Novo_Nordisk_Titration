@@ -5,34 +5,15 @@
     </div>
     <!-- datepicker / subject dropdown -->
     <div class="grid grid-cols-3 my-1 content-end">
-      <div
-        v-if="subjectListStore.currentSubject.interventionArm === 1"
-        class="grid content-end pb-1 pr-5"
-        id="titrationdatepickerstandin"
-      >
-        <VueDatePicker
-          v-model="date"
-          :min-date="dateBoundsUTCString.min"
-          :max-date="dateBoundsUTCString.max"
-          :enable-time-picker="false"
-          :disabled="noSubjSelected || !validDateReq"
-          :start-date="dateBoundsUTCString.max"
-          range
-          auto-apply
-          :markers="titrationDatesComputed"
-        />
+      <div v-if="subjectListStore.currentSubject.interventionArm === 1" class="grid content-end pb-1 pr-5"
+        id="titrationdatepickerstandin">
+        <VueDatePicker v-model="date" :min-date="dateBoundsUTCString.min" :max-date="dateBoundsUTCString.max"
+          :enable-time-picker="false" :disabled="noSubjSelected || !validDateReq" :start-date="dateBoundsUTCString.max"
+          range auto-apply :markers="titrationDatesComputed" />
       </div>
-      <div
-        v-if="subjectListStore.currentSubject.interventionArm === 1"
-        class="grid content-end"
-      >
-        <button
-          :class="{ btn: !newDateSel, 'btn-highlight': newDateSel }"
-          class="w-52"
-          id="graph-button"
-          :disabled="buttonDisabled"
-          @click="graphData"
-        >
+      <div v-if="subjectListStore.currentSubject.interventionArm === 1" class="grid content-end">
+        <button :class="{ btn: !newDateSel, 'btn-highlight': newDateSel }" class="w-52" id="graph-button"
+          :disabled="buttonDisabled" @click="graphData">
           Graph
         </button>
       </div>
@@ -46,47 +27,29 @@
       <div>{{ titrationDatesComputed }}</div>
     </div>
     <!-- titrate link / latest basal dose -->
-    <div
-      class="grid grid-cols-2 justify-between content-end p-4 bg-gray-200 rounded-lg my-4"
-    >
-      <button
-        class="btn w-52 force-center-content"
-        :disabled="!subjectListStore.titrateable"
-        @click="titrateRedirect"
-      >
+    <div class="grid grid-cols-2 justify-between content-end p-4 bg-gray-200 rounded-lg my-4">
+      <button class="btn w-52 force-center-content" :disabled="!subjectListStore.titrateable" @click="titrateRedirect">
         Titrate {{ route.params.subjectId }}
       </button>
-      <div
-        class="flex justify-between rounded-lg bg-white px-4 w-full"
-        id="basaldoselatest"
-        :title="subjectListStore.lastDoseDateText"
-      >
+      <div class="flex justify-between rounded-lg bg-white px-4 w-full" id="basaldoselatest"
+        :title="subjectListStore.lastDoseDateText">
         <div class="force-center-content">Current basal insulin dose:</div>
         <div class="force-center-content px-2 font-semibold">
           {{ subjectListStore.lastDoseText }}
         </div>
         <div class="force-center-content">
-          <router-link
-            class="btn-small force-center-content"
-            :to="{
-              name: 'BasalDoseHistory',
-              params: { subjectId: route.params.subjectId },
-            }"
-          >
+          <router-link class="btn-small force-center-content" :to="{
+            name: 'BasalDoseHistory',
+            params: { subjectId: route.params.subjectId },
+          }">
             History
           </router-link>
         </div>
       </div>
-      <div
-        v-if="titrateProblems.visible"
-        class="custom-invalid-feedback col-start-1 flex pt-2.5 justify-start"
-      >
+      <div v-if="titrateProblems.visible" class="custom-invalid-feedback col-start-1 flex pt-2.5 justify-start">
         <div>{{ titrateProblems.details }}</div>
       </div>
-      <div
-        v-if="doseProblems.visible"
-        class="custom-invalid-feedback col-start-2 flex pt-2.5 justify-end"
-      >
+      <div v-if="doseProblems.visible" class="custom-invalid-feedback col-start-2 flex pt-2.5 justify-end">
         <div>{{ doseProblems.details }}</div>
       </div>
     </div>
@@ -105,34 +68,21 @@
           </div>
         </LoadingHover>
       </div>
-      <div
-        v-if="subjectListStore.currentSubject.interventionArm === 1"
-        class="grid grid-cols-12 py-1"
-      >
+      <div v-if="subjectListStore.currentSubject.interventionArm === 1" class="grid grid-cols-12 py-1">
         <div class="col-span-11">
           <!-- glucose row -->
           <div class="py-2" id="quantile-caption">
             <span class="font-semibold">Glucose</span>
           </div>
           <div id="quantile-container">
-            <QuantileChart
-              v-if="loaded"
-              :graphableData="graphableGlucose"
-              :loaded="loaded"
-              dataType="glucose"
-            />
+            <QuantileChart v-if="loaded" :graphableData="graphableGlucose" :loaded="loaded" dataType="glucose" />
           </div>
         </div>
         <div class="grid">
           <div class="pl-3 py-2" id="tir1-caption">
             <span class="font-semibold">Plotted period</span>
           </div>
-          <TiRChart
-            class="h-80 w-10 justify-self-center"
-            v-if="loaded"
-            :tirData="tir1Graphable"
-            :loaded="loaded"
-          />
+          <TiRChart class="h-80 w-10 justify-self-center" v-if="loaded" :tirData="tir1Graphable" :loaded="loaded" />
         </div>
       </div>
     </div>
@@ -174,6 +124,7 @@ import SMBGsAndHyposFromAPIType from "@/types/SMBGsAndHyposFromAPIType";
 import SMBGTable from "@/components/SMBGTable.vue";
 import SMBGFromAPIType from "@/types/SMBGFromAPIType";
 import LoadingHover from "@/components/LoadingHover.vue";
+import { addDays } from 'date-fns'
 
 export default defineComponent({
   name: "AGP",
@@ -200,7 +151,7 @@ export default defineComponent({
         typeof auth.user !== "undefined" &&
         typeof auth.user.signInUserSession !== "undefined" &&
         typeof auth.user.signInUserSession.idToken.payload["cognito:groups"] !==
-          "undefined"
+        "undefined"
       ) {
         group =
           auth.user.signInUserSession.idToken.payload["cognito:groups"].map(
@@ -598,13 +549,16 @@ export default defineComponent({
         for (const wk of range(1, 20)) {
           const tmpMarker = {} as Markers;
           startDateDate.setDate(startDateDate.getDate() + 7);
-          tmpMarker.date = cloneDeep(startDateDate);
+          tmpMarker.date = (cloneDeep(startDateDate)).toLocaleString("en-US", {
+            timeZone: "UTC",
+          });
           tmpMarker.type = "dot";
           // console.log(`marker ${wk}:`, tmpMarker)
           // TODO
           // add color and tooltip
           tmpMarkers.push(tmpMarker);
-        }
+          console.log(tmpMarker)
+        }  
       }
       return tmpMarkers;
     });
