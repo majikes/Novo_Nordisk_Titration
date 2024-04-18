@@ -3,6 +3,7 @@ import StudyOverview from "../views/StudyOverview.vue";
 import AGP from "../views/AGP.vue";
 import TitrateView from "../views/TitrateView.vue";
 import BasalDoseHistory from "../views/BasalDoseHistory.vue";
+import HypoHistory from "../views/HypoHistory.vue";
 import ProfileView from "../views/ProfileView.vue";
 import DataEntry from "../views/DataEntry.vue";
 import SmbgTitrationRules from "../views/SmbgTitrationRules.vue";
@@ -41,6 +42,11 @@ const routes: Array<RouteRecordRaw> = [
     path: "/history/:subjectId?",
     name: "BasalDoseHistory",
     component: BasalDoseHistory,
+  },
+  {
+    path: "/hypos/:subjectId?",
+    name: "HypoHistory",
+    component: HypoHistory,
   },
   {
     path: "/profile-view/:subjectId",

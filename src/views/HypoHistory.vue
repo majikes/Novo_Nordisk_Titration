@@ -1,23 +1,13 @@
 <template>
   <div v-if="!groupComputed.includes('participant')" class="profile-history">
     <div class="control-row-header" id="header">
-      <h1 class="text-2xl font-bold">Basal Dose History</h1>
+      <h1 class="text-2xl font-bold">Hypo History</h1>
     </div>
     <div class="flex justify-end my-1">
       <SubjectDropdown v-model="selected" />
     </div>
-    <div class="flex justify-end my-1">
-      <div class="flex content-evenly gap-2 p-2">
-        <input
-          class="h-5 rounded aspect-square"
-          type="checkbox"
-          v-model="onlyParticipantEntries"
-        />
-        Only participant-added doses
-      </div>
-    </div>
-    <LoadingHover v-if="basalsLoading">Loading basal history...</LoadingHover>
-    <BasalDoseHistoryTable v-else :doseHistory="basalDoseHistoryFiltered" />
+    <LoadingHover v-if="hyposLoading">Loading hypo history...</LoadingHover>
+    <HypoTable v-else :hypos="hypoHistory" />
     <div v-if="debugModeStore.debugMode"></div>
   </div>
 </template>
@@ -26,15 +16,15 @@
 import { computed, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import SubjectDropdown from "@/components/SubjectDropdown.vue";
-import BasalDoseHistoryTable from "@/components/BasalDoseHistoryTable.vue";
+import HypoTable from "@/components/HypoTable.vue";
 import { api } from "@/functions/GlobalFunctions";
 import { useApiURL } from "@/globalConfigPlugin";
 import { useDebugModeStore } from "@/stores/debugModeStore";
 import { useAuthenticator } from "@aws-amplify/ui-vue";
 import { lowerCase } from "lodash";
 import { useErrorStore } from "@/stores/ErrorStore";
-import BasalDoseType from "@/types/BasalDoseType";
 import LoadingHover from "@/components/LoadingHover.vue";
+import HypoFromAPIType from "@/types/HypoFromAPIType";
 
 const debugModeStore = useDebugModeStore();
 const auth = useAuthenticator();
@@ -78,73 +68,31 @@ selected.value =
 watch(selected, () => {
   console.log(`dropdown: ${selected.value}`);
   // console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
-  getBasalDoseHistory();
+  getHypoHistory();
 });
 
-function formatTime(minutes: number) {
-  const hours = Math.floor(minutes / 60);
-  const minutesRemaining = minutes % 60;
+const hypoHistory = ref([] as HypoFromAPIType[]);
+const hyposLoading = ref(false);
 
-  // Format the hours and minutes to always be two digits
-  const formattedHours = hours.toString().padStart(2, "0");
-  const formattedMinutes = minutesRemaining.toString().padStart(2, "0");
-
-  const retStr = `${formattedHours}:${formattedMinutes}`;
-
-  return retStr;
-}
-
-const onlyParticipantEntries = ref(true);
-
-const basalDoseHistory = ref([] as BasalDoseType[]);
-const basalsLoading = ref(false);
-
-const basalDoseHistoryFiltered = computed(() => {
-  return [...basalDoseHistory.value].filter((histEntry) => {
-    if (onlyParticipantEntries.value) {
-      return histEntry.src_id === "2";
-    } else {
-      return true;
-    }
-  });
-});
-
-function getBasalDoseHistory() {
+function getHypoHistory() {
   console.log("loading");
-  basalsLoading.value = true;
-  console.log("clearing displayed basal dose history");
-  basalDoseHistory.value = [] as BasalDoseType[];
-  const endpoint = "getbasaldosehistory";
+  hyposLoading.value = true;
+  console.log("clearing displayed hypo history");
+  hypoHistory.value = [] as HypoFromAPIType[];
+  const endpoint = "gethypohistory";
   console.log(`GET request to /${endpoint}`);
   const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}&subject_username=${selected.value}`;
   console.log(`request to ${req_url}`);
   // server response:
   // {"id":"103","date":"08/29/2023", "timeOfDayInMinutes":1340, "basalDoseValue":40}
-  const APIKEYHARDCODED = "7LiuUEWHXNMCOSZdaCS32DQPme5SYHr7JZlsVk1a";
+  // const APIKEYHARDCODED = "7LiuUEWHXNMCOSZdaCS32DQPme5SYHr7JZlsVk1a";
   api
-    .getAPIKeyAuth<any[]>(req_url, APIKEYHARDCODED)
-    .then((doseHistoryList: any[]) => {
+    // .getAPIKeyAuth<HypoFromAPIType[]>(req_url, APIKEYHARDCODED)
+    .getAuth<HypoFromAPIType[]>(req_url, tokenComputed.value)
+    .then((hypoHistoryListFromAPI: HypoFromAPIType[]) => {
       console.log("successful basal dose history request");
-      console.log(doseHistoryList);
-      for (const dose of doseHistoryList) {
-        const tmpDose = {
-          id: "",
-          date: "",
-          basalDoseTimeOfDayInMinutes: -1,
-          basalDoseValue: -1,
-          src_id: "-1",
-          time: -1,
-          formattedTime: "",
-        };
-        tmpDose.id = dose.id;
-        tmpDose.date = dose.date;
-        tmpDose.basalDoseTimeOfDayInMinutes = dose.basalDoseTimeOfDayInMinutes;
-        tmpDose.basalDoseValue = dose.basalDoseValue;
-        tmpDose.src_id = dose.src_id;
-        tmpDose.time = dose.time;
-        tmpDose.formattedTime = formatTime(dose.basalDoseTimeOfDayInMinutes);
-        basalDoseHistory.value.push(tmpDose);
-      }
+      console.log(hypoHistoryListFromAPI);
+      hypoHistory.value = hypoHistoryListFromAPI;
     })
     .catch((err) => {
       console.log(err.message);
@@ -154,8 +102,8 @@ function getBasalDoseHistory() {
     })
     .finally(() => {
       console.log("done");
-      basalsLoading.value = false;
+      hyposLoading.value = false;
     });
 }
-getBasalDoseHistory();
+getHypoHistory();
 </script>

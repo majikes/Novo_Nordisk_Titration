@@ -3,7 +3,12 @@
     class="w-64 flex flex-wrap justify-between flex-row p-5 rounded-xl drop-shadow-lg"
     :class="{ 'bg-white text-gray-400': !isActive, 'bg-emerald-100': isActive }"
   >
-    <div class="py-1">{{ card.subject_id }}</div>
+    <div class="py-1">
+      <router-link
+        :to="{ name: 'AGP', params: { subjectId: card.subject_id } }"
+        >{{ card.subject_id }}</router-link
+      >
+    </div>
     <div
       class="px-2 py-1 rounded-md"
       :class="{
@@ -42,7 +47,6 @@ import { type SubjectCardFrontendType } from "@/types/SubjectCardTypes";
 import ConnStatus24HrChart from "./ConnStatus24HrChart.vue";
 import { useAuthenticator } from "@aws-amplify/ui-vue";
 import { lowerCase } from "lodash";
-
 const props = defineProps({
   card: {
     required: true,

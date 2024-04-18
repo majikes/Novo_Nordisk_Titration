@@ -5,15 +5,34 @@
     </div>
     <!-- datepicker / subject dropdown -->
     <div class="grid grid-cols-3 my-1 content-end">
-      <div v-if="subjectListStore.currentSubject.interventionArm === 1" class="grid content-end pb-1 pr-5"
-        id="titrationdatepickerstandin">
-        <VueDatePicker v-model="date" :min-date="dateBoundsUTCString.min" :max-date="dateBoundsUTCString.max"
-          :enable-time-picker="false" :disabled="noSubjSelected || !validDateReq" :start-date="dateBoundsUTCString.max"
-          range auto-apply :markers="titrationDatesComputed" />
+      <div
+        v-if="subjectListStore.currentSubject.interventionArm === 1"
+        class="grid content-end pb-1 pr-5"
+        id="titrationdatepickerstandin"
+      >
+        <VueDatePicker
+          v-model="date"
+          :min-date="dateBoundsUTCString.min"
+          :max-date="dateBoundsUTCString.max"
+          :enable-time-picker="false"
+          :disabled="noSubjSelected || !validDateReq"
+          :start-date="dateBoundsUTCString.max"
+          range
+          auto-apply
+          :markers="titrationDatesComputed"
+        />
       </div>
-      <div v-if="subjectListStore.currentSubject.interventionArm === 1" class="grid content-end">
-        <button :class="{ btn: !newDateSel, 'btn-highlight': newDateSel }" class="w-52" id="graph-button"
-          :disabled="buttonDisabled" @click="graphData">
+      <div
+        v-if="subjectListStore.currentSubject.interventionArm === 1"
+        class="grid content-end"
+      >
+        <button
+          :class="{ btn: !newDateSel, 'btn-highlight': newDateSel }"
+          class="w-52"
+          id="graph-button"
+          :disabled="buttonDisabled"
+          @click="graphData"
+        >
           Graph
         </button>
       </div>
@@ -27,29 +46,47 @@
       <div>{{ titrationDatesComputed }}</div>
     </div>
     <!-- titrate link / latest basal dose -->
-    <div class="grid grid-cols-2 justify-between content-end p-4 bg-gray-200 rounded-lg my-4">
-      <button class="btn w-52 force-center-content" :disabled="!subjectListStore.titratable" @click="titrateRedirect">
+    <div
+      class="grid grid-cols-2 justify-between content-end p-4 bg-gray-200 rounded-lg my-4"
+    >
+      <button
+        class="btn w-52 force-center-content"
+        :disabled="!subjectListStore.titratable"
+        @click="titrateRedirect"
+      >
         Titrate {{ route.params.subjectId }}
       </button>
-      <div class="flex justify-between rounded-lg bg-white px-4 w-full" id="basaldoselatest"
-        :title="subjectListStore.absLastDoseDateText">
+      <div
+        class="flex justify-between rounded-lg bg-white px-4 w-full"
+        id="basaldoselatest"
+        :title="subjectListStore.absLastDoseDateText"
+      >
         <div class="force-center-content">Current basal insulin dose:</div>
         <div class="force-center-content px-2 font-semibold">
           {{ subjectListStore.absLastDoseText }}
         </div>
         <div class="force-center-content">
-          <router-link class="btn-small force-center-content" :to="{
-            name: 'BasalDoseHistory',
-            params: { subjectId: route.params.subjectId },
-          }">
+          <router-link
+            class="btn-small force-center-content"
+            :to="{
+              name: 'BasalDoseHistory',
+              params: { subjectId: route.params.subjectId },
+            }"
+          >
             History
           </router-link>
         </div>
       </div>
-      <div v-if="titrateProblems.visible" class="custom-invalid-feedback col-start-1 flex pt-2.5 justify-start">
+      <div
+        v-if="titrateProblems.visible"
+        class="custom-invalid-feedback col-start-1 flex pt-2.5 justify-start"
+      >
         <div>{{ titrateProblems.details }}</div>
       </div>
-      <div v-if="doseProblems.visible" class="custom-invalid-feedback col-start-2 flex pt-2.5 justify-end">
+      <div
+        v-if="doseProblems.visible"
+        class="custom-invalid-feedback col-start-2 flex pt-2.5 justify-end"
+      >
         <div>{{ doseProblems.details }}</div>
       </div>
     </div>
@@ -68,21 +105,34 @@
           </div>
         </LoadingHover>
       </div>
-      <div v-if="subjectListStore.currentSubject.interventionArm === 1" class="grid grid-cols-12 py-1">
+      <div
+        v-if="subjectListStore.currentSubject.interventionArm === 1"
+        class="grid grid-cols-12 py-1"
+      >
         <div class="col-span-11">
           <!-- glucose row -->
           <div class="py-2" id="quantile-caption">
             <span class="font-semibold">Glucose</span>
           </div>
           <div id="quantile-container">
-            <QuantileChart v-if="loaded" :graphableData="graphableGlucose" :loaded="loaded" dataType="glucose" />
+            <QuantileChart
+              v-if="loaded"
+              :graphableData="graphableGlucose"
+              :loaded="loaded"
+              dataType="glucose"
+            />
           </div>
         </div>
         <div class="grid">
           <div class="pl-3 py-2" id="tir1-caption">
             <span class="font-semibold">Plotted period</span>
           </div>
-          <TiRChart class="h-80 w-10 justify-self-center" v-if="loaded" :tirData="tir1Graphable" :loaded="loaded" />
+          <TiRChart
+            class="h-80 w-10 justify-self-center"
+            v-if="loaded"
+            :tirData="tir1Graphable"
+            :loaded="loaded"
+          />
         </div>
       </div>
     </div>
@@ -124,8 +174,8 @@ import SMBGsAndHyposFromAPIType from "@/types/SMBGsAndHyposFromAPIType";
 import SMBGTable from "@/components/SMBGTable.vue";
 import SMBGFromAPIType from "@/types/SMBGFromAPIType";
 import LoadingHover from "@/components/LoadingHover.vue";
-import { add } from 'date-fns';
-import { toZonedTime } from 'date-fns-tz';
+import { add, set } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 
 export default defineComponent({
   name: "AGP",
@@ -152,7 +202,7 @@ export default defineComponent({
         typeof auth.user !== "undefined" &&
         typeof auth.user.signInUserSession !== "undefined" &&
         typeof auth.user.signInUserSession.idToken.payload["cognito:groups"] !==
-        "undefined"
+          "undefined"
       ) {
         group =
           auth.user.signInUserSession.idToken.payload["cognito:groups"].map(
@@ -227,21 +277,50 @@ export default defineComponent({
     // TODO CHECK BULLSHIT UTC STUFF
     const date = ref([] as Date[]);
     const prevDate = ref([] as Date[]);
-    const dateTS = computed(() => {
-      let retArr = [] as number[];
-      for (const d of date.value) {
-        const utcMilllisecondsSinceEpoch =
-          d.getTime() + d.getTimezoneOffset() * 60 * 1000;
-        const utcSecondsSinceEpoch = Math.round(
-          utcMilllisecondsSinceEpoch / 1000
-        );
-        retArr.push(utcSecondsSinceEpoch);
-      }
-      return retArr;
-    });
     const dateBounds = ref({
       min: {} as Date,
       max: {} as Date,
+    });
+    const dateCorrected = computed(() => {
+      let retArr = [] as Date[];
+      if (date.value.length >= 2) {
+        const startAdjusted = set(new Date(date.value[0]), {hours: 0, minutes: 0, seconds: 0});
+        const endAdjusted = set(new Date(date.value[1]), {hours: 23, minutes: 59, seconds: 59});
+        retArr.push(startAdjusted)
+        retArr.push(endAdjusted)
+        console.log('corrected date:',retArr)
+      }
+      return retArr
+    })
+    const prevDateCorrected = computed(() => {
+      let retArr = [] as Date[];
+      if (prevDate.value.length >= 2) {
+        const startAdjusted = set(new Date(prevDate.value[0]), {hours: 0, minutes: 0, seconds: 0});
+        const endAdjusted = set(new Date(prevDate.value[1]), {hours: 23, minutes: 59, seconds: 59});
+        retArr.push(startAdjusted)
+        retArr.push(endAdjusted)
+        console.log('corrected prevDate:',retArr)
+      }
+      return retArr
+    })
+    const dateTS = computed(() => {
+      let retArr = [] as number[];
+      // console.log("current ref(date): ", date.value);
+      if (dateCorrected.value.length >= 2) {
+        // const startAdjusted = set(new Date(date.value[0]), {hours: 0, minutes: 0, seconds: 0});
+        // const endAdjusted = set(new Date(date.value[1]), {hours: 23, minutes: 59, seconds: 59});
+        // const dateAdjusted = [startAdjusted, endAdjusted]
+        // console.log("adjusted ref(date): ", dateAdjusted)
+        for (const d of dateCorrected.value) {
+          const utcMilllisecondsSinceEpoch =
+            d.getTime() + d.getTimezoneOffset() * 60 * 1000;
+          const utcSecondsSinceEpoch = Math.round(
+            utcMilllisecondsSinceEpoch / 1000
+          );
+          retArr.push(utcSecondsSinceEpoch);
+        }
+      }
+      return retArr;
     });
     const dateBoundsUTCString = computed(() => {
       const minMaxObj = {
@@ -334,15 +413,17 @@ export default defineComponent({
       let retBool = false;
       if (
         datesValid.value &&
-        ((prevDate.value.length === 2 &&
-          (!dateMatch(date.value[0], prevDate.value[0]) ||
-            !dateMatch(date.value[1], prevDate.value[1]))) ||
-          prevDate.value.length === 0)
+        ((prevDateCorrected.value.length === 2 &&
+          (!dateMatch(dateCorrected.value[0], prevDateCorrected.value[0]) ||
+            !dateMatch(dateCorrected.value[1], prevDateCorrected.value[1]))) ||
+          prevDateCorrected.value.length === 0)
       ) {
         // that was a gross conditional. basically, if dates are valid AND (prevDate !== date OR prevDate empty)
         console.log("new dates selected from watcher!");
         console.log(`new dates: ${date.value}`);
+        console.log(`corrected new dates: ${dateCorrected.value}`);
         console.log(`old dates: ${prevDate.value}`);
+        console.log(`corrected old dates: ${prevDateCorrected.value}`);
         retBool = true;
       }
       return retBool;
@@ -540,25 +621,25 @@ export default defineComponent({
     }
 
     const browserTimezone = ref("America/New_York");
-    browserTimezone.value = Intl.DateTimeFormat().resolvedOptions().timeZone
+    browserTimezone.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     const titrationDatesComputed = computed(() => {
       const tmpMarkers = [] as Markers[];
       console.log("detected new titration subject startdate");
       if (subjStartDate.value !== "") {
-        console.log(`browserTimezone: ${browserTimezone.value}`)
+        console.log(`browserTimezone: ${browserTimezone.value}`);
         // 18 week study, draw 20 weeks of titration dates to be safe
         // but ignore first week so start at 1
         console.log(`subjStartDate.value: ${subjStartDate.value}`);
         const startDateDate = new Date(subjStartDate.value);
         console.log(`subjstartdate Date cast: ${startDateDate}`);
-        const zonedDate = toZonedTime(startDateDate, 'GMT')
+        const zonedDate = toZonedTime(startDateDate, "GMT");
         console.log(`zonedDate: ${zonedDate}`);
-        
+
         for (const wk of range(1, 20)) {
           const tmpMarker = {} as Markers;
           // zonedDate.setDate(zonedDate.getDate() + 7);
-          const tmpDate = add(new Date(zonedDate), {weeks: wk})
+          const tmpDate = add(new Date(zonedDate), { weeks: wk });
           // tmpMarker.date = (cloneDeep(zonedDate)).toLocaleString("en-US", {
           //   timeZone: "UTC",
           // });
@@ -568,8 +649,8 @@ export default defineComponent({
           // TODO
           // add color and tooltip
           tmpMarkers.push(tmpMarker);
-          console.log(tmpMarker)
-        }  
+          console.log(tmpMarker);
+        }
       }
       return tmpMarkers;
     });
