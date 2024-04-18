@@ -1,7 +1,7 @@
 <template>
   <div class="grid content-start w-64" id="subject-dropdown-div">
     <div class="flex">
-      <label for="subject-select">Subject </label>
+      <label for="subject-select">Participant </label>
       <span v-if="titratableOnly" class="pl-1"> (titratable only)</span>
     </div>
     <select class="form-select select-input border-transparent border-r-8" name="subject" id="subject-select"
