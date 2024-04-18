@@ -22,6 +22,7 @@
     <div v-if="debugModeStore.debugMode">
       {{ subjectListStore.currentSubject }}
       {{ subjectListStore.currentSubjectNewRec }}
+      <!-- {{ subjectListStore }} -->
     </div>
     <!-- {{ route.name }} -->
   </div>

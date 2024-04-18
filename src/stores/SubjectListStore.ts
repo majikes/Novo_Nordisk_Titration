@@ -92,7 +92,8 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
           subj.dose_value !== null && subj.dose_TS !== null &&
           subj.rec_dose_value !== null && subj.rec_dose_TS !== null &&
           subj.dose_value >= 0 && subj.dose_TS > 0 &&
-          subj.rec_dose_value >= 0 && subj.rec_dose_TS > 0) {
+          subj.rec_dose_value >= 0 && subj.rec_dose_TS > 0 &&
+          subj.rec_dose_TS > subj.dose_TS) {
         tmpList.push(subj)
       }
     }
