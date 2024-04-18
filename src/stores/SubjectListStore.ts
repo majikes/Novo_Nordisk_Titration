@@ -27,7 +27,11 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
     let doseStr = 'N/A'
     if (!loaded.value || currentSubject.value.loading) {
       doseStr = 'Loading...'
-    } else if (typeof (currentSubject.value.rec_dose_TS) === 'undefined' || currentSubject.value.rec_dose_value === null || currentSubject.value.rec_dose_value === -1) {
+    } else if (
+      typeof (currentSubject.value.rec_dose_TS) === 'undefined' ||
+      currentSubject.value.rec_dose_value === null ||
+      currentSubject.value.rec_dose_value === -1
+    ) {
       doseStr = 'N/A'
     } else {
       doseStr = `${currentSubject.value.rec_dose_value}U`
@@ -36,7 +40,12 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
   })
   const lastRecDoseDateText = computed(() => {
     let retStr = ''
-    if (loaded.value && typeof (currentSubject.value.rec_dose_TS) !== 'undefined' && currentSubject.value.rec_dose_TS !== null && currentSubject.value.rec_dose_TS !== -1) {
+    if (
+      loaded.value &&
+      typeof (currentSubject.value.rec_dose_TS) !== 'undefined' &&
+      currentSubject.value.rec_dose_TS !== null &&
+      currentSubject.value.rec_dose_TS !== -1
+    ) {
       const fullDate = new Date(currentSubject.value.rec_dose_TS * 1000)
       retStr = `${fullDate.toISOString()}`
     }
@@ -47,7 +56,11 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
     let doseStr = 'N/A'
     if (!loaded.value || currentSubject.value.loading) {
       doseStr = 'Loading...'
-    } else if (typeof (currentSubject.value.dose_TS) === 'undefined' || currentSubject.value.dose_value === null || currentSubject.value.dose_value === -1) {
+    } else if (
+      typeof (currentSubject.value.dose_TS) === 'undefined' ||
+      currentSubject.value.dose_value === null ||
+      currentSubject.value.dose_value === -1
+    ) {
       doseStr = 'N/A'
     } else {
       doseStr = `${currentSubject.value.dose_value}U`
@@ -56,16 +69,52 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
   })
   const lastDoseDateText = computed(() => {
     let retStr = ''
-    if (loaded.value && typeof (currentSubject.value.rec_dose_TS) !== 'undefined' && currentSubject.value.dose_TS !== null && currentSubject.value.dose_TS !== -1) {
+    if (
+      loaded.value &&
+      typeof (currentSubject.value.dose_TS) !== 'undefined' &&
+      currentSubject.value.dose_TS !== null &&
+      currentSubject.value.dose_TS !== -1
+    ) {
       const fullDate = new Date(currentSubject.value.dose_TS * 1000)
       retStr = `${fullDate.toISOString()}`
     }
     return retStr
   })
 
+  const absLastDoseText = computed(() => {
+    let doseStr = 'N/A'
+    if (!loaded.value || currentSubject.value.loading) {
+      doseStr = 'Loading...'
+    } else if (
+      typeof (currentSubject.value.abs_dose_TS) === 'undefined' ||
+      currentSubject.value.abs_dose_value === null ||
+      currentSubject.value.abs_dose_value === -1
+    ) {
+      doseStr = 'N/A'
+    } else {
+      doseStr = `${currentSubject.value.abs_dose_value}U`
+    }
+    return doseStr
+  })
+  const absLastDoseDateText = computed(() => {
+    let retStr = ''
+    if (
+      loaded.value &&
+      typeof (currentSubject.value.abs_dose_TS) !== 'undefined' &&
+      currentSubject.value.abs_dose_TS !== null &&
+      currentSubject.value.abs_dose_TS !== -1
+    ) {
+      const fullDate = new Date(currentSubject.value.abs_dose_TS * 1000)
+      retStr = `${fullDate.toISOString()}`
+    }
+    return retStr
+  })
+
+
+
   const titratable = computed(() => {
     let retBool = false
-    if (currentSubject.value.interventionArm === 1 && currentSubjectNewRec.value ) {
+    if (currentSubject.value.interventionArm === 1 && currentSubjectNewRec.value) {
       retBool = true
     }
     return retBool
@@ -89,11 +138,11 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
     const tmpList = [] as SubjectListItemType[]
     for (const subj of [...subjectListSorted.value]) {
       if (subj.interventionArm === 1 && !subj.loading &&
-          subj.dose_value !== null && subj.dose_TS !== null &&
-          subj.rec_dose_value !== null && subj.rec_dose_TS !== null &&
-          subj.dose_value >= 0 && subj.dose_TS > 0 &&
-          subj.rec_dose_value >= 0 && subj.rec_dose_TS > 0 &&
-          subj.rec_dose_TS > subj.dose_TS) {
+        subj.dose_value !== null && subj.dose_TS !== null &&
+        subj.rec_dose_value !== null && subj.rec_dose_TS !== null &&
+        subj.dose_value >= 0 && subj.dose_TS > 0 &&
+        subj.rec_dose_value >= 0 && subj.rec_dose_TS > 0 &&
+        subj.rec_dose_TS > subj.dose_TS) {
         tmpList.push(subj)
       }
     }
@@ -113,9 +162,22 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
   // function setSubjectList(subjList:SubjectListItemType[]) { subjectList.value = subjList }
 
   return {
-    currentSubject, currentSubjectNewRec, loaded, loadedTS, setCurrentSubject, subjectList,
-    subjectListSorted, interventionMap, lastRecDoseText, lastRecDoseDateText, lastDoseText, lastDoseDateText,
-    titratable, subjectListTitratable,
+    currentSubject,
+    currentSubjectNewRec,
+    loaded,
+    loadedTS,
+    setCurrentSubject,
+    subjectList,
+    subjectListSorted,
+    interventionMap,
+    lastRecDoseText,
+    lastRecDoseDateText,
+    lastDoseText,
+    lastDoseDateText,
+    absLastDoseText,
+    absLastDoseDateText,
+    titratable,
+    subjectListTitratable,
 
   }
 })

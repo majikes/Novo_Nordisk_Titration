@@ -154,6 +154,9 @@ export default defineComponent({
               dose_TS: null,
               dose_value: null,
               dose_problems: [] as string[],
+              abs_dose_TS: null,
+              abs_dose_value: null,
+              abs_dose_problems: [] as string[],
               loading: false,
             }
           })
@@ -192,10 +195,15 @@ export default defineComponent({
           console.log(`successful titrate info request for subject ${subject.id}`, subjectInfo)
           subject.dose_value = subjectInfo.dose_value
           subject.dose_TS = subjectInfo.dose_TS
+          subject.dose_problems = subjectInfo.dose_problems
+
           subject.rec_dose_value = subjectInfo.rec_dose_value
           subject.rec_dose_TS = subjectInfo.rec_dose_TS
-          subject.dose_problems = subjectInfo.dose_problems
           subject.rec_dose_problems = subjectInfo.rec_dose_problems
+          
+          subject.abs_dose_value = subjectInfo.abs_dose_value
+          subject.abs_dose_TS = subjectInfo.abs_dose_TS
+          subject.abs_dose_problems = subjectInfo.abs_dose_problems
         }).catch(err => {
           titrateError.value = err.message
           console.log(titrateError.value)

@@ -5,6 +5,9 @@ interface TitrateInfoType {
     dose_TS: number | null,
     dose_value: number | null,
     dose_problems: string[],
+    abs_dose_TS: number | null,
+    abs_dose_value: number | null,
+    abs_dose_problems: string[],
     loading: boolean,
   }
 

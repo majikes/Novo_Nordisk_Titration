@@ -28,14 +28,14 @@
     </div>
     <!-- titrate link / latest basal dose -->
     <div class="grid grid-cols-2 justify-between content-end p-4 bg-gray-200 rounded-lg my-4">
-      <button class="btn w-52 force-center-content" :disabled="!subjectListStore.titrateable" @click="titrateRedirect">
+      <button class="btn w-52 force-center-content" :disabled="!subjectListStore.titratable" @click="titrateRedirect">
         Titrate {{ route.params.subjectId }}
       </button>
       <div class="flex justify-between rounded-lg bg-white px-4 w-full" id="basaldoselatest"
-        :title="subjectListStore.lastDoseDateText">
+        :title="subjectListStore.absLastDoseDateText">
         <div class="force-center-content">Current basal insulin dose:</div>
         <div class="force-center-content px-2 font-semibold">
-          {{ subjectListStore.lastDoseText }}
+          {{ subjectListStore.absLastDoseText }}
         </div>
         <div class="force-center-content">
           <router-link class="btn-small force-center-content" :to="{
