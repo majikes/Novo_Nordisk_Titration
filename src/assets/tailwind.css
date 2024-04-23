@@ -22,6 +22,14 @@
     @apply w-5 h-5 group-hover:stroke-white
 }
 
+.overview-interactive-svg-container {
+    @apply my-2 mx-1 rounded-lg bg-white aspect-square hover:bg-slate-400 hover:text-white
+}
+
+.overview-interactive-svg {
+    @apply w-5 h-5 group-hover:stroke-white
+}
+
 .titrate-badge {
     @apply rounded-full w-10 h-10 grid content-center place-items-center absolute bottom-1 right-1 font-bold bg-slate-300;
 }
