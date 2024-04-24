@@ -33,7 +33,12 @@ import { useDebugModeStore } from "@/stores/debugModeStore";
 import { useAuthenticator } from "@aws-amplify/ui-vue";
 import { lowerCase } from "lodash";
 import { useErrorStore } from "@/stores/ErrorStore";
-import BasalDoseType from "@/types/BasalDoseType";
+import { 
+  type BasalDoseFromAPIType,
+  type BasalDoseType,
+  type BasalDoseRecType,
+  type BasalDoseHistoryFromAPIType,
+} from "@/types/BasalDoseTypes";
 import LoadingHover from "@/components/LoadingHover.vue";
 
 const debugModeStore = useDebugModeStore();
@@ -99,8 +104,18 @@ const onlyParticipantEntries = ref(true);
 const basalDoseHistory = ref([] as BasalDoseType[]);
 const basalsLoading = ref(false);
 
+const basalDoseHistorySortedByTime = computed(() => {
+  return [...basalDoseHistory.value].sort((a, b) => {
+    if (a.time < b.time) {
+      return 1;
+    } else {
+      return -1;
+    }
+  });
+});
+
 const basalDoseHistoryFiltered = computed(() => {
-  return [...basalDoseHistory.value].filter((histEntry) => {
+  return [...basalDoseHistorySortedByTime.value].filter((histEntry) => {
     if (onlyParticipantEntries.value) {
       return histEntry.src_id === "2";
     } else {
@@ -122,11 +137,11 @@ function getBasalDoseHistory() {
   // {"id":"103","date":"08/29/2023", "timeOfDayInMinutes":1340, "basalDoseValue":40}
   const APIKEYHARDCODED = "7LiuUEWHXNMCOSZdaCS32DQPme5SYHr7JZlsVk1a";
   api
-    .getAPIKeyAuth<any[]>(req_url, APIKEYHARDCODED)
-    .then((doseHistoryList: any[]) => {
+    .getAPIKeyAuth<BasalDoseHistoryFromAPIType>(req_url, APIKEYHARDCODED)
+    .then((doseHistoryObject: BasalDoseHistoryFromAPIType) => {
       console.log("successful basal dose history request");
-      console.log(doseHistoryList);
-      for (const dose of doseHistoryList) {
+      console.log(doseHistoryObject);
+      for (const dose of doseHistoryObject.basalDoseHistory) {
         const tmpDose = {
           id: "",
           date: "",
@@ -143,6 +158,24 @@ function getBasalDoseHistory() {
         tmpDose.src_id = dose.src_id;
         tmpDose.time = dose.time;
         tmpDose.formattedTime = formatTime(dose.basalDoseTimeOfDayInMinutes);
+        basalDoseHistory.value.push(tmpDose);
+      }
+      for (const dose of doseHistoryObject.basalDoseRecHistory) {
+        const tmpDose = {
+          id: "",
+          date: "",
+          basalDoseTimeOfDayInMinutes: -1,
+          basalDoseValue: -1,
+          src_id: "-1",
+          time: -1,
+          formattedTime: "",
+        };
+        tmpDose.id = dose.id;
+        tmpDose.date = dose.date;
+        tmpDose.basalDoseValue = dose.basalDoseRecom;
+        tmpDose.src_id = dose.src_id;
+        tmpDose.time = dose.time;
+        tmpDose.formattedTime = '(Recommendation)';
         basalDoseHistory.value.push(tmpDose);
       }
     })

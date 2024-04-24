@@ -246,7 +246,6 @@ import QuantileChart from "@/components/QuantileChart.vue";
 import SubjectGraphable from "@/types/SubjectGraphable";
 import QuantileGraphable from "@/types/QuantileGraphable";
 import TitrateGraphable from "@/types/TitrateGraphable";
-import BasalDoseType from "@/types/BasalDoseType";
 import { api } from "@/functions/GlobalFunctions";
 import TiRChart from "@/components/TiRChart.vue";
 import { useApiURL, useApiURLNovo } from "@/globalConfigPlugin";

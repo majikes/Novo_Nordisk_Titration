@@ -28,7 +28,7 @@
 </template>
 <script setup lang="ts">
 import { computed, defineProps, PropType } from "vue";
-import BasalDoseType from "@/types/BasalDoseType";
+import BasalDoseType from "@/types/BasalDoseTypes";
 
 const props = defineProps({
   doseHistory: {

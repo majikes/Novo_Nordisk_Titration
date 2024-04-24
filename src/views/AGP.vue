@@ -162,7 +162,6 @@ import QuantileGraphable from "@/types/QuantileGraphable";
 import SubjectDetails from "@/types/SubjectDetails";
 import SubjectDropdown from "@/components/SubjectDropdown.vue";
 import SubjectDatesFromAPIType from "@/types/SubjectDatesFromAPIType";
-import BasalDoseType from "@/types/BasalDoseType";
 import { api, dateConvertToISO, dateMatch } from "@/functions/GlobalFunctions";
 import { useApiURL, useApiURLNovo } from "@/globalConfigPlugin";
 import { useDebugModeStore } from "@/stores/debugModeStore";
