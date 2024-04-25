@@ -7,15 +7,6 @@
     </div>
   </div>
 </template>
-<script lang="ts">
-import { defineComponent, PropType } from 'vue'
+<script setup lang="ts">
 
-export default defineComponent({
-  name: 'LoadingHover',
-  components: {},
-  props: {},
-  setup(props) {
-    return {}
-  }
-})
 </script>

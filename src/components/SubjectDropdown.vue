@@ -148,6 +148,8 @@ export default defineComponent({
               id: value.id,
               active: value.active,
               interventionArm: value.interventionArm,
+              startDate: value.startDate,
+              modifiableByRequestor: value.modifiableByRequestor,
               rec_dose_TS: null,
               rec_dose_value: null,
               rec_dose_problems: [] as string[],

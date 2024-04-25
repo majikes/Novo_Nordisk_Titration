@@ -7,7 +7,7 @@
     class="titration-view"
   >
     <div class="control-row-header" id="header">
-      <h1 class="text-2xl font-bold">Subject Titration</h1>
+      <h1 class="text-2xl font-bold">Participant Titration</h1>
     </div>
     <!-- subject dropdown -->
     <div class="flex justify-end content-end">
@@ -25,7 +25,7 @@
       </LoadingHover>
     </div>
     <!-- Visible Titrate stuff -->
-    <div v-else-if="titratePageVisible">
+    <div v-else-if="titratePageVisibility.visible">
       <!-- Quantile graph and TIR -->
       <div class="grid grid-cols-12 min-h-[400px] py-1">
         <LoadingHover v-if="!loaded">
@@ -203,13 +203,7 @@
     <!-- Titrate not visible -->
     <div v-else class="w-full h-40 force-center-content text-l font-semibold">
       <div v-if="selected !== ''">
-        {{ subjectListStore.currentSubject.id }} is in the
-        {{
-          (subjectListStore.interventionMap as any)[
-            subjectListStore.currentSubject.interventionArm
-          ]
-        }}
-        arm - Titration functions disabled.
+        {{ titratePageVisibility.message }}
       </div>
       <div v-else>No subject selected.</div>
     </div>
@@ -304,16 +298,30 @@ selected.value =
     : (route.params.subjectId as string);
 
 const subjectListStore = useSubjectListStore();
-const titratePageVisible = computed(() => {
+const titratePageVisibility = computed(() => {
+  const retObj = {
+    visible: false,
+    message: 'no information'
+  }
   if (
     subjectListStore.loaded &&
-    subjectListStore.currentSubject.interventionArm === 1
+    subjectListStore.currentSubject.interventionArm === 1 &&
+    subjectListStore.currentSubject.modifiableByRequestor
   ) {
-    return true;
-  } else {
-    return false;
+    retObj.visible = true;
   }
+  if (!subjectListStore.loaded) {
+    retObj.message = 'loading information...'
+  } else {
+    if (subjectListStore.currentSubject.interventionArm !== 1) {
+      retObj.message = 'Selected participant is not in the Experimental arm - Titration functions disabled'
+    } else if (!subjectListStore.currentSubject.modifiableByRequestor) {
+      retObj.message = 'Current user not authorized to titrate selected participant - Titration functions disabled'
+    }
+  }
+  return retObj
 });
+
 
 // 'loading' and other flags that we'll need
 // primarily used to enable and disable fields for input
@@ -341,7 +349,7 @@ watch(selected, () => {
   // console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
   // router.push({ name: 'AGP', params: { subjectId: selected.value } })
   // loaded.value = false
-  if (titratePageVisible.value) {
+  if (titratePageVisibility.value.visible) {
     graphData();
   }
   // getBasalDoseHistory()
