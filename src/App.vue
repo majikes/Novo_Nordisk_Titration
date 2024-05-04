@@ -241,7 +241,8 @@
         v-if="
           groupComputed.includes('crc') ||
           groupComputed.includes('cdt technical') ||
-          groupComputed.includes('cdt overseer')
+          groupComputed.includes('cdt overseer') ||
+          auth.user?.username === 'camillalevister'
         "
         class="nav-link group"
         :to="{ name: 'CGM Data Availability' }"
