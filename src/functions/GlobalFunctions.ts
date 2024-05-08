@@ -1,5 +1,4 @@
 import Subject from '@/types/Subject'
-import UserListItem from '@/types/UserListItem'
 import SubjectFromAPI from '@/types/SubjectFromAPI'
 import SubjectGraphable from '@/types/SubjectGraphable'
 import QuantileGraphable from '@/types/QuantileGraphable'
@@ -112,15 +111,6 @@ export function subject_convert(s: SubjectFromAPI): Subject {
     }
     return ret_s
 }
-
-// export function user_convert(s: SubjectFromAPI): UserListItem {
-//     const ret_s: UserListItem = {
-//         // id: (s.id[0]).toString(),
-//         id: s.username[0],
-//         status: s.status[0]
-//     }
-//     return ret_s
-// }
 
 // date string repr conversion
 // incoming dates from API are MM/DD/YYYY, 

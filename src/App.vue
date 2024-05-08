@@ -174,7 +174,8 @@
       <router-link
         v-if="
           groupComputed.includes('admin') ||
-          groupComputed.includes('superadmin')
+          groupComputed.includes('superadmin') ||
+          groupComputed.includes('cdt overseer')
         "
         class="nav-link group"
         :to="{ name: 'NonParticipantManagement' }"

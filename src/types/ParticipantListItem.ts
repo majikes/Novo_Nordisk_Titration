@@ -1,4 +1,4 @@
-interface UserListItem {
+interface ParticipantListItem {
     fname?: string,
     fullname?: string,
     id: string,
@@ -7,4 +7,4 @@ interface UserListItem {
     active: number,
 }
 
-export default UserListItem
+export default ParticipantListItem
