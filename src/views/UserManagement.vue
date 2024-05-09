@@ -114,26 +114,6 @@ const superAdminMode = computed(() => {
   );
 });
 
-// const subjectActiveStore = ref({} as any)
-// const subjectLoadingStore = ref({} as any)
-// const subjects = ref<any[]>([]);
-// const subjectsorted = computed(() => {
-//   const sortkey = adminMode.value ? "fullname" : "id";
-//   return [...subjects.value].sort((a, b) => {
-//     if (
-//       typeof a[sortkey] !== "undefined" &&
-//       typeof b[sortkey] !== "undefined"
-//     ) {
-//       if (a[sortkey] > b[sortkey]) {
-//         return 1;
-//       } else {
-//         return -1;
-//       }
-//     } else {
-//       return 1;
-//     }
-//   });
-// });
 const usersFromAPI = ref([] as UserSupervisedByFromAPIType[]);
 const usersSupervisedByList = computed(() => {
   const retList = [] as UserSupervisedByGroupBySuperviseeType[];
@@ -172,6 +152,74 @@ const usersSupervisedByList = computed(() => {
 
   return retList;
 });
+// TODO watch usersSupervisedByList and create a ref version that's editable
+// v-model to UserManagementList component
+// whenever we make a change (activate / deactivate / add / remove) (maybe not remove actually)
+// don't auto-change in DB
+// instead have an "apply changes" button that takes the diff of the two and only
+// sends those changes to the backend
+// include "are you sure / confirm" popup
+// force page reload on change apply
+// include rules that restrict the SUPERADMIN -> ADMIN -> PHYS/CRC -> PARTICIPANT hierarchy
+// maybe also SUPERADMIN -> ALL TECHNICAL / OVERSEER STUFF (CDT PREFIX?)
+// add something that also gets all site supervisors that make sense for the current user (for adding) 
+// (might just be part of original call, lambda is doing tons already)
+
+// const subjectActiveStore = ref({} as any)
+// const subjectLoadingStore = ref({} as any)
+// const subjects = ref<any[]>([]);
+// const subjectsorted = computed(() => {
+//   const sortkey = adminMode.value ? "fullname" : "id";
+//   return [...subjects.value].sort((a, b) => {
+//     if (
+//       typeof a[sortkey] !== "undefined" &&
+//       typeof b[sortkey] !== "undefined"
+//     ) {
+//       if (a[sortkey] > b[sortkey]) {
+//         return 1;
+//       } else {
+//         return -1;
+//       }
+//     } else {
+//       return 1;
+//     }
+//   });
+// });
+const sortVar = ref("subject_id");
+const sortables = {
+  subject_id: "Participant ID",
+  // daysToTitrate: "Days to Titrate",
+  // 'glycemicRisk': 'Glycemic Risk',
+};
+const sortDirDesc = ref(true);
+function reverseSortDir() {
+  sortDirDesc.value = !sortDirDesc.value;
+}
+// const sortedBySelected = computed(() => {
+//   return [...sortedById.value].sort((a, b) => {
+//     if (
+//       typeof (a as any)[sortVar.value] !== "undefined" &&
+//       typeof (b as any)[sortVar.value] !== "undefined"
+//     ) {
+//       const directionality = sortDirDesc.value ? -1 : 1;
+//       if ((a as any)[sortVar.value] > (b as any)[sortVar.value]) {
+//         return 1 * directionality;
+//       } else {
+//         return -1 * directionality;
+//       }
+//     } else {
+//       return 1;
+//     }
+//   });
+// });
+
+const usersSupervisedByListSorted = computed(() => {
+  const retList = [] as UserSupervisedByGroupBySuperviseeType[];
+  // for (const supervisee of usersSupervisedByList.value) {
+  //   console.log()
+  // }
+  return retList
+})
 
 const error = ref(null);
 const loading = ref(true);
