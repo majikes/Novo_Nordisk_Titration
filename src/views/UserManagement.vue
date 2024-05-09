@@ -38,7 +38,41 @@
     <!-- {{route}} -->
     <div v-if="loading">Loading...</div>
     <div v-else>
-      <UserManagementList :usersupervisedbylist="usersSupervisedByList" />
+      <!-- user mgmt header, not sure why i like splitting this up -->
+      <div class="user-mgmt-table-header-row">
+        <div
+          class="flex justify-between font-bold px-4"
+          id="supervisee-header"
+          @click="toggleSort('username')"
+        >
+          <div>User</div>
+          <SortDirArrow
+            :desc="sortDirsDesc.username"
+            :visible="sortDirsVisible.username"
+          />
+        </div>
+        <div
+          class="flex justify-between font-bold px-4"
+          id="usr-role-header"
+          @click="toggleSort('role')"
+        >
+          <div>Role</div>
+          <SortDirArrow
+            :desc="sortDirsDesc.role"
+            :visible="sortDirsVisible.role"
+          />
+        </div>
+        <div class="font-bold px-4" id="supervisee-header">Supervisors</div>
+        <div class="font-bold px-4" id="sup-role-header">Role</div>
+        <div class="font-bold px-4" id="sup-site-header">Site</div>
+        <div class="font-bold px-4" id="sup-active-header">Active</div>
+      </div>
+      <UserManagementList
+        :usersupervisedbylist="usersSupervisedByListSorted"
+        v-model:modifiable-supervisee-list="
+          usersSupervisedByListModifiable
+        "
+      />
     </div>
     <!-- v-for div, full span, containing 3 sub divs
       each with 1/3 span or so.
@@ -51,11 +85,12 @@ import { computed, defineComponent, onMounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { api, subject_convert } from "@/functions/GlobalFunctions";
 import { useApiURL } from "@/globalConfigPlugin";
-import { lowerCase } from "lodash";
+import { cloneDeep, lowerCase } from "lodash";
 import { useAuthenticator } from "@aws-amplify/ui-vue";
 import { useDebugModeStore } from "@/stores/debugModeStore";
 import { useErrorStore } from "@/stores/ErrorStore";
 import UserManagementList from "@/components/UserManagementList.vue";
+import SortDirArrow from "@/components/SortDirArrow.vue";
 import {
   type UserSupervisedByFromAPIType,
   type UserSupervisedByAPIEndpointType,
@@ -131,10 +166,11 @@ const usersSupervisedByList = computed(() => {
       active: user.active,
       site_id: user.site_id,
       site_name: user.site_name,
-    }
+    };
 
     const index = retList.findIndex(
-      (existing_user) => existing_user.supervisee_username === user.supervisee_username
+      (existing_user) =>
+        existing_user.supervisee_username === user.supervisee_username
     );
     if (index === -1) {
       const tmpSupervisee = {
@@ -142,18 +178,30 @@ const usersSupervisedByList = computed(() => {
         supervisee_id: user.supervisee_id,
         supervisee_role_name: user.supervisee_role_name,
         supervisors: [tmpSupervisor],
-      }
-      retList.push(tmpSupervisee)
+      };
+      retList.push(tmpSupervisee);
     } else {
-      const tmpSupervisee = retList[index]
-      tmpSupervisee.supervisors.push(tmpSupervisor)
+      const tmpSupervisee = retList[index];
+      tmpSupervisee.supervisors.push(tmpSupervisor);
     }
   }
 
   return retList;
 });
-// TODO watch usersSupervisedByList and create a ref version that's editable
-// v-model to UserManagementList component
+
+const usersSupervisedByListModifiable = ref(
+  [] as UserSupervisedByGroupBySuperviseeType[]
+);
+watch(usersSupervisedByList, () => {
+  console.log(`change to usersSupervisedByList detected`);
+  // console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
+  usersSupervisedByListModifiable.value = cloneDeep(
+    usersSupervisedByList.value
+  );
+});
+// TODO
+// DONE watch usersSupervisedByList and create a ref version that's editable
+// DONE v-model to UserManagementList component
 // whenever we make a change (activate / deactivate / add / remove) (maybe not remove actually)
 // don't auto-change in DB
 // instead have an "apply changes" button that takes the diff of the two and only
@@ -162,7 +210,7 @@ const usersSupervisedByList = computed(() => {
 // force page reload on change apply
 // include rules that restrict the SUPERADMIN -> ADMIN -> PHYS/CRC -> PARTICIPANT hierarchy
 // maybe also SUPERADMIN -> ALL TECHNICAL / OVERSEER STUFF (CDT PREFIX?)
-// add something that also gets all site supervisors that make sense for the current user (for adding) 
+// add something that also gets all site supervisors that make sense for the current user (for adding)
 // (might just be part of original call, lambda is doing tons already)
 
 // const subjectActiveStore = ref({} as any)
@@ -185,16 +233,55 @@ const usersSupervisedByList = computed(() => {
 //     }
 //   });
 // });
-const sortVar = ref("subject_id");
-const sortables = {
-  subject_id: "Participant ID",
-  // daysToTitrate: "Days to Titrate",
-  // 'glycemicRisk': 'Glycemic Risk',
-};
-const sortDirDesc = ref(true);
-function reverseSortDir() {
-  sortDirDesc.value = !sortDirDesc.value;
+const sortVar = ref("username");
+const sortVars = ["username", "role"];
+const sortVarMap = {
+  username: 'supervisee_username',
+  role: 'supervisee_role_name',
+} as any
+const sortVarBackend = computed(() => {
+  let retStr = 'supervisee_username'
+  for (const [key, value] of Object.entries(sortVarMap)) {
+    if (sortVar.value === key) {
+      retStr = String(value)
+    }
+  }
+  console.log(`sortVarBackend change: ${retStr}`)
+  return retStr
+})
+const sortDirsDesc = ref({
+  username: true,
+  role: true,
+} as any);
+const sortDirsVisible = ref({
+  username: true,
+  role: false,
+} as any);
+function toggleSort(toggleVar: string) {
+  console.log(`toggleSort on ${toggleVar}`)
+  if (
+    sortVars.includes(toggleVar) &&
+    Object.keys(sortDirsDesc.value).includes(toggleVar) &&
+    Object.keys(sortDirsVisible.value).includes(toggleVar)
+  ) {
+    console.log('valid toggleVar')
+    sortVar.value = toggleVar
+    for (const key of Object.keys(sortDirsDesc.value)) {
+      if (key === toggleVar) { 
+        sortDirsDesc.value[key] = !sortDirsDesc.value[key]
+        console.log(`sorting on ${key}; desc sort: ${sortDirsDesc.value[key]}`)
+      }
+    }
+    for (const key of Object.keys(sortDirsVisible.value)) {
+      if (key === toggleVar) { sortDirsVisible.value[key] = true }
+      else { sortDirsVisible.value[key] = false }
+    }
+  }
 }
+// const sortDirDesc = ref(true);
+// function reverseSortDir() {
+//   sortDirDesc.value = !sortDirDesc.value;
+// }
 // const sortedBySelected = computed(() => {
 //   return [...sortedById.value].sort((a, b) => {
 //     if (
@@ -212,14 +299,51 @@ function reverseSortDir() {
 //     }
 //   });
 // });
+// usersSupervisedByList
+// usersSupervisedByListModifiable
 
 const usersSupervisedByListSorted = computed(() => {
-  const retList = [] as UserSupervisedByGroupBySuperviseeType[];
-  // for (const supervisee of usersSupervisedByList.value) {
-  //   console.log()
-  // }
-  return retList
-})
+  const retList = cloneDeep(usersSupervisedByList.value);
+  return retList.sort((a, b) => {
+    if (
+      typeof (a as any)[sortVarBackend.value] !== "undefined" &&
+      typeof (b as any)[sortVarBackend.value] !== "undefined"
+    ) {
+      let directionality = 1;
+      if (typeof (sortDirsDesc.value)[sortVar.value] !== "undefined") {
+        directionality = (sortDirsDesc.value)[sortVar.value] ? -1 : 1;
+      }
+      if ((a as any)[sortVarBackend.value] > (b as any)[sortVarBackend.value]) {
+        return 1 * directionality;
+      } else {
+        return -1 * directionality;
+      }
+    } else {
+      return 1;
+    }
+  });
+});
+const usersSupervisedByListModifiableSorted = computed(() => {
+  const retList = cloneDeep(usersSupervisedByListModifiable.value);
+  return retList.sort((a, b) => {
+    if (
+      typeof (a as any)[sortVarBackend.value] !== "undefined" &&
+      typeof (b as any)[sortVarBackend.value] !== "undefined"
+    ) {
+      let directionality = 1;
+      if (typeof (sortDirsDesc.value)[sortVar.value] !== "undefined") {
+        directionality = (sortDirsDesc.value)[sortVar.value] ? -1 : 1;
+      }
+      if ((a as any)[sortVarBackend.value] > (b as any)[sortVarBackend.value]) {
+        return 1 * directionality;
+      } else {
+        return -1 * directionality;
+      }
+    } else {
+      return 1;
+    }
+  });
+});
 
 const error = ref(null);
 const loading = ref(true);
