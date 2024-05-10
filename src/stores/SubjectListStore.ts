@@ -1,6 +1,8 @@
 import { defineStore } from "pinia"
 import { computed, ref } from "vue"
 import { type SubjectListItemType } from "@/types/SubjectListItemType"
+import { format } from "date-fns";
+// import { toZonedTime } from "date-fns-tz";
 
 export const useSubjectListStore = defineStore('subjectListStore', () => {
   const interventionMap = {
@@ -47,7 +49,8 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
       currentSubject.value.rec_dose_TS !== -1
     ) {
       const fullDate = new Date(currentSubject.value.rec_dose_TS * 1000)
-      retStr = `${fullDate.toISOString()}`
+      // retStr = `${fullDate.toISOString()}`
+      retStr = format(fullDate, 'LL-dd-yyyy HH:mm')
     }
     return retStr
   })
@@ -76,9 +79,36 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
       currentSubject.value.dose_TS !== -1
     ) {
       const fullDate = new Date(currentSubject.value.dose_TS * 1000)
-      retStr = `${fullDate.toISOString()}`
+      // retStr = `${fullDate.toISOString()}`
+      retStr = format(fullDate, 'LL-dd-yyyy HH:mm')
     }
     return retStr
+  })
+  const lastDoseSrcText = computed(() => {
+    let retStr = 'N/A'
+    let titrateRetStr = 'N/A'
+    if (
+      loaded.value &&
+      typeof (currentSubject.value.dose_src_id) !== 'undefined' &&
+      currentSubject.value.dose_src_id !== null &&
+      currentSubject.value.dose_src_id !== '-1'
+    ) {
+      const src_id = currentSubject.value.dose_src_id
+      if (src_id === "0") {
+        retStr = "Automated system";
+        titrateRetStr = "system generated";
+      } else if (src_id === "1") {
+        retStr = "Physician";
+        titrateRetStr = "physician approved";
+      } else if (src_id === "2") {
+        retStr = "Participant";
+        titrateRetStr = "participant added";
+      }
+    }
+    return {
+      src_text: retStr,
+      src_text_titrate: titrateRetStr
+    }
   })
 
   const absLastDoseText = computed(() => {
@@ -105,9 +135,36 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
       currentSubject.value.abs_dose_TS !== -1
     ) {
       const fullDate = new Date(currentSubject.value.abs_dose_TS * 1000)
-      retStr = `${fullDate.toISOString()}`
+      // retStr = `${fullDate.toISOString()}`
+      retStr = format(fullDate, 'LL-dd-yyyy HH:mm')
     }
     return retStr
+  })
+  const absLastDoseSrcText = computed(() => {
+    let retStr = 'N/A'
+    let titrateRetStr = 'N/A'
+    if (
+      loaded.value &&
+      typeof (currentSubject.value.abs_dose_src_id) !== 'undefined' &&
+      currentSubject.value.abs_dose_src_id !== null &&
+      currentSubject.value.abs_dose_src_id !== '-1'
+    ) {
+      const src_id = currentSubject.value.abs_dose_src_id
+      if (src_id === "0") {
+        retStr = "Automated system";
+        titrateRetStr = "system generated";
+      } else if (src_id === "1") {
+        retStr = "Physician";
+        titrateRetStr = "physician approved";
+      } else if (src_id === "2") {
+        retStr = "Participant";
+        titrateRetStr = "participant added";
+      }
+    }
+    return {
+      src_text: retStr,
+      src_text_titrate: titrateRetStr
+    }
   })
 
 
@@ -174,8 +231,10 @@ export const useSubjectListStore = defineStore('subjectListStore', () => {
     lastRecDoseDateText,
     lastDoseText,
     lastDoseDateText,
+    lastDoseSrcText,
     absLastDoseText,
     absLastDoseDateText,
+    absLastDoseSrcText,
     titratable,
     subjectListTitratable,
 

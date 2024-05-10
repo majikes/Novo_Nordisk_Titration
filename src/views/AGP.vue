@@ -61,7 +61,9 @@
         id="basaldoselatest"
         :title="subjectListStore.absLastDoseDateText"
       >
-        <div class="force-center-content">Current basal insulin dose:</div>
+        <div class="force-center-content">Current dose 
+          ({{ subjectListStore.absLastDoseSrcText.src_text_titrate }}):
+        </div>
         <div class="force-center-content px-2 font-semibold">
           {{ subjectListStore.absLastDoseText }}
         </div>

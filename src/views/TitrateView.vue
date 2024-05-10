@@ -67,7 +67,9 @@
           :title="subjectListStore.lastDoseDateText"
         >
           <!-- :title="lastDoseDate" -->
-          <div class="force-center-content">Current basal insulin dose:</div>
+          <div class="force-center-content">
+            Most recent approved basal insulin dose:
+          </div>
           <div
             class="force-center-content px-2"
             :class="{
@@ -90,6 +92,29 @@
         </div>
         <div
           class="flex justify-between rounded-lg bg-white px-4 py-3 w-full"
+          id="basaldoseabslatest"
+          :title="subjectListStore.absLastDoseDateText"
+        >
+          <!-- :title="lastDoseDate" -->
+          <div class="force-center-content">
+            <div class="flex">
+              Most recent dose ({{
+                subjectListStore.absLastDoseSrcText.src_text_titrate
+              }}):
+            </div>
+          </div>
+          <div
+            class="force-center-content px-2"
+            :class="{
+              'text-gray-500': !subjectListStore.loaded,
+              'font-semibold': subjectListStore.loaded,
+            }"
+          >
+            {{ subjectListStore.absLastDoseText }}
+          </div>
+        </div>
+        <div
+          class="col-start-1 flex justify-between rounded-lg bg-white px-4 py-3 w-full"
           id="basaldoserec"
           :title="subjectListStore.lastRecDoseDateText"
         >
@@ -141,7 +166,7 @@
               :class="{ 'font-semibold': newDoseValid }"
               @click="showModal"
             >
-              {{confirmButtonText}}
+              {{ confirmButtonText }}
               <!-- {{newDoseTextConditional}} -->
             </button>
           </div>
@@ -301,8 +326,8 @@ const subjectListStore = useSubjectListStore();
 const titratePageVisibility = computed(() => {
   const retObj = {
     visible: false,
-    message: 'no information'
-  }
+    message: "no information",
+  };
   if (
     subjectListStore.loaded &&
     subjectListStore.currentSubject.interventionArm === 1 &&
@@ -311,17 +336,18 @@ const titratePageVisibility = computed(() => {
     retObj.visible = true;
   }
   if (!subjectListStore.loaded) {
-    retObj.message = 'loading information...'
+    retObj.message = "loading information...";
   } else {
     if (subjectListStore.currentSubject.interventionArm !== 1) {
-      retObj.message = 'Selected participant is not in the Experimental arm - Titration functions disabled'
+      retObj.message =
+        "Selected participant is not in the Experimental arm - Titration functions disabled";
     } else if (!subjectListStore.currentSubject.modifiableByRequestor) {
-      retObj.message = 'Current user not authorized to titrate selected participant - Titration functions disabled'
+      retObj.message =
+        "Current user not authorized to titrate selected participant - Titration functions disabled";
     }
   }
-  return retObj
+  return retObj;
 });
-
 
 // 'loading' and other flags that we'll need
 // primarily used to enable and disable fields for input
@@ -443,9 +469,9 @@ graphData();
 
 onMounted(() => {
   if (subjectListStore.loaded) {
-    newDoseModel.value = String(subjectListStore.currentSubject.rec_dose_value)
+    newDoseModel.value = String(subjectListStore.currentSubject.rec_dose_value);
   }
-})
+});
 
 watch(
   () => subjectListStore.currentSubject.rec_dose_value,
@@ -623,11 +649,11 @@ const confirmAndSendDisabled = computed(() => {
 
 const confirmButtonText = computed(() => {
   if (newDoseValid.value) {
-    return `CONFIRM + SEND ${newDoseModel.value}U`
+    return `CONFIRM + SEND ${newDoseModel.value}U`;
   } else {
-    return `CONFIRM + SEND`
+    return `CONFIRM + SEND`;
   }
-})
+});
 
 function hideModal() {
   modalVisible.value = false;

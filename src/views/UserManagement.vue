@@ -41,7 +41,7 @@
       <!-- user mgmt header, not sure why i like splitting this up -->
       <div class="user-mgmt-table-header-row">
         <div
-          class="flex justify-between font-bold px-4"
+          class="flex justify-between font-bold px-4 hover:bg-gray-300 rounded-md"
           id="supervisee-header"
           @click="toggleSort('username')"
         >
@@ -52,7 +52,7 @@
           />
         </div>
         <div
-          class="flex justify-between font-bold px-4"
+          class="flex justify-between font-bold px-4 hover:bg-gray-300 rounded-md"
           id="usr-role-header"
           @click="toggleSort('role')"
         >
@@ -257,6 +257,7 @@ const sortDirsVisible = ref({
   username: true,
   role: false,
 } as any);
+
 function toggleSort(toggleVar: string) {
   console.log(`toggleSort on ${toggleVar}`)
   if (
@@ -268,7 +269,9 @@ function toggleSort(toggleVar: string) {
     sortVar.value = toggleVar
     for (const key of Object.keys(sortDirsDesc.value)) {
       if (key === toggleVar) { 
-        sortDirsDesc.value[key] = !sortDirsDesc.value[key]
+        if (sortDirsVisible.value[key]) { 
+          sortDirsDesc.value[key] = !sortDirsDesc.value[key]
+        }
         console.log(`sorting on ${key}; desc sort: ${sortDirsDesc.value[key]}`)
       }
     }
@@ -301,7 +304,7 @@ function toggleSort(toggleVar: string) {
 // });
 // usersSupervisedByList
 // usersSupervisedByListModifiable
-
+// const usersSupervisedByListPreSorted
 const usersSupervisedByListSorted = computed(() => {
   const retList = cloneDeep(usersSupervisedByList.value);
   return retList.sort((a, b) => {
@@ -323,6 +326,7 @@ const usersSupervisedByListSorted = computed(() => {
     }
   });
 });
+// const usersSupervisedByListModifiablePreSorted
 const usersSupervisedByListModifiableSorted = computed(() => {
   const retList = cloneDeep(usersSupervisedByListModifiable.value);
   return retList.sort((a, b) => {
