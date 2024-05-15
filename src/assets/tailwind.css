@@ -230,10 +230,6 @@
     @apply py-2 px-4 rounded-md bg-gray-100 border-transparent disabled:text-gray-400
 }
 
-.user-mgmt-cell {
-    @apply w-48
-}
-
 .tir-graph-cell {
     @apply rounded-md
 }
@@ -267,11 +263,26 @@
 }
 
 .user-mgmt-table-simple-row {
-    @apply grid grid-cols-6 rounded-md px-4 py-1 even:bg-gray-100
+    @apply grid grid-cols-7 rounded-md px-4 py-1 even:bg-gray-100
 }
 
 .user-mgmt-table-header-row {
-    @apply grid grid-cols-6 rounded-md px-4 py-1 mb-3 bg-gray-200
+    @apply grid grid-cols-7 rounded-md px-4 py-1 mb-3 bg-gray-200
+}
+
+/* .user-mgmt-checkbox-input {
+    @apply w-full h-6 rounded bg-gray-200 border-transparent focus:border-transparent focus:bg-gray-200 text-gray-700 
+} */
+.user-mgmt-active-dropdown {
+    @apply w-full h-7 p-1 my-0.5 rounded-md bg-gray-100 border border-gray-300 focus:border-gray-500 focus:bg-white focus:ring-1 focus:ring-offset-2 focus:ring-gray-500
+}
+
+.user-mgmt-cell {
+    @apply self-center
+}
+
+.user-mgmt-modified {
+    @apply ring-rose-500 ring-2 ring-offset-1
 }
 /* .disabled {
     @apply text-gray-400
