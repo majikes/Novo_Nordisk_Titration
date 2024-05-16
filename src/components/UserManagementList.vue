@@ -1,8 +1,16 @@
 <template>
   <div class="col-span-6">
     <div v-if="debugModeStore.debugMode">
-      <div><span class="font-semibold">usersupervisedbylist === modifiablesupervisedbylist:</span> {{ isEqual(usersupervisedbylist, modifiablesupervisedbylist) }}</div>
-      <div><span class="font-semibold">modifiedSupervisors:</span> {{ modifiedSupervisors }}</div>
+      <div>
+        <span class="font-semibold"
+          >usersupervisedbylist === modifiablesupervisedbylist:</span
+        >
+        {{ isEqual(usersupervisedbylist, modifiablesupervisedbylist) }}
+      </div>
+      <div>
+        <span class="font-semibold">modifiedSupervisors:</span>
+        {{ modifiedSupervisors }}
+      </div>
       <!-- <div><span class="font-semibold">usersupervisedbylist:</span> {{ usersupervisedbylist }}</div> -->
       <!-- <div><span class="font-semibold">modifiablesupervisedbylist:</span> {{ modifiablesupervisedbylist }}</div> -->
     </div>
@@ -20,19 +28,46 @@
       <div class="px-4 py-1">
         <div class="user-mgmt-cell">{{ supervisee.supervisee_site_name }}</div>
       </div>
-      <div class="col-span-4">
+      <div class="col-span-4 relative">
+        <AddSupervisorModal
+          v-if="addSupervisorModalVisible[index]"
+          @cancel-click="hideAddSupervisorModal(supervisee, index)"
+          @confirm-click="addSupervisors"
+          :index="index"
+          :supervisee="supervisee"
+          :supervisoroptions="addableSupervisorsBySupervisee[index]"
+        />
+        <div
+          v-if="debugModeStore.debugMode"
+          class="absolute top-1 right-1 z-20 text-xs text-red-400"
+        >
+          <div v-if="addSupervisorModalVisible[index]">
+            <div>showmodal</div>
+            <div class="text-black">
+              {{ addableSupervisorsBySupervisee[index] }}
+            </div>
+          </div>
+        </div>
         <div
           v-for="(supervisor, index2) in supervisee.supervisors"
           :key="index2"
           class="grid grid-cols-4"
         >
-          <div class="px-4 user-mgmt-cell">
+          <div class="px-4 user-mgmt-cell relative">
             {{ supervisor.supervisor_username }}
+            <AddSupervisorPlusIcon
+              v-if="index2 === supervisee.supervisors.length - 1"
+              :disabled="addSupervisorsBySuperviseeDisabled[index]"
+              :evenrow="index % 2 === 0"
+              @add-supervisor-click="showAddSupervisorModal(supervisee, index)"
+            />
           </div>
           <div class="px-4 user-mgmt-cell">
             {{ supervisor.supervisor_role_name }}
           </div>
-          <div class="px-4 user-mgmt-cell">{{ supervisor.supervisor_site_name }}</div>
+          <div class="px-4 user-mgmt-cell">
+            {{ supervisor.supervisor_site_name }}
+          </div>
           <!-- <div class="px-4">{{ supervisor.active }}</div> -->
           <div class="px-4 user-mgmt-cell">
             <select
@@ -67,11 +102,18 @@ import { computed, defineProps, defineModel, PropType, ref } from "vue";
 import {
   type UserSupervisedByGroupBySuperviseeType,
   type Supervisee,
+  type Supervisor,
   type USBGFrontendSortType,
 } from "@/types/UserSupervisedByTypes";
-import UserManagementListItem from "@/components/UserManagementListItem.vue";
+import AddSupervisorPlusIcon from "@/components/AddSupervisorPlusIcon.vue";
+import AddSupervisorModal from "@/components/AddSupervisorModal.vue";
 import { cloneDeep, isEqual } from "lodash";
 import { useDebugModeStore } from "@/stores/debugModeStore";
+import { useErrorStore } from "@/stores/ErrorStore";
+import {
+  supervisorToSupervisee,
+  superviseeToSupervisor,
+} from "@/functions/GlobalFunctions";
 
 const props = defineProps({
   usersupervisedbylist: {
@@ -100,6 +142,7 @@ const modifiablesupervisedbylist = defineModel<
   UserSupervisedByGroupBySuperviseeType[]
 >("modifiablesupervisedbylist");
 
+const errors = useErrorStore();
 const debugModeStore = useDebugModeStore();
 
 // TODO
@@ -125,23 +168,23 @@ const modifiedSupervisors = computed(() => {
       // boolean row for current supervisee
       // const superviseeBools = [] as boolean[]
 
-      
-        const origSupervisee = props.usersupervisedbylist[index];
-        for (const [index2, supervisor] of supervisee.supervisors.entries()) {
-          if (index2 < origSupervisee.supervisors.length) {
-            if (
-              // lol needed string casting here because args come in as numbers
-              // but the moment you make a selection they become strings
-              // (facepalm)
-              String(origSupervisee.supervisors[index2].active) !== String(supervisor.active)
-            ) {
-              retArr[index][index2] = true;
-            } else {
-              retArr[index][index2] = false;
-            }
+      const origSupervisee = props.usersupervisedbylist[index];
+      for (const [index2, supervisor] of supervisee.supervisors.entries()) {
+        if (index2 < origSupervisee.supervisors.length) {
+          if (
+            // lol needed string casting here because args come in as numbers
+            // but the moment you make a selection they become strings
+            // (facepalm)
+            String(origSupervisee.supervisors[index2].active) !==
+            String(supervisor.active)
+          ) {
+            retArr[index][index2] = true;
+          } else {
+            retArr[index][index2] = false;
           }
         }
-      
+      }
+
       // then push current row to retArr
       // retArr.push(superviseeBools)
     }
@@ -180,8 +223,110 @@ const newSupervisors = computed(() => {
   return retArr;
 });
 
+// const addableSupervisorNames = computed(() => {
+//   const retArr = props.addablesupervisors.map(
+//     (supervisor) => supervisor.supervisee_username
+//   );
+//   return retArr;
+// });
+
+// const existingSupervisorNames = supervisee.supervisors.map(
+//     (supervisor) => supervisor.supervisor_username
+//   )
+const addableSupervisorsBySupervisee = computed(() => {
+  const retArr = new Array(
+    modifiablesupervisedbylist.value?.length
+  ) as Supervisor[][];
+  if (modifiablesupervisedbylist.value) {
+    for (const [
+      index,
+      supervisee,
+    ] of modifiablesupervisedbylist.value?.entries()) {
+      //
+      const supervisorNames = supervisee.supervisors.map(
+        (supervisor) => supervisor.supervisor_username
+      );
+      const tmpSupervisees = props.addablesupervisors.filter(
+        (supervisee) =>
+          !supervisorNames.includes(supervisee.supervisee_username)
+      );
+      const tmpSupervisors = tmpSupervisees.map(superviseeToSupervisor);
+      retArr[index] = tmpSupervisors;
+    }
+  }
+  return retArr;
+});
+
+const addSupervisorsBySuperviseeDisabled = computed(() => {
+  const retArr = new Array(addableSupervisorsBySupervisee.value.length).fill(
+    false
+  ) as boolean[];
+  for (const [
+    index,
+    supervisorList,
+  ] of addableSupervisorsBySupervisee.value.entries()) {
+    if (supervisorList.length <= 0) {
+      retArr[index] = true;
+    }
+  }
+  return retArr;
+});
+
+// add supervisor toggle
+// might need an html ref
+// we want to just pop up a modal that offers remaining addable supervisors
+// so we go through the list of addable supervisors
+// if their username is not in the list of supervisee.supervisors
+// then we can add them, and they're added as an option to the dropdown
+
+const addSupervisorModalVisible = ref(
+  new Array(modifiablesupervisedbylist.value?.length)
+);
+
+function showAddSupervisorModal(
+  supervisee: UserSupervisedByGroupBySuperviseeType,
+  index: number
+) {
+  console.log(`addSupervisorModal called for supervisee:`, supervisee);
+  if (!addSupervisorsBySuperviseeDisabled.value[index]) {
+    addSupervisorModalVisible.value[index] = true;
+  }
+}
+function hideAddSupervisorModal(
+  supervisee: UserSupervisedByGroupBySuperviseeType,
+  index: number
+) {
+  console.log(`addSupervisorModal called for supervisee`, supervisee);
+  addSupervisorModalVisible.value[index] = false;
+}
+function addSupervisors(
+  supervisee: UserSupervisedByGroupBySuperviseeType,
+  supervisors: Supervisor[],
+  index: number
+) {
+  const supervisorNames = supervisee.supervisors.map(
+    (supervisor) => supervisor.supervisor_username
+  );
+  let hidemodal = false;
+  for (const supervisor of supervisors) {
+    if (!supervisorNames.includes(supervisor.supervisor_username)) {
+      supervisee.supervisors.push(supervisor);
+      hidemodal = true;
+    } else {
+      console.log(`error adding supervisor`, supervisor);
+      errors.errorLog(
+        `AddSupervisorModal; Supervisor ${supervisor.supervisor_username} is already assigned to user ${supervisee.supervisee_username}`,
+        true
+      );
+    }
+  }
+  if (hidemodal) {
+    hideAddSupervisorModal(supervisee, index);
+  }
+}
+
 const activeOptions = [
-  { text: 'Inactive', value: '0' },
-  { text: 'Active', value: '1' },
-]
+  { text: "Inactive", value: "0" },
+  { text: "Active", value: "1" },
+];
 </script>

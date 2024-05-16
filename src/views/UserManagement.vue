@@ -107,7 +107,7 @@ import {
   type UserSupervisedByAPIEndpointType,
   type UserSupervisedByGroupBySuperviseeType,
   type USBGFrontendSortType,
-  Supervisee,
+  type Supervisee,
 } from "@/types/UserSupervisedByTypes";
 
 const apiRootURL = useApiURL();
@@ -227,10 +227,18 @@ watch(usersSupervisedByList, () => {
 // DONE fix sorting
 // DONE fix status display as modified
 // add supervisor feature
-//  - button placement
+//  - DONE (mostly) button placement
+//  - DONE "add new supervisor" tooltip
+//  - DONE @click event
+//    - CANCEL add supervisor with dummy values
+//  - CANCEL dropdown to select new supervisor
+//  - modal to select new supervisor
 //  - dropdown should only list available supervisors - already assigned supervisors
-//  - that should be a computed list
+//  - that should be a computed list (list of objects, or list of lists,
+//     both map to whatever it's called. the main list.)
 //  - if len(that list) == 0, don't show anything in the dropdown
+//    - also grey out (disabled prop) add button
+//      - "no more available supervisors" tooltip
 // supervisor display as added (like red border around "active" dropdown)
 // computed array (probably UserSupervisedByFromAPIType[]) that represents
 //  diff between original and modified

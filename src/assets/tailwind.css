@@ -288,3 +288,6 @@
     @apply text-gray-400
 } */
 
+.add-supervisor-modal {
+    @apply z-30 w-48 min-h-16 p-4 rounded-md drop-shadow-lg absolute grid grid-cols-3 gap-2 bottom-1 left-1
+}

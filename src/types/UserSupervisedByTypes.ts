@@ -12,7 +12,7 @@ interface UserSupervisedByFromAPIType {
     supervisor_site_name: string,
   }
 
-  interface Supervisee {
+interface Supervisee {
     supervisee_username: string,
     supervisee_id: number,
     supervisee_role_name: string,

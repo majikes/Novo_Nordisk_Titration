@@ -4,6 +4,34 @@ import SubjectGraphable from '@/types/SubjectGraphable'
 import QuantileGraphable from '@/types/QuantileGraphable'
 import TiRType from '@/types/TiRType'
 import { flattenDeep } from 'lodash'
+import {
+    type UserSupervisedByGroupBySuperviseeType,
+    type Supervisee,
+    type Supervisor,
+    type USBGFrontendSortType,
+} from "@/types/UserSupervisedByTypes";
+
+export function supervisorToSupervisee(supervisor: Supervisor): Supervisee {
+    return {
+        supervisee_username: supervisor.supervisor_username,
+        supervisee_id: supervisor.supervisor_id,
+        supervisee_role_name: supervisor.supervisor_role_name,
+        active: supervisor.active,
+        site_id: supervisor.supervisor_site_id,
+        site_name: supervisor.supervisor_site_name,
+      } as Supervisee
+}
+
+export function superviseeToSupervisor(supervisee: Supervisee): Supervisor {
+    return {
+        supervisor_username: supervisee.supervisee_username,
+        supervisor_id: supervisee.supervisee_id,
+        supervisor_role_name: supervisee.supervisee_role_name,
+        active: supervisee.active,
+        supervisor_site_id: supervisee.site_id,
+        supervisor_site_name: supervisee.site_name,
+    } as Supervisor
+}
 
 // https://www.newline.co/@bespoyasov/how-to-use-fetch-with-typescript--a81ac257
 // Make the `request` function generic
@@ -24,10 +52,10 @@ export async function request<TResponse>(
     // `RequestInit` is a type for configuring 
     // a `fetch` request. By default, an empty object.
     config: RequestInit = {}
-     
-  // This function is async, it will return a Promise:
-  ): Promise<TResponse> {
-      
+
+    // This function is async, it will return a Promise:
+): Promise<TResponse> {
+
     // Inside, we call the `fetch` function with 
     // a URL and config given:
     // const response = await fetch(url, config)
@@ -57,7 +85,7 @@ export const api = {
                 'Authorization': token,
             })
         }),
-    
+
     // API Key auth
     getAPIKeyAuth: <TResponse>(url: string, apiKey: string) =>
         request<TResponse>(url, {
@@ -104,7 +132,7 @@ export function subject_convert(s: SubjectFromAPI): Subject {
         lastIdentNE: s.lastIdentNE,
         lastBWeeklyOpt: s.lastBWeeklyOpt,
         t_not: s.t_not[0],
-        nWeeksSD: s.nWeeksSD[0], 
+        nWeeksSD: s.nWeeksSD[0],
         nWeeksP: s.nWeeksP[0],
         tControl: s.tControl,
         lastLog: s.lastLog
