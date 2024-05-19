@@ -1,19 +1,18 @@
 <template>
-  <!-- https://feathericons.dev/?search=plus-square&iconset=feather -->
   <div
-    class="w-6 h-6 p-1 aspect-square absolute -bottom-3.5 right-0 rounded-md z-10"
+    class="w-6 h-6 p-1 aspect-square absolute -top-2.5 -right-2.5 rounded-md z-10"
     :class="containerClassObj"
-    :title="containerClassTooltip"
-    @click="$emit('addSupervisorClick')"
+    title="Remove supervisor"
+    @click="$emit('removeSupervisorClick')"
   >
     <div class="w-full aspect-square" ref="resizeRef">
+      <!-- https://feathericons.dev/?search=minus-square&iconset=feather -->
       <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
         :width="width"
         :height="height"
-        class="main-grid-item-icon"
-        :class="svgClassObj"
+        class="fill-white stroke-rose-500 hover:fill-rose-500 hover:stroke-white"
         fill="none"
         stroke="currentColor"
         stroke-linecap="round"
@@ -21,7 +20,6 @@
         stroke-width="2"
       >
         <rect height="18" rx="2" ry="2" width="18" x="3" y="3" />
-        <line x1="12" x2="12" y1="8" y2="16" />
         <line x1="8" x2="16" y1="12" y2="12" />
       </svg>
     </div>
@@ -39,21 +37,10 @@ import { useElementSize } from "@vueuse/core";
 // surrounding curve?? maybe. idk.
 
 const props = defineProps({
-  disabled: {
-    required: true,
-    type: Boolean as PropType<boolean>,
-  },
   evenrow: {
     required: true,
     type: Boolean as PropType<boolean>,
   },
-});
-const svgClassObj = computed(() => {
-  const retObj = {
-    "fill-white stroke-gray-300": props.disabled,
-    "fill-white stroke-emerald-500": !props.disabled,
-  };
-  return retObj;
 });
 const containerClassObj = computed(() => {
   const retObj = {
@@ -62,11 +49,7 @@ const containerClassObj = computed(() => {
   };
   return retObj;
 });
-const containerClassTooltip = computed(() => {
-  return !props.disabled
-    ? "Add new supervisor"
-    : "All available supervisors assigned";
-});
+
 
 const resizeRef = ref(null);
 const { width, height } = useElementSize(resizeRef);

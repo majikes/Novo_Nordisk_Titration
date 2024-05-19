@@ -10,7 +10,7 @@ interface UserSupervisedByFromAPIType {
     supervisor_site_id: number,
     supervisee_site_name: string,
     supervisor_site_name: string,
-  }
+}
 
 interface Supervisee {
     supervisee_username: string,
@@ -19,12 +19,20 @@ interface Supervisee {
     active: number,
     site_id: number,
     site_name: string,
-  }
+}
 
 interface UserSupervisedByAPIEndpointType {
     message: string,
     user_list?: UserSupervisedByFromAPIType[],
     supervisor_list?: Supervisee[],
+}
+
+interface USBModifiedType {
+    supervisee_username: string,
+    modified: boolean,
+    added: boolean,
+    changes_text: string,
+    usbg_supervisee: UserSupervisedByFromAPIType
 }
 
 interface Supervisor {
@@ -63,4 +71,5 @@ export {
     type Supervisee,
     type UserSupervisedByGroupBySuperviseeType,
     type USBGFrontendSortType,
+    type USBModifiedType,
 }

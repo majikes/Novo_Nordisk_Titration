@@ -10,7 +10,7 @@
     <div class="control-row-header" id="header">
       <h1 class="text-2xl font-bold">User Management</h1>
     </div>
-    <div class="my-8 grid grid-cols-4 gap-2" id="add-user">
+    <div class="mt-8 grid grid-cols-4 gap-2" id="add-user">
       <!-- <SubjectDropdown/> -->
       <!-- <UserDropdown userType="Physician" /> -->
       <router-link
@@ -29,6 +29,27 @@
       </router-link>
     </div>
 
+    <!-- user management controls -->
+    <div class="my-3 flex justify-end gap-2" id="mgmt-controls-top">
+      <!-- reset button -->
+      <div
+        class="add-supervisor-btn"
+        :class="resetButtonObj"
+        @click="resetChanges"
+      >
+        Reset changes
+      </div>
+      <!-- save changes button -->
+      <div
+        class="add-supervisor-btn"
+        :class="saveButtonObj"
+        @click="showSaveModal"
+      >
+        Save changes
+      </div>
+    </div>
+
+    <!-- some random debug stuff -->
     <div v-if="debugModeStore.debugMode">
       <!-- <div> -->
       <div>{{ groupComputed }}</div>
@@ -38,10 +59,29 @@
       <div>
         <span class="font-semibold">sortDirsInfo:</span> {{ sortDirsInfo }}
       </div>
+      <div>
+        <span class="font-semibold">modifiedSupervisorsList:</span>
+        {{ modifiedSupervisorsList }}
+      </div>
+      <div>
+        <span class="font-semibold">addedSupervisorsList:</span>
+        {{ addedSupervisorsList }}
+      </div>
       <!-- <div>usersSupervisedByListSorted: {{ usersSupervisedByListSorted }}</div>
       <div>usersSupervisedByListModifiable: {{ usersSupervisedByListModifiable }}</div> -->
       <!-- <div>{{ subjectActiveStore }}</div> -->
     </div>
+
+    <!-- save changes modal -->
+    <AddSupervisorSaveChangesModal
+      v-if="saveModalVisible"
+      :modifiedsupervisedbylist="modifiedSupervisorsList"
+      :addedsupervisedbylist="addedSupervisorsList"
+      @cancel-click="hideSaveModal"
+      @confirm-click="postSupervisors"
+    />
+
+    <!-- user list -->
     <!-- <div>{{ subjectActiveStore }}</div> -->
     <!-- {{route}} -->
     <div v-if="loading">Loading...</div>
@@ -71,7 +111,9 @@
           />
         </div>
         <div class="font-bold px-4" id="usr-site-header">Site</div>
-        <div class="font-bold px-4" id="usr-supervisors-header">Supervisors</div>
+        <div class="font-bold px-4" id="usr-supervisors-header">
+          Supervisors
+        </div>
         <div class="font-bold px-4" id="sup-role-header">Role</div>
         <div class="font-bold px-4" id="sup-site-header">Site</div>
         <div class="font-bold px-4" id="sup-active-header">Status</div>
@@ -82,17 +124,43 @@
         :disabled="userListDisabled"
         :editmode="userListEditable"
         :sortdirsinfo="sortDirsInfo"
+        v-model:modifiedsupervisedbylist="modifiedSupervisorsList"
+        v-model:addedsupervisedbylist="addedSupervisorsList"
         v-model:modifiablesupervisedbylist="usersSupervisedByListModifiable"
       />
     </div>
-    <!-- v-for div, full span, containing 3 sub divs
-      each with 1/3 span or so.
-      not its own component, not isolated enough i think -->
+
+    <!-- user management controls bottom -->
+    <div v-if="!loading" class="my-3 flex justify-end gap-2" id="mgmt-controls-top">
+      <!-- reset button -->
+      <div
+        class="add-supervisor-btn"
+        :class="resetButtonObj"
+        @click="resetChanges"
+      >
+        Reset changes
+      </div>
+      <!-- save changes button -->
+      <div
+        class="add-supervisor-btn"
+        :class="saveButtonObj"
+        @click="showSaveModal"
+      >
+        Save changes
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, defineComponent, onMounted, ref, watch } from "vue";
+import {
+  computed,
+  defineComponent,
+  getCurrentInstance,
+  onMounted,
+  ref,
+  watch,
+} from "vue";
 import { useRoute } from "vue-router";
 import { api, subject_convert } from "@/functions/GlobalFunctions";
 import { useApiURL } from "@/globalConfigPlugin";
@@ -101,6 +169,7 @@ import { useAuthenticator } from "@aws-amplify/ui-vue";
 import { useDebugModeStore } from "@/stores/debugModeStore";
 import { useErrorStore } from "@/stores/ErrorStore";
 import UserManagementList from "@/components/UserManagementList.vue";
+import AddSupervisorSaveChangesModal from "@/components/AddSupervisorSaveChangesModal.vue";
 import SortDirArrow from "@/components/SortDirArrow.vue";
 import {
   type UserSupervisedByFromAPIType,
@@ -221,6 +290,17 @@ watch(usersSupervisedByList, () => {
   usersSupervisedByListOriginal.value = cloneDeep(usersSupervisedByList.value);
   sortLists();
 });
+
+const modifiedSupervisorsList = ref([] as UserSupervisedByFromAPIType[]);
+const addedSupervisorsList = ref([] as UserSupervisedByFromAPIType[]);
+
+const modificationsMade = computed(() => {
+  return (
+    modifiedSupervisorsList.value.length > 0 ||
+    addedSupervisorsList.value.length > 0
+  );
+});
+
 // TODO
 // DONE watch usersSupervisedByList and create a ref version that's editable
 // DONE v-model to UserManagementList component
@@ -244,9 +324,9 @@ watch(usersSupervisedByList, () => {
 //  diff between original and modified
 //  - should be in this file, not the list
 //  - on our end, try to figure out if a supervisor is being added or just modified
-//  - on backend still be safe about things and check if a supervisor already 
+//  - on backend still be safe about things and check if a supervisor already
 //    exists for a given user, then decide whether to UPDATE or INSERT
-// 
+//
 // whenever we make a change (activate / deactivate / add / remove) (maybe not remove actually)
 // don't auto-change in DB
 // instead have an "apply changes" button that takes the diff of the two and only
@@ -258,26 +338,6 @@ watch(usersSupervisedByList, () => {
 // add something that also gets all site supervisors that make sense for the current user (for adding)
 // (might just be part of original call, lambda is doing tons already)
 
-// const subjectActiveStore = ref({} as any)
-// const subjectLoadingStore = ref({} as any)
-// const subjects = ref<any[]>([]);
-// const subjectsorted = computed(() => {
-//   const sortkey = adminMode.value ? "fullname" : "id";
-//   return [...subjects.value].sort((a, b) => {
-//     if (
-//       typeof a[sortkey] !== "undefined" &&
-//       typeof b[sortkey] !== "undefined"
-//     ) {
-//       if (a[sortkey] > b[sortkey]) {
-//         return 1;
-//       } else {
-//         return -1;
-//       }
-//     } else {
-//       return 1;
-//     }
-//   });
-// });
 const sortVar = ref("username");
 const sortVars = ["username", "role"];
 const sortVarMap = {
@@ -358,44 +418,6 @@ function sortLists() {
   // Sort original list
   usersSupervisedByListOriginal.value.sort(compareFn);
 
-  // usersSupervisedByListModifiable.value.sort((a, b) => {
-  //   if (
-  //     typeof (a as any)[sortVarBackend.value] !== "undefined" &&
-  //     typeof (b as any)[sortVarBackend.value] !== "undefined"
-  //   ) {
-  //     let directionality = 1;
-  //     if (typeof sortDirsDesc.value[sortVar.value] !== "undefined") {
-  //       directionality = sortDirsDesc.value[sortVar.value] ? -1 : 1;
-  //     }
-  //     if ((a as any)[sortVarBackend.value] > (b as any)[sortVarBackend.value]) {
-  //       return 1 * directionality;
-  //     } else {
-  //       return -1 * directionality;
-  //     }
-  //   } else {
-  //     return 1;
-  //   }
-  // });
-  // // ...then same thing for orig, computed() not firing unless called
-  // usersSupervisedByListOriginal.value.sort((a, b) => {
-  //   if (
-  //     typeof (a as any)[sortVarBackend.value] !== "undefined" &&
-  //     typeof (b as any)[sortVarBackend.value] !== "undefined"
-  //   ) {
-  //     let directionality = 1;
-  //     if (typeof sortDirsDesc.value[sortVar.value] !== "undefined") {
-  //       directionality = sortDirsDesc.value[sortVar.value] ? -1 : 1;
-  //     }
-  //     if ((a as any)[sortVarBackend.value] > (b as any)[sortVarBackend.value]) {
-  //       return 1 * directionality;
-  //     } else {
-  //       return -1 * directionality;
-  //     }
-  //   } else {
-  //     return 1;
-  //   }
-  // });
-
   console.log(
     "usersSupervisedByListModifiable:",
     usersSupervisedByListModifiable.value
@@ -405,73 +427,6 @@ function sortLists() {
     usersSupervisedByListOriginal.value
   );
 }
-// const sortDirDesc = ref(true);
-// function reverseSortDir() {
-//   sortDirDesc.value = !sortDirDesc.value;
-// }
-// const sortedBySelected = computed(() => {
-//   return [...sortedById.value].sort((a, b) => {
-//     if (
-//       typeof (a as any)[sortVar.value] !== "undefined" &&
-//       typeof (b as any)[sortVar.value] !== "undefined"
-//     ) {
-//       const directionality = sortDirDesc.value ? -1 : 1;
-//       if ((a as any)[sortVar.value] > (b as any)[sortVar.value]) {
-//         return 1 * directionality;
-//       } else {
-//         return -1 * directionality;
-//       }
-//     } else {
-//       return 1;
-//     }
-//   });
-// });
-// usersSupervisedByList
-// usersSupervisedByListModifiable
-// const usersSupervisedByListPreSorted
-// const usersSupervisedByListSorted = computed(() => {
-//   const retList = cloneDeep(usersSupervisedByList.value);
-//   return retList.sort((a, b) => {
-//     if (
-//       typeof (a as any)[sortVarBackend.value] !== "undefined" &&
-//       typeof (b as any)[sortVarBackend.value] !== "undefined"
-//     ) {
-//       let directionality = 1;
-//       if (typeof sortDirsDesc.value[sortVar.value] !== "undefined") {
-//         directionality = sortDirsDesc.value[sortVar.value] ? -1 : 1;
-//       }
-//       if ((a as any)[sortVarBackend.value] > (b as any)[sortVarBackend.value]) {
-//         return 1 * directionality;
-//       } else {
-//         return -1 * directionality;
-//       }
-//     } else {
-//       return 1;
-//     }
-//   });
-// });
-// const usersSupervisedByListModifiablePreSorted
-// const usersSupervisedByListModifiableSorted = computed(() => {
-//   const retList = cloneDeep(usersSupervisedByListModifiable.value);
-//   return retList.sort((a, b) => {
-//     if (
-//       typeof (a as any)[sortVarBackend.value] !== "undefined" &&
-//       typeof (b as any)[sortVarBackend.value] !== "undefined"
-//     ) {
-//       let directionality = 1;
-//       if (typeof sortDirsDesc.value[sortVar.value] !== "undefined") {
-//         directionality = sortDirsDesc.value[sortVar.value] ? -1 : 1;
-//       }
-//       if ((a as any)[sortVarBackend.value] > (b as any)[sortVarBackend.value]) {
-//         return 1 * directionality;
-//       } else {
-//         return -1 * directionality;
-//       }
-//     } else {
-//       return 1;
-//     }
-//   });
-// });
 
 const error = ref(null);
 const loading = ref(true);
@@ -519,6 +474,57 @@ function loadList() {
 }
 loadList();
 
+function resetChanges() {
+  if (modificationsMade.value) {
+    console.log("resetting to original list");
+    usersSupervisedByListModifiable.value = cloneDeep(
+      usersSupervisedByListOriginal.value
+    );
+  }
+}
+
+const saveModalVisible = ref(false);
+function showSaveModal() {
+  if (modificationsMade.value) {
+    console.log("opening save modal");
+    saveModalVisible.value = true;
+  }
+}
+function hideSaveModal() {
+  saveModalVisible.value = false;
+}
+
+// const pageReloader = ref(0);
+function postSupervisors() {
+  // console.log('modifiedSupervisorsList:',modifiedSupervisorsList.value)
+  // console.log('addedSupervisorsList:',addedSupervisorsList.value)
+  console.log("attempting to send changes to user_supervised_by to backend...");
+
+  // if success
+  hideSaveModal();
+  // pageReloader.value += 1;
+  // console.log(`keyval: ${pageReloader.value}`)
+  // const instance = getCurrentInstance();
+  // instance.proxy.forceUpdate();
+}
+
 const userListDisabled = ref(false);
 const userListEditable = ref(true);
+
+const resetButtonObj = computed(() => {
+  const retObj = {
+    "bg-gray-100 border-amber-300 hover:border-white hover:bg-amber-300 hover:text-white":
+      modificationsMade.value,
+    "text-gray-400 bg-gray-100 border-transparent": !modificationsMade.value,
+  };
+  return retObj;
+});
+const saveButtonObj = computed(() => {
+  const retObj = {
+    "bg-gray-100 border-emerald-300 hover:border-white hover:bg-emerald-300 hover:text-white":
+      modificationsMade.value,
+    "text-gray-400 bg-gray-100 border-transparent": !modificationsMade.value,
+  };
+  return retObj;
+});
 </script>

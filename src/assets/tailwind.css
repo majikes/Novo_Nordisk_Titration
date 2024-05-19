@@ -282,7 +282,7 @@
 }
 
 .user-mgmt-modified {
-    @apply ring-rose-500 ring-2 ring-offset-1
+    @apply ring-emerald-300 ring-1 ring-offset-2
 }
 /* .disabled {
     @apply text-gray-400
@@ -290,4 +290,28 @@
 
 .add-supervisor-modal {
     @apply z-30 w-48 min-h-16 p-4 rounded-md drop-shadow-lg absolute grid grid-cols-3 gap-2 bottom-1 left-1
+
+}
+.add-supervisor-save-changes-modal {
+    @apply z-40 w-10/12 rounded-lg drop-shadow-lg absolute grid content-center place-items-center top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+}
+
+.add-supervisor-btn {
+    @apply text-center p-2 w-48 rounded-md border-2
+}
+
+.add-supervisor-table-simple-row {
+    @apply grid grid-cols-9 rounded-md px-4 py-1 even:bg-gray-100
+}
+
+.add-supervisor-table-simple-cell {
+    @apply px-4
+}
+
+.add-supervisor-table-header-row {
+    @apply grid grid-cols-9 rounded-md px-4 py-1 mb-3 bg-gray-200
+}
+
+.add-supervisor-confirm-btn {
+    @apply text-center mt-1 p-2 rounded-md border-transparent disabled:text-gray-400
 }

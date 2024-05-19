@@ -8,9 +8,17 @@
         {{ isEqual(usersupervisedbylist, modifiablesupervisedbylist) }}
       </div>
       <div>
-        <span class="font-semibold">modifiedSupervisors:</span>
-        {{ modifiedSupervisors }}
+        <span class="font-semibold">modifiedSupervisorsList:</span>
+        {{ modifiedSupervisorsList }}
       </div>
+      <div>
+        <span class="font-semibold">newSupervisorsList:</span>
+        {{ newSupervisorsList }}
+      </div>
+      <!-- <div>
+        <span class="font-semibold">modifiedSupervisorsMatrix:</span>
+        {{ modifiedSupervisorsMatrix }}
+      </div> -->
       <!-- <div><span class="font-semibold">usersupervisedbylist:</span> {{ usersupervisedbylist }}</div> -->
       <!-- <div><span class="font-semibold">modifiablesupervisedbylist:</span> {{ modifiablesupervisedbylist }}</div> -->
     </div>
@@ -51,7 +59,11 @@
         <div
           v-for="(supervisor, index2) in supervisee.supervisors"
           :key="index2"
-          class="grid grid-cols-4"
+          class="border my-0.5 rounded-md grid grid-cols-4"
+          :class="{
+            'border-emerald-300': newSupervisorsMatrix[index][index2],
+            'border-transparent': !newSupervisorsMatrix[index][index2],
+          }"
         >
           <div class="px-4 user-mgmt-cell relative">
             {{ supervisor.supervisor_username }}
@@ -69,14 +81,14 @@
             {{ supervisor.supervisor_site_name }}
           </div>
           <!-- <div class="px-4">{{ supervisor.active }}</div> -->
-          <div class="px-4 user-mgmt-cell">
+          <div class="relative px-4 user-mgmt-cell text-sm">
             <select
               name="active"
               :id="`${supervisee.supervisee_username}-${supervisor.supervisor_username}-active-select`"
               v-model="supervisor.active"
               class="user-mgmt-active-dropdown"
               :class="{
-                'user-mgmt-modified': modifiedSupervisors[index][index2],
+                'user-mgmt-modified': modifiedSupervisorsMatrix[index][index2],
               }"
             >
               <option
@@ -87,6 +99,11 @@
                 {{ active_option.text }}
               </option>
             </select>
+            <AddSupervisorMinusIcon
+              v-if="newSupervisorsMatrix[index][index2]"
+              :evenrow="index % 2 === 0"
+              @remove-supervisor-click="removeSupervisor(supervisee, index, index2)"
+            />
           </div>
         </div>
       </div>
@@ -98,14 +115,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps, defineModel, PropType, ref } from "vue";
+import { computed, defineProps, defineModel, PropType, ref, watch } from "vue";
 import {
   type UserSupervisedByGroupBySuperviseeType,
   type Supervisee,
   type Supervisor,
   type USBGFrontendSortType,
+  type UserSupervisedByFromAPIType,
 } from "@/types/UserSupervisedByTypes";
 import AddSupervisorPlusIcon from "@/components/AddSupervisorPlusIcon.vue";
+import AddSupervisorMinusIcon from "@/components/AddSupervisorMinusIcon.vue";
 import AddSupervisorModal from "@/components/AddSupervisorModal.vue";
 import { cloneDeep, isEqual } from "lodash";
 import { useDebugModeStore } from "@/stores/debugModeStore";
@@ -141,6 +160,12 @@ const props = defineProps({
 const modifiablesupervisedbylist = defineModel<
   UserSupervisedByGroupBySuperviseeType[]
 >("modifiablesupervisedbylist");
+const modifiedsupervisedbylist = defineModel<
+  UserSupervisedByFromAPIType[]
+>("modifiedsupervisedbylist");
+const addedsupervisedbylist = defineModel<
+  UserSupervisedByFromAPIType[]
+>("addedsupervisedbylist");
 
 const errors = useErrorStore();
 const debugModeStore = useDebugModeStore();
@@ -149,13 +174,13 @@ const debugModeStore = useDebugModeStore();
 // make new computed that, given appropriate indices, tracks
 // if user is new
 // if user active status is new
-const modifiedSupervisors = computed(() => {
+const modifiedSupervisorsMatrix = computed(() => {
   // TODO props.addablesupervisors.length IS DANGEROUS!!!!!
   // DUPLICATES CAN EXIST IN DB
   // MAKE THIS MAX OF ADDABLESUPERVISORS.LENGTH AND LONGEST SUPERVISORS
   // const maxSupervisors = new Array(props.addablesupervisors.length).fill(false);
   // const retArr = new Array(modifiablesupervisedbylist.value?.length).fill(cloneDeep(maxSupervisors));
-  const retArr = new Array(modifiablesupervisedbylist.value?.length);
+  const retArr = new Array(modifiablesupervisedbylist.value?.length) as boolean[][];
   for (let i = 0; i < retArr.length; i++) {
     retArr[i] = new Array(props.addablesupervisors.length).fill(false);
   }
@@ -192,36 +217,122 @@ const modifiedSupervisors = computed(() => {
   return retArr;
 });
 
-const newSupervisors = computed(() => {
-  const retArr = [] as boolean[][];
+const newSupervisorsMatrix = computed(() => {
+  // const retArr = [] as boolean[][];
+  const retArr = new Array(
+    modifiablesupervisedbylist.value?.length
+  ) as boolean[][];
+
   if (modifiablesupervisedbylist.value) {
     for (const [
       index,
       supervisee,
     ] of modifiablesupervisedbylist.value?.entries()) {
       // boolean row for current supervisee
-      const superviseeBools = [] as boolean[];
+      const superviseeBools = new Array(
+        supervisee.supervisors.length
+      ) as boolean[];
       const origSupervisee = cloneDeep(props.usersupervisedbylist[index]);
       const origSuperviseeSupervisorNames = origSupervisee.supervisors.map(
         (supervisor) => supervisor.supervisor_username
       );
-      for (const supervisor of supervisee.supervisors) {
+
+      for (const [index2, supervisor] of supervisee.supervisors.entries()) {
         if (
           !origSuperviseeSupervisorNames.includes(
             supervisor.supervisor_username
           )
         ) {
-          superviseeBools.push(true);
+          superviseeBools[index2] = true;
         } else {
-          superviseeBools.push(false);
+          superviseeBools[index2] = false;
         }
       }
       // then push current row to retArr
-      retArr.push(superviseeBools);
+      retArr[index] = superviseeBools;
     }
   }
   return retArr;
 });
+
+const modifiedSupervisorsList = computed(() => {
+  const retArr = [] as UserSupervisedByFromAPIType[]
+    for (const [index1, superviseeBoolArr] of modifiedSupervisorsMatrix.value.entries()) {
+      for (const [index2, supervisorBool] of superviseeBoolArr.entries()) {
+        if (supervisorBool) {
+          if (modifiablesupervisedbylist.value) {
+            const tmpAPIUserSupervisedBy = {} as UserSupervisedByFromAPIType
+            const tmpSupervisee = modifiablesupervisedbylist.value[index1] // UserSupervisedByGroupBySuperviseeType
+            const tmpSupervisor = tmpSupervisee.supervisors[index2] // supervisor to add
+
+            tmpAPIUserSupervisedBy.supervisee_username = tmpSupervisee.supervisee_username
+            tmpAPIUserSupervisedBy.supervisee_id = tmpSupervisee.supervisee_id
+            tmpAPIUserSupervisedBy.supervisee_role_name = tmpSupervisee.supervisee_role_name
+            tmpAPIUserSupervisedBy.supervisee_site_id = tmpSupervisee.supervisee_site_id
+            tmpAPIUserSupervisedBy.supervisee_site_name = tmpSupervisee.supervisee_site_name
+
+            tmpAPIUserSupervisedBy.supervisor_username = tmpSupervisor.supervisor_username
+            tmpAPIUserSupervisedBy.supervisor_id = tmpSupervisor.supervisor_id
+            tmpAPIUserSupervisedBy.supervisor_role_name = tmpSupervisor.supervisor_role_name
+            tmpAPIUserSupervisedBy.supervisor_site_id = tmpSupervisor.supervisor_site_id
+            tmpAPIUserSupervisedBy.supervisor_site_name = tmpSupervisor.supervisor_site_name
+            tmpAPIUserSupervisedBy.active = tmpSupervisor.active
+
+            retArr.push(tmpAPIUserSupervisedBy)
+          }
+        }
+      }
+    }
+  return retArr
+})
+const newSupervisorsList = computed(() => {
+  const retArr = [] as UserSupervisedByFromAPIType[]
+    for (const [index1, superviseeBoolArr] of newSupervisorsMatrix.value.entries()) {
+      for (const [index2, supervisorBool] of superviseeBoolArr.entries()) {
+        if (supervisorBool) {
+          if (modifiablesupervisedbylist.value) {
+            const tmpAPIUserSupervisedBy = {} as UserSupervisedByFromAPIType
+            const tmpSupervisee = modifiablesupervisedbylist.value[index1] // UserSupervisedByGroupBySuperviseeType
+            const tmpSupervisor = tmpSupervisee.supervisors[index2] // supervisor to add
+
+            tmpAPIUserSupervisedBy.supervisee_username = tmpSupervisee.supervisee_username
+            tmpAPIUserSupervisedBy.supervisee_id = tmpSupervisee.supervisee_id
+            tmpAPIUserSupervisedBy.supervisee_role_name = tmpSupervisee.supervisee_role_name
+            tmpAPIUserSupervisedBy.supervisee_site_id = tmpSupervisee.supervisee_site_id
+            tmpAPIUserSupervisedBy.supervisee_site_name = tmpSupervisee.supervisee_site_name
+
+            tmpAPIUserSupervisedBy.supervisor_username = tmpSupervisor.supervisor_username
+            tmpAPIUserSupervisedBy.supervisor_id = tmpSupervisor.supervisor_id
+            tmpAPIUserSupervisedBy.supervisor_role_name = tmpSupervisor.supervisor_role_name
+            tmpAPIUserSupervisedBy.supervisor_site_id = tmpSupervisor.supervisor_site_id
+            tmpAPIUserSupervisedBy.supervisor_site_name = tmpSupervisor.supervisor_site_name
+            tmpAPIUserSupervisedBy.active = tmpSupervisor.active
+
+            retArr.push(tmpAPIUserSupervisedBy)
+          }
+        }
+      }
+    }
+  return retArr
+})
+
+watch(modifiedSupervisorsList, () => {
+  console.log(`change to modifiedSupervisorsList detected`);
+  // console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
+  modifiedsupervisedbylist.value = cloneDeep(
+    modifiedSupervisorsList.value
+  );
+});
+watch(newSupervisorsList, () => {
+  console.log(`change to modifiedSupervisorsList detected`);
+  // console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
+  addedsupervisedbylist.value = cloneDeep(
+    newSupervisorsList.value
+  );
+});
+
+modifiedsupervisedbylist
+addedsupervisedbylist
 
 // const addableSupervisorNames = computed(() => {
 //   const retArr = props.addablesupervisors.map(
@@ -323,6 +434,23 @@ function addSupervisors(
   if (hidemodal) {
     hideAddSupervisorModal(supervisee, index);
   }
+}
+
+function removeSupervisor(
+  supervisee: UserSupervisedByGroupBySuperviseeType,
+  // supervisorToRemove: Supervisor
+  index1: number,
+  index2: number
+) {
+  // supervisee.supervisors.splice(index,1)
+  if (modifiablesupervisedbylist.value) {
+    modifiablesupervisedbylist.value[index1].supervisors.splice(index2,1)
+  }
+  // for (const [index, supervisor] of supervisee.supervisors.entries()) {
+  //   if (supervisor.supervisor_username === supervisorToRemove.supervisor_username) {
+  //     modifiablesupervisedbylist.value.splice(index,1);
+  //   }
+  // }
 }
 
 const activeOptions = [
