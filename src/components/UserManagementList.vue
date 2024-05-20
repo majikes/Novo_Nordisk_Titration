@@ -1,5 +1,8 @@
 <template>
   <div class="col-span-6">
+    <LoadingHover v-if="loading">
+      <div class="font-semibold">Loading list...</div>
+    </LoadingHover>
     <div v-if="debugModeStore.debugMode">
       <div>
         <span class="font-semibold"
@@ -103,7 +106,9 @@
             <AddSupervisorMinusIcon
               v-if="newSupervisorsMatrix[index][index2]"
               :evenrow="index % 2 === 0"
-              @remove-supervisor-click="removeSupervisor(supervisee, index, index2)"
+              @remove-supervisor-click="
+                removeSupervisor(supervisee, index, index2)
+              "
             />
           </div>
         </div>
@@ -127,6 +132,7 @@ import {
 import AddSupervisorPlusIcon from "@/components/AddSupervisorPlusIcon.vue";
 import AddSupervisorMinusIcon from "@/components/AddSupervisorMinusIcon.vue";
 import AddSupervisorModal from "@/components/AddSupervisorModal.vue";
+import LoadingHover from "@/components/LoadingHover.vue";
 import { cloneDeep, isEqual } from "lodash";
 import { useDebugModeStore } from "@/stores/debugModeStore";
 import { useErrorStore } from "@/stores/ErrorStore";
@@ -156,17 +162,21 @@ const props = defineProps({
     required: true,
     type: Boolean as PropType<boolean>,
   },
+  loading: {
+    required: true,
+    type: Boolean as PropType<boolean>,
+  },
 });
 
 const modifiablesupervisedbylist = defineModel<
   UserSupervisedByGroupBySuperviseeType[]
 >("modifiablesupervisedbylist");
-const modifiedsupervisedbylist = defineModel<
-  UserSupervisedByFromAPIType[]
->("modifiedsupervisedbylist");
-const addedsupervisedbylist = defineModel<
-  UserSupervisedByFromAPIType[]
->("addedsupervisedbylist");
+const modifiedsupervisedbylist = defineModel<UserSupervisedByFromAPIType[]>(
+  "modifiedsupervisedbylist"
+);
+const addedsupervisedbylist = defineModel<UserSupervisedByFromAPIType[]>(
+  "addedsupervisedbylist"
+);
 
 const errors = useErrorStore();
 const debugModeStore = useDebugModeStore();
@@ -181,7 +191,9 @@ const modifiedSupervisorsMatrix = computed(() => {
   // MAKE THIS MAX OF ADDABLESUPERVISORS.LENGTH AND LONGEST SUPERVISORS
   // const maxSupervisors = new Array(props.addablesupervisors.length).fill(false);
   // const retArr = new Array(modifiablesupervisedbylist.value?.length).fill(cloneDeep(maxSupervisors));
-  const retArr = new Array(modifiablesupervisedbylist.value?.length) as boolean[][];
+  const retArr = new Array(
+    modifiablesupervisedbylist.value?.length
+  ) as boolean[][];
   for (let i = 0; i < retArr.length; i++) {
     retArr[i] = new Array(props.addablesupervisors.length).fill(false);
   }
@@ -257,83 +269,101 @@ const newSupervisorsMatrix = computed(() => {
 });
 
 const modifiedSupervisorsList = computed(() => {
-  const retArr = [] as UserSupervisedByFromAPIType[]
-    for (const [index1, superviseeBoolArr] of modifiedSupervisorsMatrix.value.entries()) {
-      for (const [index2, supervisorBool] of superviseeBoolArr.entries()) {
-        if (supervisorBool) {
-          if (modifiablesupervisedbylist.value) {
-            const tmpAPIUserSupervisedBy = {} as UserSupervisedByFromAPIType
-            const tmpSupervisee = modifiablesupervisedbylist.value[index1] // UserSupervisedByGroupBySuperviseeType
-            const tmpSupervisor = tmpSupervisee.supervisors[index2] // supervisor to add
+  const retArr = [] as UserSupervisedByFromAPIType[];
+  for (const [
+    index1,
+    superviseeBoolArr,
+  ] of modifiedSupervisorsMatrix.value.entries()) {
+    for (const [index2, supervisorBool] of superviseeBoolArr.entries()) {
+      if (supervisorBool) {
+        if (modifiablesupervisedbylist.value) {
+          const tmpAPIUserSupervisedBy = {} as UserSupervisedByFromAPIType;
+          const tmpSupervisee = modifiablesupervisedbylist.value[index1]; // UserSupervisedByGroupBySuperviseeType
+          const tmpSupervisor = tmpSupervisee.supervisors[index2]; // supervisor to add
 
-            tmpAPIUserSupervisedBy.supervisee_username = tmpSupervisee.supervisee_username
-            tmpAPIUserSupervisedBy.supervisee_id = tmpSupervisee.supervisee_id
-            tmpAPIUserSupervisedBy.supervisee_role_name = tmpSupervisee.supervisee_role_name
-            tmpAPIUserSupervisedBy.supervisee_site_id = tmpSupervisee.supervisee_site_id
-            tmpAPIUserSupervisedBy.supervisee_site_name = tmpSupervisee.supervisee_site_name
+          tmpAPIUserSupervisedBy.supervisee_username =
+            tmpSupervisee.supervisee_username;
+          tmpAPIUserSupervisedBy.supervisee_id = tmpSupervisee.supervisee_id;
+          tmpAPIUserSupervisedBy.supervisee_role_name =
+            tmpSupervisee.supervisee_role_name;
+          tmpAPIUserSupervisedBy.supervisee_site_id =
+            tmpSupervisee.supervisee_site_id;
+          tmpAPIUserSupervisedBy.supervisee_site_name =
+            tmpSupervisee.supervisee_site_name;
 
-            tmpAPIUserSupervisedBy.supervisor_username = tmpSupervisor.supervisor_username
-            tmpAPIUserSupervisedBy.supervisor_id = tmpSupervisor.supervisor_id
-            tmpAPIUserSupervisedBy.supervisor_role_name = tmpSupervisor.supervisor_role_name
-            tmpAPIUserSupervisedBy.supervisor_site_id = tmpSupervisor.supervisor_site_id
-            tmpAPIUserSupervisedBy.supervisor_site_name = tmpSupervisor.supervisor_site_name
-            tmpAPIUserSupervisedBy.active = tmpSupervisor.active
+          tmpAPIUserSupervisedBy.supervisor_username =
+            tmpSupervisor.supervisor_username;
+          tmpAPIUserSupervisedBy.supervisor_id = tmpSupervisor.supervisor_id;
+          tmpAPIUserSupervisedBy.supervisor_role_name =
+            tmpSupervisor.supervisor_role_name;
+          tmpAPIUserSupervisedBy.supervisor_site_id =
+            tmpSupervisor.supervisor_site_id;
+          tmpAPIUserSupervisedBy.supervisor_site_name =
+            tmpSupervisor.supervisor_site_name;
+          tmpAPIUserSupervisedBy.active = tmpSupervisor.active;
 
-            retArr.push(tmpAPIUserSupervisedBy)
-          }
+          retArr.push(tmpAPIUserSupervisedBy);
         }
       }
     }
-  return retArr
-})
+  }
+  return retArr;
+});
 const newSupervisorsList = computed(() => {
-  const retArr = [] as UserSupervisedByFromAPIType[]
-    for (const [index1, superviseeBoolArr] of newSupervisorsMatrix.value.entries()) {
-      for (const [index2, supervisorBool] of superviseeBoolArr.entries()) {
-        if (supervisorBool) {
-          if (modifiablesupervisedbylist.value) {
-            const tmpAPIUserSupervisedBy = {} as UserSupervisedByFromAPIType
-            const tmpSupervisee = modifiablesupervisedbylist.value[index1] // UserSupervisedByGroupBySuperviseeType
-            const tmpSupervisor = tmpSupervisee.supervisors[index2] // supervisor to add
+  const retArr = [] as UserSupervisedByFromAPIType[];
+  for (const [
+    index1,
+    superviseeBoolArr,
+  ] of newSupervisorsMatrix.value.entries()) {
+    for (const [index2, supervisorBool] of superviseeBoolArr.entries()) {
+      if (supervisorBool) {
+        if (modifiablesupervisedbylist.value) {
+          const tmpAPIUserSupervisedBy = {} as UserSupervisedByFromAPIType;
+          const tmpSupervisee = modifiablesupervisedbylist.value[index1]; // UserSupervisedByGroupBySuperviseeType
+          const tmpSupervisor = tmpSupervisee.supervisors[index2]; // supervisor to add
 
-            tmpAPIUserSupervisedBy.supervisee_username = tmpSupervisee.supervisee_username
-            tmpAPIUserSupervisedBy.supervisee_id = tmpSupervisee.supervisee_id
-            tmpAPIUserSupervisedBy.supervisee_role_name = tmpSupervisee.supervisee_role_name
-            tmpAPIUserSupervisedBy.supervisee_site_id = tmpSupervisee.supervisee_site_id
-            tmpAPIUserSupervisedBy.supervisee_site_name = tmpSupervisee.supervisee_site_name
+          tmpAPIUserSupervisedBy.supervisee_username =
+            tmpSupervisee.supervisee_username;
+          tmpAPIUserSupervisedBy.supervisee_id = tmpSupervisee.supervisee_id;
+          tmpAPIUserSupervisedBy.supervisee_role_name =
+            tmpSupervisee.supervisee_role_name;
+          tmpAPIUserSupervisedBy.supervisee_site_id =
+            tmpSupervisee.supervisee_site_id;
+          tmpAPIUserSupervisedBy.supervisee_site_name =
+            tmpSupervisee.supervisee_site_name;
 
-            tmpAPIUserSupervisedBy.supervisor_username = tmpSupervisor.supervisor_username
-            tmpAPIUserSupervisedBy.supervisor_id = tmpSupervisor.supervisor_id
-            tmpAPIUserSupervisedBy.supervisor_role_name = tmpSupervisor.supervisor_role_name
-            tmpAPIUserSupervisedBy.supervisor_site_id = tmpSupervisor.supervisor_site_id
-            tmpAPIUserSupervisedBy.supervisor_site_name = tmpSupervisor.supervisor_site_name
-            tmpAPIUserSupervisedBy.active = tmpSupervisor.active
+          tmpAPIUserSupervisedBy.supervisor_username =
+            tmpSupervisor.supervisor_username;
+          tmpAPIUserSupervisedBy.supervisor_id = tmpSupervisor.supervisor_id;
+          tmpAPIUserSupervisedBy.supervisor_role_name =
+            tmpSupervisor.supervisor_role_name;
+          tmpAPIUserSupervisedBy.supervisor_site_id =
+            tmpSupervisor.supervisor_site_id;
+          tmpAPIUserSupervisedBy.supervisor_site_name =
+            tmpSupervisor.supervisor_site_name;
+          tmpAPIUserSupervisedBy.active = tmpSupervisor.active;
 
-            retArr.push(tmpAPIUserSupervisedBy)
-          }
+          retArr.push(tmpAPIUserSupervisedBy);
         }
       }
     }
-  return retArr
-})
+  }
+  return retArr;
+});
 
 watch(modifiedSupervisorsList, () => {
   console.log(`change to modifiedSupervisorsList detected`);
   // console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
-  modifiedsupervisedbylist.value = cloneDeep(
-    modifiedSupervisorsList.value
-  );
+  modifiedsupervisedbylist.value = cloneDeep(modifiedSupervisorsList.value);
 });
 watch(newSupervisorsList, () => {
   console.log(`change to modifiedSupervisorsList detected`);
   // console.log(`subjectIdStore: ${subjectIdStore.subjectId}`)
-  addedsupervisedbylist.value = cloneDeep(
-    newSupervisorsList.value
-  );
+  addedsupervisedbylist.value = cloneDeep(newSupervisorsList.value);
 });
 
-modifiedsupervisedbylist
-addedsupervisedbylist
+modifiedsupervisedbylist;
+addedsupervisedbylist;
 
 // const addableSupervisorNames = computed(() => {
 //   const retArr = props.addablesupervisors.map(
@@ -445,7 +475,7 @@ function removeSupervisor(
 ) {
   // supervisee.supervisors.splice(index,1)
   if (modifiablesupervisedbylist.value) {
-    modifiablesupervisedbylist.value[index1].supervisors.splice(index2,1)
+    modifiablesupervisedbylist.value[index1].supervisors.splice(index2, 1);
   }
   // for (const [index, supervisor] of supervisee.supervisors.entries()) {
   //   if (supervisor.supervisor_username === supervisorToRemove.supervisor_username) {

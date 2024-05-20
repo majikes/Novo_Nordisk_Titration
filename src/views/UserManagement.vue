@@ -85,8 +85,8 @@
     <!-- user list -->
     <!-- <div>{{ subjectActiveStore }}</div> -->
     <!-- {{route}} -->
-    <div v-if="loading">Loading...</div>
-    <div v-else>
+    <!-- <div v-if="loading">Loading...</div> -->
+    <div>
       <!-- user mgmt header, not sure why i like splitting this up -->
       <div class="user-mgmt-table-header-row">
         <div
@@ -124,6 +124,7 @@
         :addablesupervisors="supervisorsFromAPI"
         :disabled="userListDisabled"
         :editmode="userListEditable"
+        :loading="userListLoading"
         :sortdirsinfo="sortDirsInfo"
         v-model:modifiedsupervisedbylist="modifiedSupervisorsList"
         v-model:addedsupervisedbylist="addedSupervisorsList"
@@ -133,7 +134,7 @@
 
     <!-- user management controls bottom -->
     <div
-      v-if="!loading"
+      v-if="!userListLoading"
       class="my-3 flex justify-end gap-2"
       id="mgmt-controls-top"
     >
@@ -440,9 +441,10 @@ function sortLists() {
 }
 
 const error = ref(null);
-const loading = ref(true);
+const userListLoading = ref(true);
 function loadList() {
   console.log("loading user list");
+  userListLoading.value = true
   usersFromAPI.value = [] as UserSupervisedByFromAPIType[];
   supervisorsFromAPI.value = [] as Supervisee[];
 
@@ -480,7 +482,7 @@ function loadList() {
       );
     })
     .finally(() => {
-      loading.value = false;
+      userListLoading.value = false;
     });
 }
 loadList();
@@ -536,6 +538,8 @@ function postSupervisors() {
       console.log(response);
       // only hide modal on success?
       hideSaveModal();
+      // ...and also reload the list
+      loadList();
     })
     .catch((err) => {
       console.log(err.message);
