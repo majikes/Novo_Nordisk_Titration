@@ -131,7 +131,11 @@
     </div>
 
     <!-- user management controls bottom -->
-    <div v-if="!loading" class="my-3 flex justify-end gap-2" id="mgmt-controls-top">
+    <div
+      v-if="!loading"
+      class="my-3 flex justify-end gap-2"
+      id="mgmt-controls-top"
+    >
       <!-- reset button -->
       <div
         class="add-supervisor-btn"
@@ -495,13 +499,50 @@ function hideSaveModal() {
 }
 
 // const pageReloader = ref(0);
+const postSupervisorsErrors = ref(null)
+const postSupervisorsLoading = ref(false)
 function postSupervisors() {
   // console.log('modifiedSupervisorsList:',modifiedSupervisorsList.value)
   // console.log('addedSupervisorsList:',addedSupervisorsList.value)
+  postSupervisorsLoading.value = true
+  const requestObj = {
+    requestor: {
+      username: auth.user.username,
+      role: groupComputed.value[0],
+    },
+    added_supervisors: addedSupervisorsList.value,
+    modified_supervisors: modifiedSupervisorsList.value,
+    project: "novonordisktitration",
+  };
   console.log("attempting to send changes to user_supervised_by to backend...");
-
+  const endpoint = "usersupervisedby";
+  const req_url = `${apiRootURL}/${endpoint}?requestor_username=${auth.user.username}`;
+  // console.log(`POST request to /${endpoint}`);
+  console.log(`POST request to ${req_url}`);
+  api
+    .postAuth<any, any>(
+      req_url,
+      tokenComputed.value,
+      JSON.stringify(requestObj)
+    )
+    .then((response: any) => {
+      console.log(response);
+      // only hide modal on success?
+      hideSaveModal();
+    })
+    .catch((err) => {
+      console.log(err.message);
+      postSupervisorsErrors.value = err.message;
+      errors.errorLog(
+        `${componentName}; request to ${req_url}: ${err.message}`,
+        true
+      );
+    })
+    .finally(() => {
+      postSupervisorsLoading.value = false;
+    });
   // if success
-  hideSaveModal();
+  
   // pageReloader.value += 1;
   // console.log(`keyval: ${pageReloader.value}`)
   // const instance = getCurrentInstance();
