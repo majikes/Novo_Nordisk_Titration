@@ -1,10 +1,10 @@
 <template>
   <!-- https://feathericons.dev/?search=plus-square&iconset=feather -->
   <div
-    class="w-6 h-6 p-1 aspect-square absolute -bottom-3.5 right-0 rounded-md z-10"
+    class="w-6 h-6 p-1 aspect-square absolute -bottom-3.5 -right-2 rounded-md z-10"
     :class="containerClassObj"
     :title="containerClassTooltip"
-    @click="$emit('addSupervisorClick')"
+    @click="showAddSupervisorListModal"
   >
     <div class="w-full aspect-square" ref="resizeRef">
       <svg
@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineProps, PropType, ref } from "vue";
+import { computed, defineEmits, defineProps, PropType, ref } from "vue";
 import { useElementSize } from "@vueuse/core";
 
 // TODO are we REALLY going down the path of creating fancy splines
@@ -48,6 +48,15 @@ const props = defineProps({
     type: Boolean as PropType<boolean>,
   },
 });
+
+const emit = defineEmits(["addSupervisorClick"]);
+
+function showAddSupervisorListModal() {
+  if (!props.disabled) {
+    emit("addSupervisorClick")
+  }
+}
+
 const svgClassObj = computed(() => {
   const retObj = {
     "fill-white stroke-gray-300": props.disabled,
@@ -57,15 +66,15 @@ const svgClassObj = computed(() => {
 });
 const containerClassObj = computed(() => {
   const retObj = {
-    "bg-gray-100": !props.evenrow,
-    "bg-white": props.evenrow,
+    "bg-gradient-to-t via-gray-100 from-gray-100": !props.evenrow,
+    "bg-gradient-to-t via-white from-white": props.evenrow,
   };
   return retObj;
 });
 const containerClassTooltip = computed(() => {
   return !props.disabled
     ? "Add new supervisor"
-    : "All available supervisors assigned";
+    : "Function temporarily disabled";
 });
 
 const resizeRef = ref(null);

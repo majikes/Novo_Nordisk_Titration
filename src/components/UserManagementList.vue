@@ -69,7 +69,7 @@
             {{ supervisor.supervisor_username }}
             <AddSupervisorPlusIcon
               v-if="index2 === supervisee.supervisors.length - 1"
-              :disabled="addSupervisorsBySuperviseeDisabled[index]"
+              :disabled="addSupervisorsBySuperviseeDisabled[index] || disabled"
               :evenrow="index % 2 === 0"
               @add-supervisor-click="showAddSupervisorModal(supervisee, index)"
             />
@@ -90,6 +90,7 @@
               :class="{
                 'user-mgmt-modified': modifiedSupervisorsMatrix[index][index2],
               }"
+              :disabled="disabled"
             >
               <option
                 v-for="(active_option, index3) in activeOptions"

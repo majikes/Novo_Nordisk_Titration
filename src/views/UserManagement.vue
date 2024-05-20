@@ -75,6 +75,7 @@
     <!-- save changes modal -->
     <AddSupervisorSaveChangesModal
       v-if="saveModalVisible"
+      :update-changes-loading="postSupervisorsLoading"
       :modifiedsupervisedbylist="modifiedSupervisorsList"
       :addedsupervisedbylist="addedSupervisorsList"
       @cancel-click="hideSaveModal"
@@ -374,30 +375,36 @@ const sortDirsInfo = computed(() => {
 });
 
 function toggleSort(toggleVar: string) {
-  // first actually modify sort variables
-  console.log(`toggleSort on ${toggleVar}`);
-  if (
-    sortVars.includes(toggleVar) &&
-    Object.keys(sortDirsDesc.value).includes(toggleVar) &&
-    Object.keys(sortDirsVisible.value).includes(toggleVar)
-  ) {
-    console.log("valid toggleVar");
-    sortVar.value = toggleVar;
+  if (!userListDisabled.value) {
+    // first actually modify sort variables
+    console.log(`toggleSort on ${toggleVar}`);
+    if (
+      sortVars.includes(toggleVar) &&
+      Object.keys(sortDirsDesc.value).includes(toggleVar) &&
+      Object.keys(sortDirsVisible.value).includes(toggleVar)
+    ) {
+      console.log("valid toggleVar");
+      sortVar.value = toggleVar;
 
-    for (const key of Object.keys(sortDirsDesc.value)) {
-      if (key === toggleVar) {
-        if (sortDirsVisible.value[key]) {
-          sortDirsDesc.value[key] = !sortDirsDesc.value[key];
+      for (const key of Object.keys(sortDirsDesc.value)) {
+        if (key === toggleVar) {
+          if (sortDirsVisible.value[key]) {
+            sortDirsDesc.value[key] = !sortDirsDesc.value[key];
+          }
+          console.log(
+            `sorting on ${key}; desc sort: ${sortDirsDesc.value[key]}`
+          );
         }
-        console.log(`sorting on ${key}; desc sort: ${sortDirsDesc.value[key]}`);
+      }
+      for (const key of Object.keys(sortDirsVisible.value)) {
+        sortDirsVisible.value[key] = key === toggleVar;
       }
     }
-    for (const key of Object.keys(sortDirsVisible.value)) {
-      sortDirsVisible.value[key] = key === toggleVar;
-    }
+    // then sort the lists
+    sortLists();
+  } else {
+    console.log('list interactions disabled...')
   }
-  // then sort the lists
-  sortLists();
 }
 
 function sortLists() {
@@ -479,7 +486,7 @@ function loadList() {
 loadList();
 
 function resetChanges() {
-  if (modificationsMade.value) {
+  if (!buttonsDisabled.value) {
     console.log("resetting to original list");
     usersSupervisedByListModifiable.value = cloneDeep(
       usersSupervisedByListOriginal.value
@@ -489,7 +496,7 @@ function resetChanges() {
 
 const saveModalVisible = ref(false);
 function showSaveModal() {
-  if (modificationsMade.value) {
+  if (!buttonsDisabled.value) {
     console.log("opening save modal");
     saveModalVisible.value = true;
   }
@@ -499,12 +506,12 @@ function hideSaveModal() {
 }
 
 // const pageReloader = ref(0);
-const postSupervisorsErrors = ref(null)
-const postSupervisorsLoading = ref(false)
+const postSupervisorsErrors = ref(null);
+const postSupervisorsLoading = ref(false);
 function postSupervisors() {
   // console.log('modifiedSupervisorsList:',modifiedSupervisorsList.value)
   // console.log('addedSupervisorsList:',addedSupervisorsList.value)
-  postSupervisorsLoading.value = true
+  postSupervisorsLoading.value = true;
   const requestObj = {
     requestor: {
       username: auth.user.username,
@@ -542,29 +549,39 @@ function postSupervisors() {
       postSupervisorsLoading.value = false;
     });
   // if success
-  
+
   // pageReloader.value += 1;
   // console.log(`keyval: ${pageReloader.value}`)
   // const instance = getCurrentInstance();
   // instance.proxy.forceUpdate();
 }
 
-const userListDisabled = ref(false);
+// const userListDisabled = ref(false);
+const userListDisabled = computed(() => {
+  return saveModalVisible.value
+})
 const userListEditable = ref(true);
 
+const buttonsDisabled = computed(() => {
+  if (!userListDisabled.value) {
+    return !modificationsMade.value 
+  } else {
+    return true
+  }
+})
 const resetButtonObj = computed(() => {
   const retObj = {
     "bg-gray-100 border-amber-300 hover:border-white hover:bg-amber-300 hover:text-white":
-      modificationsMade.value,
-    "text-gray-400 bg-gray-100 border-transparent": !modificationsMade.value,
+    !buttonsDisabled.value,
+    "text-gray-400 bg-gray-100 border-transparent": buttonsDisabled.value,
   };
   return retObj;
 });
 const saveButtonObj = computed(() => {
   const retObj = {
     "bg-gray-100 border-emerald-300 hover:border-white hover:bg-emerald-300 hover:text-white":
-      modificationsMade.value,
-    "text-gray-400 bg-gray-100 border-transparent": !modificationsMade.value,
+    !buttonsDisabled.value,
+    "text-gray-400 bg-gray-100 border-transparent": buttonsDisabled.value,
   };
   return retObj;
 });

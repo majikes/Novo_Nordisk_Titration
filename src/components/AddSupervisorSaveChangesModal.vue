@@ -5,7 +5,10 @@
     id="save-changes-modal-container"
     v-on-click-outside="cancelModal"
   >
-    <div class="bg-white rounded-lg w-full p-4">
+    <div class="relative bg-white rounded-lg w-full p-4">
+      <LoadingHover v-if="updateChangesLoading">
+        <div class="font-semibold">Submitting changes...</div>
+      </LoadingHover>
       <div class="flex justify-center my-6 font-semibold">
         Review changes to User/Supervisor relationships:
       </div>
@@ -75,6 +78,7 @@ import {
   type UserSupervisedByFromAPIType,
   type USBModifiedType,
 } from "@/types/UserSupervisedByTypes";
+import LoadingHover from "@/components/LoadingHover.vue";
 
 const props = defineProps({
   modifiedsupervisedbylist: {
@@ -84,6 +88,10 @@ const props = defineProps({
   addedsupervisedbylist: {
     required: true,
     type: Array as PropType<UserSupervisedByFromAPIType[]>,
+  },
+  updateChangesLoading: {
+    required: true,
+    type: Boolean as PropType<boolean>,
   },
 });
 
@@ -105,10 +113,14 @@ const emit = defineEmits(["cancelClick", "confirmClick"]);
 //        usbg_supervisee: UserSupervisedByFromAPIType
 //      }
 function cancelModal() {
-  emit("cancelClick");
+  if (!props.updateChangesLoading) {
+    emit("cancelClick");
+  }
 }
 function confirmModal() {
-  emit("confirmClick");
+  if (!props.updateChangesLoading) {
+    emit("confirmClick");
+  }
 }
 
 const changesList = computed(() => {
