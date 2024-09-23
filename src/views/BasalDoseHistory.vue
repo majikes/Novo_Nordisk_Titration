@@ -135,7 +135,7 @@ function getBasalDoseHistory() {
   console.log(`request to ${req_url}`);
   // server response:
   // {"id":"103","date":"08/29/2023", "timeOfDayInMinutes":1340, "basalDoseValue":40}
-  const APIKEYHARDCODED = "7LiuUEWHXNMCOSZdaCS32DQPme5SYHr7JZlsVk1a";
+  const APIKEYHARDCODED = xxxxx";
   api
     .getAPIKeyAuth<BasalDoseHistoryFromAPIType>(req_url, APIKEYHARDCODED)
     .then((doseHistoryObject: BasalDoseHistoryFromAPIType) => {
